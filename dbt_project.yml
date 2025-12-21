@@ -1,0 +1,71 @@
+name: "financial_analytics"
+version: "1.0.0"
+config-version: 2
+
+profile: "financial_analytics"
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  finance_analytics:
+    # Bronze Layer - Ingestion - Raw data ingestion
+    ingestion:
+      +materialized: table
+      +schema: bronze
+      +tags: ["bronze", "ingestion", "raw"]
+
+    # Silver Layer - Transform - Cleaned and standardized
+    transform:
+      +materialized: table
+      +schema: silver
+      +tags: ["silver", "transform", "cleaned"]
+
+    # Gold Layer - Serving - Kimball dimensional model
+    # serving:
+    #   dimensions:
+    #     +materialized: table
+    #     +schema: gold
+    #     +tags: ["gold", "serving", "dimension"]
+    #   facts:
+    #     +materialized: incremental
+    #     +schema: gold
+    #     +tags: ["gold", "serving", "fact"]
+    #     +on_schema_change: "append_new_columns"
+    #   aggregates:
+    #     +materialized: table
+    #     +schema: gold
+    #     +tags: ["gold", "serving", "aggregate"]
+    #   analytics:
+    #     +materialized: view
+    #     +schema: gold
+    #     +tags: ["gold", "serving", "analytics"]
+
+vars:
+  # Business rules
+  fraud_threshold: 0.7
+  high_risk_amount: 10000
+  churn_risk_threshold: 0.6
+  delinquent_days: 30
+
+  # Date parameters
+  lookback_days: 90
+
+seeds:
+  +schema: bronze
+  +tags: ["seed"]
+
+snapshots:
+  +target_schema: silver
+  +strategy: timestamp
+  +updated_at: updated_at
+  +tags: ["snapshot", "scd"]

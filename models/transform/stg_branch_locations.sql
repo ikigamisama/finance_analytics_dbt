@@ -1,0 +1,63 @@
+{{
+    config(
+        materialized='table',
+        tags=['silver', 'ingestion', 'branch_locations']
+    )
+}}
+
+WITH source AS (
+    SELECT * FROM {{ source('ingestion_raw_data', 'branch_locations') }}
+),
+
+cleaned AS (
+    SELECT
+        -- Primary Key
+        branch_id,
+        branch_code,
+        
+        -- Branch Information
+        TRIM(branch_name) AS branch_name,
+        branch_type,
+        region,
+        
+        -- Location Details
+        TRIM(address) AS address,
+        TRIM(city) AS city,
+        UPPER(TRIM(state)) AS state,
+        TRIM(zip_code) AS zip_code,
+        UPPER(TRIM(country)) AS country,
+        latitude,
+        longitude,
+        
+        -- Contact
+        TRIM(phone) AS phone,
+        
+        -- Operational Details
+        open_date,
+        is_active,
+        operating_hours,
+        
+        -- Capacity Metrics
+        square_footage,
+        num_employees,
+        avg_daily_customers,
+        
+        -- Services Available
+        has_safe_deposit,
+        has_notary,
+        has_coin_counter,
+        wheelchair_accessible,
+        
+        -- Management
+        TRIM(manager_name) AS manager_name,
+        
+        -- Metadata
+        created_at,
+        CURRENT_TIMESTAMP AS dbt_updated_at
+        
+    FROM source
+    WHERE branch_id IS NOT NULL
+)
+
+SELECT * FROM cleaned
+

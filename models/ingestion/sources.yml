@@ -1,0 +1,1302 @@
+version: 2
+
+sources:
+  - name: ingestion_raw_data
+    description: "Raw data loaded from CSV files into Bronze schema"
+    database: finance_analytics
+    schema: bronze
+
+    # Default freshness for all tables (can be overridden per table)
+    freshness:
+      warn_after: { count: 24, period: hour }
+      error_after: { count: 48, period: hour }
+
+    # Default loaded_at field
+    loaded_at_field: created_at
+
+    tables:
+      # ================================================================
+      # REFERENCE DATA
+      # ================================================================
+
+      - name: products
+        description: "Financial products catalog - product offerings and terms"
+        identifier: products
+        freshness:
+          warn_after: { count: 7, period: day }
+          error_after: { count: 30, period: day }
+        columns:
+          - name: product_id
+            description: "Primary key - Unique product identifier"
+            tests:
+              - unique
+              - not_null
+          - name: product_name
+            description: "Name of the financial product"
+            tests:
+              - not_null
+          - name: category
+            description: "Product category (Deposit, Credit, Loan, Investment)"
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ["Deposit", "Credit", "Loan", "Investment"]
+          - name: interest_rate
+            description: "Annual interest rate as decimal (e.g., 0.05 = 5%)"
+          - name: min_balance
+            description: "Minimum balance requirement"
+          - name: monthly_fee
+            description: "Monthly maintenance fee"
+          - name: overdraft_limit
+            description: "Overdraft protection limit"
+          - name: product_tier
+            description: "Product tier (Basic, Standard, Premium, Business)"
+          - name: is_premium
+            description: "Flag indicating premium product"
+          - name: created_at
+            description: "Record creation timestamp"
+
+      - name: merchants
+        description: "Merchant master data - businesses where transactions occur"
+        identifier: merchants
+        freshness:
+          warn_after: { count: 7, period: day }
+          error_after: { count: 30, period: day }
+        columns:
+          - name: merchant_id
+            description: "Primary key - Unique merchant identifier"
+            tests:
+              - unique
+              - not_null
+          - name: merchant_name
+            description: "Merchant business name"
+            tests:
+              - not_null
+          - name: category
+            description: "Merchant business category"
+            tests:
+              - not_null
+          - name: mcc_code
+            description: "Merchant Category Code (MCC) - ISO 18245 standard"
+          - name: city
+            description: "Merchant city location"
+          - name: state
+            description: "Merchant state (2-letter code)"
+          - name: country
+            description: "Merchant country"
+          - name: latitude
+            description: "Geographic latitude coordinate"
+          - name: longitude
+            description: "Geographic longitude coordinate"
+          - name: risk_rating
+            description: "Merchant risk rating (Low, Medium, High)"
+            tests:
+              - accepted_values:
+                  values: ["Low", "Medium", "High"]
+          - name: avg_transaction_amount
+            description: "Average transaction amount at this merchant"
+          - name: is_online
+            description: "Flag indicating online/e-commerce merchant"
+          - name: established_date
+            description: "Date merchant was established"
+          - name: created_at
+            description: "Record creation timestamp"
+
+      # ================================================================
+      # CORE ENTITIES
+      # ================================================================
+
+      - name: customers
+        description: "Customer master data - demographics and profile information"
+        identifier: customers
+        freshness:
+          warn_after: { count: 12, period: hour }
+          error_after: { count: 24, period: hour }
+        columns:
+          - name: customer_id
+            description: "Primary key - Unique customer identifier"
+            tests:
+              - unique
+              - not_null
+          - name: first_name
+            description: "Customer first name"
+          - name: last_name
+            description: "Customer last name"
+          - name: email
+            description: "Customer email address"
+            tests:
+              - unique
+              - not_null
+          - name: phone
+            description: "Customer phone number"
+          - name: date_of_birth
+            description: "Customer date of birth"
+          - name: age
+            description: "Customer age in years"
+          - name: ssn
+            description: "Social Security Number (PII - handle with care)"
+          - name: address
+            description: "Street address"
+          - name: city
+            description: "City"
+          - name: state
+            description: "State (2-letter code)"
+          - name: zip_code
+            description: "ZIP/Postal code"
+          - name: country
+            description: "Country"
+          - name: signup_date
+            description: "Date customer signed up"
+            tests:
+              - not_null
+          - name: credit_score
+            description: "Credit score (300-850)"
+            tests:
+              - not_null
+          - name: annual_income
+            description: "Annual income in USD"
+          - name: employment_status
+            description: "Employment status"
+            tests:
+              - accepted_values:
+                  values:
+                    [
+                      "Employed",
+                      "Self-Employed",
+                      "Retired",
+                      "Student",
+                      "Unemployed",
+                    ]
+          - name: employer
+            description: "Employer name"
+          - name: job_title
+            description: "Job title/position"
+          - name: education_level
+            description: "Highest education level"
+          - name: marital_status
+            description: "Marital status"
+          - name: number_of_dependents
+            description: "Number of dependents"
+          - name: home_ownership
+            description: "Home ownership status (Own, Rent, Mortgage)"
+          - name: customer_segment
+            description: "Customer segment classification"
+            tests:
+              - accepted_values:
+                  values: ["Mass Market", "Affluent", "Premium", "Business"]
+          - name: life_stage
+            description: "Customer life stage"
+          - name: risk_segment
+            description: "Risk classification"
+            tests:
+              - accepted_values:
+                  values: ["Low", "Medium", "High"]
+          - name: is_active
+            description: "Active customer flag"
+            tests:
+              - not_null
+          - name: preferred_channel
+            description: "Preferred communication/service channel"
+          - name: marketing_opt_in
+            description: "Marketing communication opt-in flag"
+          - name: loyalty_tier
+            description: "Loyalty program tier"
+          - name: customer_lifetime_value
+            description: "Estimated customer lifetime value (CLV)"
+          - name: churn_risk_score
+            description: "Churn probability score (0-1)"
+          - name: last_login_date
+            description: "Last login/interaction date"
+          - name: acquisition_channel
+            description: "Channel through which customer was acquired"
+          - name: created_at
+            description: "Record creation timestamp"
+
+      - name: accounts
+        description: "Customer account information - all account types"
+        identifier: accounts
+        freshness:
+          warn_after: { count: 12, period: hour }
+          error_after: { count: 24, period: hour }
+        columns:
+          - name: account_id
+            description: "Primary key - Unique account identifier"
+            tests:
+              - unique
+              - not_null
+          - name: customer_id
+            description: "Foreign key to customers"
+            tests:
+              - not_null
+              - relationships:
+                  to: source('ingestion_raw_data', 'customers')
+                  field: customer_id
+          - name: product_id
+            description: "Foreign key to products"
+            tests:
+              - not_null
+              - relationships:
+                  to: source('ingestion_raw_data', 'products')
+                  field: product_id
+          - name: account_number
+            description: "Account number (masked for security)"
+            tests:
+              - unique
+          - name: account_status
+            description: "Current account status"
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ["Active", "Dormant", "Closed"]
+          - name: open_date
+            description: "Account opening date"
+            tests:
+              - not_null
+          - name: close_date
+            description: "Account closing date (null if open)"
+          - name: current_balance
+            description: "Current account balance"
+            tests:
+              - not_null
+          - name: available_balance
+            description: "Available balance (current minus holds)"
+          - name: credit_limit
+            description: "Credit limit (for credit accounts)"
+          - name: currency
+            description: "Currency code (ISO 4217)"
+            tests:
+              - accepted_values:
+                  values: ["USD"]
+          - name: interest_rate
+            description: "Account-specific interest rate"
+          - name: minimum_payment
+            description: "Minimum payment due (for credit/loan accounts)"
+          - name: payment_due_date
+            description: "Next payment due date"
+          - name: last_statement_date
+            description: "Last statement generation date"
+          - name: autopay_enabled
+            description: "Automatic payment enabled flag"
+          - name: overdraft_protection
+            description: "Overdraft protection enabled flag"
+          - name: primary_account
+            description: "Primary account flag for customer"
+          - name: created_at
+            description: "Record creation timestamp"
+
+      # ================================================================
+      # TRANSACTIONAL DATA
+      # ================================================================
+
+      - name: transactions
+        description: "All financial transactions across all accounts and channels"
+        identifier: transactions
+        loaded_at_field: created_at
+        freshness:
+          warn_after: { count: 2, period: hour }
+          error_after: { count: 6, period: hour }
+        columns:
+          - name: transaction_id
+            description: "Primary key - Unique transaction identifier"
+            tests:
+              - unique
+              - not_null
+          - name: account_id
+            description: "Foreign key to accounts"
+            tests:
+              - not_null
+              - relationships:
+                  to: source('ingestion_raw_data', 'accounts')
+                  field: account_id
+          - name: customer_id
+            description: "Foreign key to customers"
+            tests:
+              - not_null
+              - relationships:
+                  to: source('ingestion_raw_data', 'customers')
+                  field: customer_id
+          - name: merchant_id
+            description: "Foreign key to merchants"
+            tests:
+              - relationships:
+                  to: source('ingestion_raw_data', 'merchants')
+                  field: merchant_id
+          - name: transaction_date
+            description: "Transaction date and time"
+            tests:
+              - not_null
+          - name: transaction_type
+            description: "Type of transaction"
+            tests:
+              - not_null
+              - accepted_values:
+                  values:
+                    [
+                      "Purchase",
+                      "ATM Withdrawal",
+                      "Transfer",
+                      "Payment",
+                      "Deposit",
+                      "Refund",
+                      "Fee",
+                      "Interest Credit",
+                      "Dividend",
+                    ]
+          - name: amount
+            description: "Transaction amount (negative for debits, positive for credits)"
+            tests:
+              - not_null
+          - name: currency
+            description: "Transaction currency"
+            tests:
+              - accepted_values:
+                  values: ["USD"]
+          - name: channel
+            description: "Transaction channel"
+            tests:
+              - accepted_values:
+                  values: ["Online", "Mobile", "ATM", "Branch", "POS", "Phone"]
+          - name: merchant_category
+            description: "Merchant category for the transaction"
+          - name: mcc_code
+            description: "Merchant Category Code"
+          - name: description
+            description: "Transaction description/memo"
+          - name: is_fraud
+            description: "Fraud flag (actual fraud)"
+            tests:
+              - not_null
+          - name: fraud_score
+            description: "Fraud probability score (0-1)"
+            tests:
+              - not_null
+          - name: location_city
+            description: "Transaction location city"
+          - name: location_state
+            description: "Transaction location state"
+          - name: location_country
+            description: "Transaction location country"
+          - name: latitude
+            description: "Transaction location latitude"
+          - name: longitude
+            description: "Transaction location longitude"
+          - name: device_id
+            description: "Device identifier (for digital transactions)"
+          - name: ip_address
+            description: "IP address (for online transactions)"
+          - name: is_international
+            description: "International transaction flag"
+          - name: authorization_code
+            description: "Payment authorization code"
+          - name: card_last_four
+            description: "Last 4 digits of card (if card transaction)"
+          - name: is_recurring
+            description: "Recurring transaction flag"
+          - name: hour_of_day
+            description: "Hour of transaction (0-23)"
+          - name: day_of_week
+            description: "Day of week (0=Sunday, 6=Saturday)"
+          - name: is_weekend
+            description: "Weekend transaction flag"
+          - name: distance_from_home_km
+            description: "Distance from customer home location (km)"
+          - name: merchant_risk_score
+            description: "Merchant risk score (0-1)"
+          - name: velocity_24h
+            description: "Number of transactions in last 24 hours"
+          - name: amount_deviation_score
+            description: "Deviation from typical transaction amount (0-1)"
+          - name: processing_time_ms
+            description: "Transaction processing time (milliseconds)"
+          - name: decline_reason
+            description: "Reason for decline (if applicable)"
+          - name: created_at
+            description: "Record creation timestamp"
+            tests:
+              - not_null
+
+      # ================================================================
+      # CREDIT & LENDING
+      # ================================================================
+
+      - name: credit_applications
+        description: "Credit application history and decisions"
+        identifier: credit_applications
+        freshness:
+          warn_after: { count: 24, period: hour }
+          error_after: { count: 72, period: hour }
+        columns:
+          - name: application_id
+            description: "Primary key - Unique application identifier"
+            tests:
+              - unique
+              - not_null
+          - name: customer_id
+            description: "Foreign key to customers"
+            tests:
+              - not_null
+              - relationships:
+                  to: source('ingestion_raw_data', 'customers')
+                  field: customer_id
+          - name: product_id
+            description: "Foreign key to products (credit product applied for)"
+          - name: application_date
+            description: "Application submission date"
+            tests:
+              - not_null
+          - name: requested_amount
+            description: "Credit amount requested"
+            tests:
+              - not_null
+          - name: requested_term_months
+            description: "Requested loan term in months"
+          - name: credit_score_at_application
+            description: "Credit score at time of application"
+          - name: annual_income
+            description: "Annual income at time of application"
+          - name: debt_to_income_ratio
+            description: "Debt-to-income ratio (DTI)"
+          - name: employment_length_years
+            description: "Years at current employer"
+          - name: decision
+            description: "Application decision"
+            tests:
+              - accepted_values:
+                  values: ["Approved", "Declined", "Pending"]
+          - name: decision_date
+            description: "Decision date"
+          - name: approved_amount
+            description: "Approved credit amount (if approved)"
+          - name: approved_rate
+            description: "Approved interest rate (if approved)"
+          - name: application_channel
+            description: "Application submission channel"
+          - name: approval_probability_score
+            description: "Model-based approval probability (0-1)"
+          - name: risk_grade
+            description: "Risk grade assigned (A-G)"
+          - name: created_at
+            description: "Record creation timestamp"
+
+      # ================================================================
+      # FRAUD & RISK
+      # ================================================================
+
+      - name: fraud_alerts
+        description: "Fraud detection alerts and investigation status"
+        identifier: fraud_alerts
+        loaded_at_field: alert_date
+        freshness:
+          warn_after: { count: 1, period: hour }
+          error_after: { count: 4, period: hour }
+        columns:
+          - name: alert_id
+            description: "Primary key - Unique alert identifier"
+            tests:
+              - unique
+              - not_null
+          - name: transaction_id
+            description: "Related transaction ID"
+            tests:
+              - relationships:
+                  to: source('ingestion_raw_data', 'transactions')
+                  field: transaction_id
+          - name: customer_id
+            description: "Foreign key to customers"
+            tests:
+              - relationships:
+                  to: source('ingestion_raw_data', 'customers')
+                  field: customer_id
+          - name: account_id
+            description: "Foreign key to accounts"
+            tests:
+              - relationships:
+                  to: source('ingestion_raw_data', 'accounts')
+                  field: account_id
+          - name: alert_date
+            description: "Alert generation date/time"
+            tests:
+              - not_null
+          - name: alert_type
+            description: "Type of fraud alert"
+            tests:
+              - not_null
+          - name: alert_severity
+            description: "Alert severity level"
+            tests:
+              - accepted_values:
+                  values: ["Low", "Medium", "High", "Critical"]
+          - name: investigation_status
+            description: "Current investigation status"
+            tests:
+              - accepted_values:
+                  values:
+                    [
+                      "Open",
+                      "Under Review",
+                      "Resolved - Fraud",
+                      "Resolved - Legitimate",
+                      "False Positive",
+                    ]
+          - name: resolution_date
+            description: "Alert resolution date"
+          - name: amount_recovered
+            description: "Amount recovered (if fraud confirmed)"
+          - name: assigned_to
+            description: "Investigator assigned to alert"
+          - name: notes
+            description: "Investigation notes"
+          - name: created_at
+            description: "Record creation timestamp"
+
+      # ================================================================
+      # CUSTOMER SERVICE
+      # ================================================================
+
+      - name: customer_interactions
+        description: "Customer service interactions and support tickets"
+        identifier: customer_interactions
+        loaded_at_field: interaction_date
+        freshness:
+          warn_after: { count: 12, period: hour }
+          error_after: { count: 24, period: hour }
+        columns:
+          - name: interaction_id
+            description: "Primary key - Unique interaction identifier"
+            tests:
+              - unique
+              - not_null
+          - name: customer_id
+            description: "Foreign key to customers"
+            tests:
+              - not_null
+              - relationships:
+                  to: source('ingestion_raw_data', 'customers')
+                  field: customer_id
+          - name: interaction_date
+            description: "Interaction date/time"
+            tests:
+              - not_null
+          - name: interaction_type
+            description: "Type of interaction"
+            tests:
+              - accepted_values:
+                  values:
+                    [
+                      "Phone Call",
+                      "Email",
+                      "Chat",
+                      "Branch Visit",
+                      "Social Media",
+                    ]
+          - name: reason
+            description: "Reason for interaction"
+          - name: duration_minutes
+            description: "Interaction duration in minutes"
+          - name: sentiment_score
+            description: "Sentiment analysis score (-1 to 1)"
+          - name: satisfaction_rating
+            description: "Customer satisfaction rating (1-5)"
+          - name: resolved
+            description: "Issue resolved flag"
+          - name: escalated
+            description: "Escalation flag"
+          - name: agent_id
+            description: "Service agent identifier"
+          - name: notes
+            description: "Interaction notes"
+          - name: created_at
+            description: "Record creation timestamp"
+
+      # ================================================================
+      # ECONOMIC DATA
+      # ================================================================
+
+      - name: economic_indicators
+        description: "Daily macroeconomic indicators for causal analysis"
+        identifier: economic_indicators
+        loaded_at_field: date
+        freshness:
+          warn_after: { count: 2, period: day }
+          error_after: { count: 7, period: day }
+        columns:
+          - name: date
+            description: "Indicator date (primary key)"
+            tests:
+              - unique
+              - not_null
+          - name: gdp_growth_rate
+            description: "GDP growth rate (percentage)"
+          - name: unemployment_rate
+            description: "Unemployment rate (percentage)"
+          - name: inflation_rate
+            description: "Inflation rate (percentage)"
+          - name: federal_funds_rate
+            description: "Federal funds rate (percentage)"
+          - name: sp500_index
+            description: "S&P 500 index value"
+          - name: vix_index
+            description: "VIX volatility index"
+          - name: consumer_confidence_index
+            description: "Consumer confidence index"
+          - name: housing_price_index
+            description: "Housing price index"
+          - name: "10yr_treasury_yield"
+            description: "10-year treasury yield (percentage)"
+          - name: mortgage_rate_30yr
+            description: "30-year mortgage rate (percentage)"
+          - name: created_at
+            description: "Record creation timestamp"
+
+      # ================================================================
+      # MARKETING
+      # ================================================================
+
+      - name: marketing_campaigns
+        description: "Marketing campaign data for attribution analysis"
+        identifier: marketing_campaigns
+        freshness:
+          warn_after: { count: 7, period: day }
+          error_after: { count: 14, period: day }
+        columns:
+          - name: campaign_id
+            description: "Primary key - Unique campaign identifier"
+            tests:
+              - unique
+              - not_null
+          - name: campaign_name
+            description: "Campaign name"
+            tests:
+              - not_null
+          - name: campaign_type
+            description: "Campaign type/channel"
+            tests:
+              - accepted_values:
+                  values:
+                    [
+                      "Email",
+                      "Social Media",
+                      "Direct Mail",
+                      "TV",
+                      "Radio",
+                      "Online Display",
+                    ]
+          - name: start_date
+            description: "Campaign start date"
+            tests:
+              - not_null
+          - name: end_date
+            description: "Campaign end date"
+          - name: target_segment
+            description: "Target customer segment"
+          - name: budget
+            description: "Campaign budget (USD)"
+          - name: impressions
+            description: "Total impressions"
+          - name: clicks
+            description: "Total clicks"
+          - name: conversions
+            description: "Total conversions"
+          - name: cost_per_acquisition
+            description: "Cost per acquisition (CPA)"
+          - name: roi
+            description: "Return on investment (ROI)"
+          - name: product_promoted
+            description: "Product being promoted (FK to products)"
+          - name: created_at
+            description: "Record creation timestamp"
+
+      # ================================================================
+      # LOAN PAYMENTS
+      # ================================================================
+
+      - name: loan_payments
+        description: "Loan payment history for delinquency analysis"
+        identifier: loan_payments
+        loaded_at_field: scheduled_date
+        freshness:
+          warn_after: { count: 24, period: hour }
+          error_after: { count: 48, period: hour }
+        columns:
+          - name: payment_id
+            description: "Primary key - Unique payment identifier"
+            tests:
+              - unique
+              - not_null
+          - name: account_id
+            description: "Foreign key to accounts (loan account)"
+            tests:
+              - not_null
+              - relationships:
+                  to: source('ingestion_raw_data', 'accounts')
+                  field: account_id
+          - name: customer_id
+            description: "Foreign key to customers"
+            tests:
+              - not_null
+              - relationships:
+                  to: source('ingestion_raw_data', 'customers')
+                  field: customer_id
+          - name: scheduled_date
+            description: "Scheduled payment date"
+            tests:
+              - not_null
+          - name: actual_date
+            description: "Actual payment date (null if not paid)"
+          - name: scheduled_amount
+            description: "Scheduled payment amount"
+            tests:
+              - not_null
+          - name: actual_amount
+            description: "Actual payment amount (0 if not paid)"
+          - name: is_late
+            description: "Late payment flag"
+            tests:
+              - not_null
+          - name: days_late
+            description: "Number of days late (0 if on time)"
+          - name: late_fee
+            description: "Late fee charged"
+          - name: payment_method
+            description: "Payment method used"
+          - name: outstanding_balance
+            description: "Outstanding loan balance after payment"
+          - name: created_at
+            description: "Record creation timestamp"
+
+      - name: branch_locations
+        description: "Physical branch location data and operational details"
+        identifier: branch_locations
+        freshness:
+          warn_after: { count: 7, period: day }
+          error_after: { count: 30, period: day }
+        columns:
+          - name: branch_id
+            description: "Primary key - Unique branch identifier"
+            tests:
+              - unique
+              - not_null
+          - name: branch_name
+            description: "Branch name/location descriptor"
+            tests:
+              - not_null
+          - name: branch_code
+            description: "Internal branch code (e.g., BR00123)"
+            tests:
+              - unique
+              - not_null
+          - name: branch_type
+            description: "Type of branch facility"
+            tests:
+              - accepted_values:
+                  values:
+                    [
+                      "Full Service",
+                      "Limited Service",
+                      "Drive-Through Only",
+                      "Commercial",
+                    ]
+          - name: address
+            description: "Street address"
+          - name: city
+            description: "City"
+          - name: state
+            description: "State (2-letter code)"
+          - name: zip_code
+            description: "ZIP/Postal code"
+          - name: country
+            description: "Country"
+          - name: latitude
+            description: "Geographic latitude coordinate"
+          - name: longitude
+            description: "Geographic longitude coordinate"
+          - name: phone
+            description: "Branch phone number"
+          - name: open_date
+            description: "Branch opening date"
+            tests:
+              - not_null
+          - name: is_active
+            description: "Active branch flag"
+            tests:
+              - not_null
+          - name: square_footage
+            description: "Branch size in square feet"
+          - name: num_employees
+            description: "Number of employees at branch"
+          - name: avg_daily_customers
+            description: "Average daily customer traffic"
+          - name: has_safe_deposit
+            description: "Safe deposit box service available"
+          - name: has_notary
+            description: "Notary services available"
+          - name: has_coin_counter
+            description: "Coin counting machine available"
+          - name: wheelchair_accessible
+            description: "ADA accessibility flag"
+          - name: operating_hours
+            description: "Branch operating hours"
+          - name: manager_name
+            description: "Branch manager name"
+          - name: region
+            description: "Geographic region (Northeast, Southeast, etc.)"
+            tests:
+              - accepted_values:
+                  values:
+                    ["Northeast", "Southeast", "Midwest", "Southwest", "West"]
+          - name: created_at
+            description: "Record creation timestamp"
+
+      - name: atm_locations
+        description: "ATM network locations and operational status"
+        identifier: atm_locations
+        freshness:
+          warn_after: { count: 12, period: hour }
+          error_after: { count: 24, period: hour }
+        columns:
+          - name: atm_id
+            description: "Primary key - Unique ATM identifier"
+            tests:
+              - unique
+              - not_null
+          - name: atm_code
+            description: "ATM code (e.g., ATM123456)"
+            tests:
+              - unique
+              - not_null
+          - name: location_name
+            description: "Location descriptor (e.g., 'Shopping Mall', 'Airport')"
+          - name: location_type
+            description: "ATM location type"
+            tests:
+              - accepted_values:
+                  values: ["Branch", "Off-Site", "Third-Party"]
+          - name: address
+            description: "Street address"
+          - name: city
+            description: "City"
+          - name: state
+            description: "State (2-letter code)"
+          - name: zip_code
+            description: "ZIP/Postal code"
+          - name: country
+            description: "Country"
+          - name: latitude
+            description: "Geographic latitude coordinate"
+          - name: longitude
+            description: "Geographic longitude coordinate"
+          - name: install_date
+            description: "ATM installation date"
+            tests:
+              - not_null
+          - name: is_operational
+            description: "Operational status flag"
+            tests:
+              - not_null
+          - name: is_deposit_enabled
+            description: "Deposit functionality enabled"
+          - name: is_cash_only
+            description: "Cash-only ATM (no deposits)"
+          - name: max_withdrawal_amount
+            description: "Maximum single withdrawal amount"
+          - name: daily_transaction_limit
+            description: "Maximum transactions per day per card"
+          - name: avg_daily_transactions
+            description: "Average daily transaction volume"
+          - name: cash_capacity
+            description: "Maximum cash capacity (USD)"
+          - name: last_refill_date
+            description: "Last cash refill date"
+          - name: last_maintenance_date
+            description: "Last maintenance/service date"
+          - name: surcharge_fee
+            description: "Surcharge fee for non-customer transactions"
+          - name: is_24_hour
+            description: "24-hour access flag"
+          - name: has_camera
+            description: "Security camera present"
+          - name: branch_id
+            description: "Foreign key to branch_locations (null if off-site)"
+            tests:
+              - relationships:
+                  to: source('ingestion_raw_data', 'branch_locations')
+                  field: branch_id
+                  where: "branch_id IS NOT NULL"
+          - name: created_at
+            description: "Record creation timestamp"
+
+      - name: risk_assessments
+        description: "Periodic customer risk assessments for regulatory compliance"
+        identifier: risk_assessments
+        loaded_at_field: assessment_date
+        freshness:
+          warn_after: { count: 7, period: day }
+          error_after: { count: 14, period: day }
+        columns:
+          - name: assessment_id
+            description: "Primary key - Unique assessment identifier"
+            tests:
+              - unique
+              - not_null
+          - name: customer_id
+            description: "Foreign key to customers"
+            tests:
+              - not_null
+              - relationships:
+                  to: source('ingestion_raw_data', 'customers')
+                  field: customer_id
+          - name: assessment_date
+            description: "Date of risk assessment"
+            tests:
+              - not_null
+          - name: assessment_type
+            description: "Type of assessment"
+            tests:
+              - accepted_values:
+                  values:
+                    - "Periodic Review"
+                    - "Account Opening"
+                    - "Transaction Triggered"
+                    - "Annual Review"
+                    - "High Risk Review"
+          - name: risk_rating
+            description: "Overall risk rating"
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ["Low", "Medium", "High"]
+          - name: risk_score
+            description: "Quantitative risk score (0-1)"
+            tests:
+              - not_null
+          - name: credit_risk
+            description: "Credit risk component"
+            tests:
+              - accepted_values:
+                  values: ["Low", "Medium", "High"]
+          - name: fraud_risk
+            description: "Fraud risk component"
+            tests:
+              - accepted_values:
+                  values: ["Low", "Medium", "High"]
+          - name: aml_risk
+            description: "Anti-Money Laundering (AML) risk level"
+            tests:
+              - accepted_values:
+                  values: ["Low", "Medium", "High", "Critical"]
+          - name: kyc_status
+            description: "Know Your Customer (KYC) verification status"
+            tests:
+              - accepted_values:
+                  values: ["Verified", "Pending", "Expired", "Failed"]
+          - name: kyc_last_updated
+            description: "Last KYC update date"
+          - name: pep_flag
+            description: "Politically Exposed Person (PEP) flag"
+            tests:
+              - not_null
+          - name: sanctions_flag
+            description: "Sanctions list match flag"
+            tests:
+              - not_null
+          - name: adverse_media_flag
+            description: "Adverse media screening flag"
+            tests:
+              - not_null
+          - name: high_value_customer
+            description: "High value customer designation"
+          - name: transaction_volume_last_90d
+            description: "Transaction volume in last 90 days (USD)"
+          - name: num_accounts
+            description: "Number of accounts held"
+          - name: years_as_customer
+            description: "Customer tenure in years"
+          - name: employment_verified
+            description: "Employment verification status"
+          - name: income_verified
+            description: "Income verification status"
+          - name: address_verified
+            description: "Address verification status"
+          - name: regulatory_concerns
+            description: "Specific regulatory concerns (if any)"
+          - name: next_review_date
+            description: "Scheduled next review date"
+            tests:
+              - not_null
+          - name: assessor_id
+            description: "ID of compliance officer who performed assessment"
+          - name: assessment_notes
+            description: "Assessment notes and comments"
+          - name: requires_enhanced_due_diligence
+            description: "Enhanced due diligence (EDD) required flag"
+            tests:
+              - not_null
+          - name: created_at
+            description: "Record creation timestamp"
+
+      - name: account_events
+        description: >
+          Raw account-level event history capturing lifecycle,
+          risk, balance, and administrative changes for customer accounts.
+          One row per account event.
+
+        columns:
+          - name: event_id
+            description: Unique identifier for the account event
+            tests:
+              - not_null
+              - unique
+
+          - name: account_id
+            description: Unique identifier of the account
+            tests:
+              - not_null
+
+          - name: customer_id
+            description: Customer associated with the account
+            tests:
+              - not_null
+
+          - name: product_id
+            description: Financial product associated with the account
+
+          - name: event_date
+            description: Date when the event occurred
+            tests:
+              - not_null
+
+          - name: event_type
+            description: Human-readable event description (e.g. Account Opened, Credit Limit Increased)
+            tests:
+              - not_null
+
+          - name: event_category
+            description: Normalized category of the account event (lifecycle, risk, balance, admin)
+
+          - name: old_value
+            description: Previous value before the event (if applicable)
+
+          - name: new_value
+            description: New value after the event (if applicable)
+
+          - name: triggered_by
+            description: Entity or reason that triggered the event
+
+          - name: channel
+            description: Channel through which the event was initiated
+
+          - name: processed_by
+            description: Internal employee or system that processed the event
+
+          - name: notes
+            description: Free-text notes describing the event
+
+          - name: is_reversible
+            description: Indicates whether the event can be reversed
+
+          - name: requires_approval
+            description: Indicates if the event required managerial approval
+
+          - name: approval_status
+            description: Approval outcome for events requiring approval
+
+      - name: regulatory_reports
+        description: >
+          Raw regulatory and compliance reports submitted to internal and
+          external regulators (e.g. FinCEN, OFAC, FDIC). One row per
+          regulatory filing or review instance.
+
+        columns:
+          - name: report_id
+            description: Unique identifier for the regulatory report
+            tests:
+              - not_null
+              - unique
+
+          - name: report_type_code
+            description: Regulatory report code (e.g. SAR, CTR, OFAC)
+
+          - name: report_type_name
+            description: Full name of the regulatory report
+
+          - name: report_period_start
+            description: Start date of the reporting period
+
+          - name: report_period_end
+            description: End date of the reporting period
+
+          - name: filing_date
+            description: Date the report was initiated or filed
+
+          - name: due_date
+            description: Regulatory due date for the report
+
+          - name: actual_filing_date
+            description: Date the report was actually submitted
+
+          - name: filing_status
+            description: Filing status (Filed, Late Filed, Pending, Amended, Withdrawn)
+
+          - name: report_frequency
+            description: Expected reporting frequency (Daily, Monthly, Quarterly, Annual)
+
+          - name: regulator
+            description: Regulatory authority receiving the report
+
+          - name: customer_id
+            description: Related customer identifier (nullable)
+
+          - name: account_id
+            description: Related account identifier (nullable)
+
+          - name: transaction_id
+            description: Related transaction identifier (nullable)
+
+          - name: amount_reported
+            description: Monetary amount included in the report
+
+          - name: risk_level
+            description: Risk classification associated with the report
+
+          - name: requires_follow_up
+            description: Indicates if follow-up investigation is required
+
+          - name: follow_up_date
+            description: Scheduled date for follow-up action
+
+          - name: assigned_to
+            description: Compliance officer or team assigned
+
+          - name: reviewed_by
+            description: Reviewer who approved the filing
+
+          - name: approval_date
+            description: Date the report was approved
+
+          - name: filing_method
+            description: Submission method (Electronic or Paper)
+
+          - name: confirmation_number
+            description: Confirmation number returned by regulator
+
+          - name: findings
+            description: Outcome or findings of the review
+
+          - name: internal_notes
+            description: Internal compliance notes
+
+          - name: is_amended
+            description: Indicates whether the report is an amendment
+
+          - name: original_report_id
+            description: Reference to the original report if amended
+
+          - name: penalty_amount
+            description: Monetary penalty assessed due to late or non-compliant filing
+
+      - name: customer_segments_history
+        description: >
+          Historical record of customer segmentation, loyalty tier,
+          and risk classification changes over time.
+          One row per customer segment change event.
+
+        columns:
+          - name: segment_history_id
+            description: Unique identifier for the segment history record
+            tests:
+              - not_null
+              - unique
+
+          - name: customer_id
+            description: Unique identifier of the customer
+            tests:
+              - not_null
+
+          - name: effective_date
+            description: Date when the segment change became effective
+            tests:
+              - not_null
+
+          - name: end_date
+            description: End date of the segment validity period
+
+          - name: is_current
+            description: Indicates whether this is the current active segment record
+
+          - name: customer_segment
+            description: Customer segment after the change (Mass Market, Affluent, Premium, Business)
+
+          - name: previous_segment
+            description: Customer segment prior to the change
+
+          - name: loyalty_tier
+            description: Loyalty tier after the change
+
+          - name: previous_tier
+            description: Loyalty tier prior to the change
+
+          - name: risk_segment
+            description: Risk classification after the change
+
+          - name: previous_risk
+            description: Risk classification prior to the change
+
+          - name: change_type
+            description: Type of change (Segment Change, Tier Change, Risk Change, Multiple Changes)
+
+          - name: change_reason
+            description: Reason for the segment change
+
+          - name: triggered_by
+            description: Source that triggered the change
+
+          - name: total_accounts
+            description: Number of accounts held by the customer at time of change
+
+          - name: total_balance
+            description: Total account balance at time of change
+
+          - name: avg_monthly_transactions
+            description: Average monthly transaction count
+
+          - name: products_held
+            description: Number of financial products held
+
+          - name: customer_lifetime_value
+            description: Estimated customer lifetime value at time of change
+
+          - name: tenure_days
+            description: Customer tenure in days
+
+          - name: credit_score
+            description: Customer credit score at time of change
+
+          - name: annual_income
+            description: Estimated annual income at time of change
+
+          - name: last_interaction_days
+            description: Days since last customer interaction
+
+          - name: digital_engagement_score
+            description: Digital engagement score between 0 and 1
+
+          - name: branch_visits_last_90d
+            description: Branch visits in the last 90 days
+
+          - name: online_logins_last_90d
+            description: Online logins in the last 90 days
+
+          - name: eligible_for_premium
+            description: Indicates if customer is eligible for premium offerings
+
+          - name: churn_risk
+            description: Estimated churn risk category
+
+          - name: cross_sell_opportunity
+            description: Indicates potential cross-sell opportunity
+
+          - name: notes
+            description: Free-text notes describing the change
+
+          - name: updated_by
+            description: System or user that last updated the record
