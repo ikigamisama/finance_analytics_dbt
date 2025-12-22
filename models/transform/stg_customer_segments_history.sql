@@ -5,6 +5,10 @@
     )
 }}
 
+WITH source AS (
+    SELECT * FROM {{ source('ingestion_raw_data', 'customer_segments_history') }}
+),
+
 cleaned AS (
     SELECT
         -- Primary Keys
@@ -53,8 +57,7 @@ cleaned AS (
         -- Metadata
         TRIM(notes) AS notes,
         TRIM(updated_by) AS updated_by,
-        created_at,
-        CURRENT_TIMESTAMP AS dbt_updated_at
+        CURRENT_TIMESTAMP AS created_at
         
     FROM source
     WHERE segment_history_id IS NOT NULL

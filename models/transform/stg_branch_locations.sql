@@ -24,7 +24,7 @@ cleaned AS (
         TRIM(address) AS address,
         TRIM(city) AS city,
         UPPER(TRIM(state)) AS state,
-        TRIM(zip_code) AS zip_code,
+        zip_code,
         UPPER(TRIM(country)) AS country,
         latitude,
         longitude,

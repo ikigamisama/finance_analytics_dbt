@@ -27,7 +27,7 @@ cleaned AS (
         TRIM(address) AS address,
         TRIM(UPPER(city)) AS city,
         TRIM(UPPER(state)) AS state,
-        TRIM(zip_code) AS zip_code,
+        zip_code,
         TRIM(UPPER(country)) AS country,
         
         -- Account Information

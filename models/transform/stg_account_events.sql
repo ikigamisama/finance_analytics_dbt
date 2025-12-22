@@ -39,8 +39,7 @@ cleaned AS (
         approval_status,
         
         -- Metadata
-        created_at,
-        CURRENT_TIMESTAMP AS dbt_updated_at
+        CURRENT_TIMESTAMP AS created_at
         
     FROM source
     WHERE event_id IS NOT NULL

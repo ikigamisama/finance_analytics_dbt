@@ -62,4 +62,4 @@ cleaned AS (
     WHERE application_id IS NOT NULL
 )
 
-SELECT * FROM cleaned;
+SELECT * FROM cleaned

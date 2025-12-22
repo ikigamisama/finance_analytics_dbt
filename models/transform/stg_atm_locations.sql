@@ -5,6 +5,10 @@
     )
 }}
 
+WITH source AS (
+    SELECT * FROM {{ source('ingestion_raw_data', 'atm_locations') }}
+),
+
 cleaned AS (
     SELECT
         -- Primary Key
@@ -19,7 +23,7 @@ cleaned AS (
         TRIM(address) AS address,
         TRIM(city) AS city,
         UPPER(TRIM(state)) AS state,
-        TRIM(zip_code) AS zip_code,
+        zip_code,
         UPPER(TRIM(country)) AS country,
         latitude,
         longitude,
@@ -51,8 +55,7 @@ cleaned AS (
         branch_id,
         
         -- Metadata
-        created_at,
-        CURRENT_TIMESTAMP AS dbt_updated_at
+        CURRENT_TIMESTAMP AS created_at
         
     FROM source
     WHERE atm_id IS NOT NULL

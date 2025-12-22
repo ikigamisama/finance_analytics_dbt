@@ -1,0 +1,723 @@
+version: 2
+
+models:
+  # ================================================================
+  # REFERENCE DATA
+  # ================================================================
+  - name: products
+    description: "Raw products data in Bronze layer"
+    columns:
+      - name: product_id
+        tests:
+          - unique
+          - not_null
+      - name: product_name
+        tests:
+          - not_null
+      - name: category
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["Deposit", "Credit", "Loan", "Investment"]
+      - name: interest_rate
+      - name: min_balance
+      - name: monthly_fee
+      - name: overdraft_limit
+      - name: product_tier
+      - name: is_premium
+      - name: created_at
+
+  - name: merchants
+    description: "Raw merchant data in Bronze layer"
+    columns:
+      - name: merchant_id
+        tests:
+          - unique
+          - not_null
+      - name: merchant_name
+        tests:
+          - not_null
+      - name: category
+        tests:
+          - not_null
+      - name: mcc_code
+      - name: city
+      - name: state
+      - name: country
+      - name: latitude
+      - name: longitude
+      - name: risk_rating
+        tests:
+          - accepted_values:
+              values: ["Low", "Medium", "High"]
+      - name: avg_transaction_amount
+      - name: is_online
+      - name: established_date
+      - name: created_at
+
+  # ================================================================
+  # CORE ENTITIES
+  # ================================================================
+  - name: customers
+    description: "Raw customer master data"
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+      - name: first_name
+      - name: last_name
+      - name: email
+        tests:
+          - unique
+          - not_null
+      - name: phone
+      - name: date_of_birth
+      - name: age
+      - name: ssn
+      - name: address
+      - name: city
+      - name: state
+      - name: zip_code
+      - name: country
+      - name: signup_date
+        tests:
+          - not_null
+      - name: credit_score
+        tests:
+          - not_null
+      - name: annual_income
+      - name: employment_status
+        tests:
+          - accepted_values:
+              values:
+                [
+                  "Employed",
+                  "Self-Employed",
+                  "Retired",
+                  "Student",
+                  "Unemployed",
+                ]
+      - name: employer
+      - name: job_title
+      - name: education_level
+      - name: marital_status
+      - name: number_of_dependents
+      - name: home_ownership
+      - name: customer_segment
+        tests:
+          - accepted_values:
+              values: ["Mass Market", "Affluent", "Premium", "Business"]
+      - name: life_stage
+      - name: risk_segment
+        tests:
+          - accepted_values:
+              values: ["Low", "Medium", "High"]
+      - name: is_active
+        tests:
+          - not_null
+      - name: preferred_channel
+      - name: marketing_opt_in
+      - name: loyalty_tier
+      - name: customer_lifetime_value
+      - name: churn_risk_score
+      - name: last_login_date
+      - name: acquisition_channel
+      - name: created_at
+
+  - name: accounts
+    description: "Raw account data"
+    columns:
+      - name: account_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('customers')
+              field: customer_id
+      - name: product_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('products')
+              field: product_id
+      - name: account_number
+        tests:
+          - unique
+      - name: account_status
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["Active", "Dormant", "Closed"]
+      - name: open_date
+        tests:
+          - not_null
+      - name: close_date
+      - name: current_balance
+        tests:
+          - not_null
+      - name: available_balance
+      - name: credit_limit
+      - name: currency
+        tests:
+          - accepted_values:
+              values: ["USD"]
+      - name: interest_rate
+      - name: minimum_payment
+      - name: payment_due_date
+      - name: last_statement_date
+      - name: autopay_enabled
+      - name: overdraft_protection
+      - name: primary_account
+      - name: created_at
+
+  - name: transactions
+    description: "Raw transactions data"
+    columns:
+      - name: transaction_id
+        tests:
+          - unique
+          - not_null
+      - name: account_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('accounts')
+              field: account_id
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('customers')
+              field: customer_id
+      - name: merchant_id
+        tests:
+          - relationships:
+              to: ref('merchants')
+              field: merchant_id
+      - name: transaction_date
+        tests:
+          - not_null
+      - name: transaction_type
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                [
+                  "Purchase",
+                  "ATM Withdrawal",
+                  "Transfer",
+                  "Payment",
+                  "Deposit",
+                  "Refund",
+                  "Fee",
+                  "Interest Credit",
+                  "Dividend",
+                ]
+      - name: amount
+        tests:
+          - not_null
+      - name: currency
+        tests:
+          - accepted_values:
+              values: ["USD"]
+      - name: channel
+        tests:
+          - accepted_values:
+              values: ["Online", "Mobile", "ATM", "Branch", "POS", "Phone"]
+      - name: merchant_category
+      - name: mcc_code
+      - name: description
+      - name: is_fraud
+        tests:
+          - not_null
+      - name: fraud_score
+        tests:
+          - not_null
+      - name: location_city
+      - name: location_state
+      - name: location_country
+      - name: latitude
+      - name: longitude
+      - name: device_id
+      - name: ip_address
+      - name: is_international
+      - name: authorization_code
+      - name: card_last_four
+      - name: is_recurring
+      - name: hour_of_day
+      - name: day_of_week
+      - name: is_weekend
+      - name: distance_from_home_km
+      - name: merchant_risk_score
+      - name: velocity_24h
+      - name: amount_deviation_score
+      - name: processing_time_ms
+      - name: decline_reason
+      - name: created_at
+
+  # ================================================================
+  # CREDIT & LENDING
+  # ================================================================
+  - name: credit_applications
+    description: "Raw credit applications data"
+    columns:
+      - name: application_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('customers')
+              field: customer_id
+      - name: product_id
+        tests:
+          - relationships:
+              to: ref('products')
+              field: product_id
+      - name: application_date
+        tests:
+          - not_null
+      - name: requested_amount
+        tests:
+          - not_null
+      - name: requested_term_months
+      - name: credit_score_at_application
+      - name: annual_income
+      - name: debt_to_income_ratio
+      - name: employment_length_years
+      - name: decision
+        tests:
+          - accepted_values:
+              values: ["Approved", "Declined", "Pending"]
+      - name: decision_date
+      - name: approved_amount
+      - name: approved_rate
+      - name: application_channel
+      - name: approval_probability_score
+      - name: risk_grade
+      - name: created_at
+
+  # ================================================================
+  # FRAUD & RISK
+  # ================================================================
+  - name: fraud_alerts
+    description: "Raw fraud alert data"
+    columns:
+      - name: alert_id
+        tests:
+          - unique
+          - not_null
+      - name: transaction_id
+        tests:
+          - relationships:
+              to: ref('transactions')
+              field: transaction_id
+      - name: customer_id
+        tests:
+          - relationships:
+              to: ref('customers')
+              field: customer_id
+      - name: account_id
+        tests:
+          - relationships:
+              to: ref('accounts')
+              field: account_id
+      - name: alert_date
+        tests:
+          - not_null
+      - name: alert_type
+        tests:
+          - not_null
+      - name: alert_severity
+        tests:
+          - accepted_values:
+              values: ["Low", "Medium", "High", "Critical"]
+      - name: investigation_status
+        tests:
+          - accepted_values:
+              values:
+                [
+                  "Open",
+                  "Under Review",
+                  "Resolved - Fraud",
+                  "Resolved - Legitimate",
+                  "False Positive",
+                ]
+      - name: resolution_date
+      - name: amount_recovered
+      - name: assigned_to
+      - name: notes
+      - name: created_at
+
+  # ================================================================
+  # CUSTOMER SERVICE
+  # ================================================================
+  - name: customer_interactions
+    description: "Raw customer interaction data"
+    columns:
+      - name: interaction_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('customers')
+              field: customer_id
+      - name: interaction_date
+        tests:
+          - not_null
+      - name: interaction_type
+        tests:
+          - accepted_values:
+              values:
+                ["Phone Call", "Email", "Chat", "Branch Visit", "Social Media"]
+      - name: reason
+      - name: duration_minutes
+      - name: sentiment_score
+      - name: satisfaction_rating
+      - name: resolved
+      - name: escalated
+      - name: agent_id
+      - name: notes
+      - name: created_at
+
+  # ================================================================
+  # ECONOMIC DATA
+  # ================================================================
+  - name: economic_indicators
+    description: "Raw economic indicators data"
+    columns:
+      - name: date
+        tests:
+          - unique
+          - not_null
+      - name: gdp_growth_rate
+      - name: unemployment_rate
+      - name: inflation_rate
+      - name: federal_funds_rate
+      - name: sp500_index
+      - name: vix_index
+      - name: consumer_confidence_index
+      - name: housing_price_index
+      - name: "10yr_treasury_yield"
+      - name: mortgage_rate_30yr
+      - name: created_at
+
+  # ================================================================
+  # MARKETING
+  # ================================================================
+  - name: marketing_campaigns
+    description: "Raw marketing campaign data"
+    columns:
+      - name: campaign_id
+        tests:
+          - unique
+          - not_null
+      - name: campaign_name
+        tests:
+          - not_null
+      - name: campaign_type
+        tests:
+          - accepted_values:
+              values:
+                [
+                  "Email",
+                  "Social Media",
+                  "Direct Mail",
+                  "TV",
+                  "Radio",
+                  "Online Display",
+                ]
+      - name: start_date
+        tests:
+          - not_null
+      - name: end_date
+      - name: target_segment
+      - name: budget
+      - name: impressions
+      - name: clicks
+      - name: conversions
+      - name: cost_per_acquisition
+      - name: roi
+      - name: product_promoted
+      - name: created_at
+
+  # ================================================================
+  # LOAN PAYMENTS
+  # ================================================================
+  - name: loan_payments
+    description: "Raw loan payments data"
+    columns:
+      - name: payment_id
+        tests:
+          - unique
+          - not_null
+      - name: account_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('accounts')
+              field: account_id
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('customers')
+              field: customer_id
+      - name: scheduled_date
+        tests:
+          - not_null
+      - name: actual_date
+      - name: scheduled_amount
+        tests:
+          - not_null
+      - name: actual_amount
+      - name: is_late
+        tests:
+          - not_null
+      - name: days_late
+      - name: late_fee
+      - name: payment_method
+      - name: outstanding_balance
+      - name: created_at
+
+  - name: branch_locations
+    description: "Raw branch locations data"
+    columns:
+      - name: branch_id
+        tests:
+          - unique
+          - not_null
+      - name: branch_name
+        tests:
+          - not_null
+      - name: branch_code
+        tests:
+          - unique
+          - not_null
+      - name: branch_type
+        tests:
+          - accepted_values:
+              values:
+                [
+                  "Full Service",
+                  "Limited Service",
+                  "Drive-Through Only",
+                  "Commercial",
+                ]
+      - name: address
+      - name: city
+      - name: state
+      - name: zip_code
+      - name: country
+      - name: latitude
+      - name: longitude
+      - name: phone
+      - name: open_date
+        tests:
+          - not_null
+      - name: is_active
+        tests:
+          - not_null
+      - name: square_footage
+      - name: num_employees
+      - name: avg_daily_customers
+      - name: has_safe_deposit
+      - name: has_notary
+      - name: has_coin_counter
+      - name: wheelchair_accessible
+      - name: operating_hours
+      - name: manager_name
+      - name: region
+        tests:
+          - accepted_values:
+              values: ["Northeast", "Southeast", "Midwest", "Southwest", "West"]
+      - name: created_at
+
+  - name: atm_locations
+    description: "Raw ATM locations data"
+    columns:
+      - name: atm_id
+        tests:
+          - unique
+          - not_null
+      - name: atm_code
+        tests:
+          - unique
+          - not_null
+      - name: location_name
+      - name: location_type
+        tests:
+          - accepted_values:
+              values: ["Branch", "Off-Site", "Third-Party"]
+      - name: address
+      - name: city
+      - name: state
+      - name: zip_code
+      - name: country
+      - name: latitude
+      - name: longitude
+      - name: install_date
+        tests:
+          - not_null
+      - name: is_operational
+        tests:
+          - not_null
+      - name: is_deposit_enabled
+      - name: is_cash_only
+      - name: max_withdrawal_amount
+      - name: daily_transaction_limit
+      - name: avg_daily_transactions
+      - name: cash_capacity
+      - name: last_refill_date
+      - name: last_maintenance_date
+      - name: surcharge_fee
+      - name: is_24_hour
+      - name: has_camera
+      - name: branch_id
+        tests:
+          - relationships:
+              to: ref('branch_locations')
+              field: branch_id
+              where: "branch_id IS NOT NULL"
+      - name: created_at
+
+    # ================================================================
+  # RISK & COMPLIANCE
+  # ================================================================
+  - name: risk_assessments
+    description: "Raw risk assessment data for customers and accounts"
+    columns:
+      - name: risk_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - relationships:
+              to: ref('customers')
+              field: customer_id
+      - name: account_id
+        tests:
+          - relationships:
+              to: ref('accounts')
+              field: account_id
+      - name: assessment_date
+        tests:
+          - not_null
+      - name: risk_type
+        tests:
+          - accepted_values:
+              values: ["Credit", "Fraud", "AML", "Operational"]
+      - name: risk_score
+        tests:
+          - not_null
+      - name: risk_level
+        tests:
+          - accepted_values:
+              values: ["Low", "Medium", "High", "Critical"]
+      - name: assessor
+      - name: notes
+      - name: created_at
+
+  - name: account_events
+    description: "Raw account events such as status changes or alerts"
+    columns:
+      - name: event_id
+        tests:
+          - unique
+          - not_null
+      - name: account_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('accounts')
+              field: account_id
+      - name: customer_id
+        tests:
+          - relationships:
+              to: ref('customers')
+              field: customer_id
+      - name: event_date
+        tests:
+          - not_null
+      - name: event_type
+        tests:
+          - accepted_values:
+              values:
+                [
+                  "Open",
+                  "Close",
+                  "Freeze",
+                  "Unfreeze",
+                  "Overdraft",
+                  "Chargeback",
+                ]
+      - name: event_reason
+      - name: performed_by
+      - name: created_at
+
+  - name: regulatory_reports
+    description: "Raw regulatory report data for compliance purposes"
+    columns:
+      - name: report_id
+        tests:
+          - unique
+          - not_null
+      - name: report_type
+        tests:
+          - accepted_values:
+              values: ["AML", "KYC", "CTR", "SAR", "Audit"]
+      - name: report_date
+        tests:
+          - not_null
+      - name: customer_id
+        tests:
+          - relationships:
+              to: ref('customers')
+              field: customer_id
+      - name: account_id
+        tests:
+          - relationships:
+              to: ref('accounts')
+              field: account_id
+      - name: filed_by
+      - name: status
+        tests:
+          - accepted_values:
+              values: ["Filed", "Pending", "Reviewed"]
+      - name: remarks
+      - name: created_at
+
+  - name: customer_segments_history
+    description: "Historical segmentation data of customers"
+    columns:
+      - name: segment_history_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('customers')
+              field: customer_id
+      - name: segment_name
+        tests:
+          - accepted_values:
+              values: ["Mass Market", "Affluent", "Premium", "Business"]
+      - name: effective_date
+        tests:
+          - not_null
+      - name: end_date
+      - name: created_by
+      - name: notes
+      - name: created_at

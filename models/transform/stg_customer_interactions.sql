@@ -56,4 +56,4 @@ cleaned AS (
     WHERE interaction_id IS NOT NULL
 )
 
-SELECT * FROM cleaned;
+SELECT * FROM cleaned
