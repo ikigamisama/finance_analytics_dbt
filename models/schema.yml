@@ -6,81 +6,315 @@ models:
   # ===================================================================
 
   - name: stg_customers
-    description: "Cleaned customer master data"
+    description: >
+      Cleaned and standardized customer master data. This staging model
+      normalizes personal information, derives segmentation attributes,
+      computes tenure and churn indicators, and prepares customer data
+      for downstream analytics and dimensional modeling.
+
     tests:
       - dbt_utils.recency:
           datepart: day
           field: updated_at
           interval: 1
+
     columns:
       - name: customer_id
         description: "Unique customer identifier"
         tests:
-          - unique
           - not_null
+          - unique
+
+      - name: first_name
+        description: "Customer first name (uppercased and trimmed)"
+
+      - name: last_name
+        description: "Customer last name (uppercased and trimmed)"
+
       - name: email
-        description: "Customer email address"
+        description: "Customer email address (lowercased and cleaned)"
         tests:
-          - unique
           - not_null
+          - unique
+
+      - name: phone_clean
+        description: "Customer phone number with non-numeric characters removed"
+
+      - name: date_of_birth
+        description: "Customer date of birth"
+
+      - name: age
+        description: "Customer age derived from date of birth"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 18
+              max_value: 120
+
+      - name: ssn
+        description: "Customer social security number or national identifier"
+
+      - name: address
+        description: "Customer street address"
+
+      - name: city
+        description: "Customer city (uppercased)"
+
+      - name: state
+        description: "Customer state or region (uppercased)"
+
+      - name: zip_code
+        description: "Customer postal or ZIP code"
+
+      - name: country
+        description: "Customer country (uppercased)"
+
+      - name: signup_date
+        description: "Date when the customer account was created"
+        tests:
+          - not_null
+
       - name: credit_score
-        description: "Customer credit score"
+        description: "Normalized customer credit score (bounded between 300 and 850)"
         tests:
           - not_null
           - dbt_utils.accepted_range:
               min_value: 300
               max_value: 850
-      - name: age
-        description: "Customer age"
+
+      - name: credit_score_band
+        description: "Categorized credit score band derived from credit_score"
         tests:
-          - dbt_utils.accepted_range:
-              min_value: 18
-              max_value: 120
+          - accepted_values:
+              values: ["Excellent", "Very Good", "Good", "Fair", "Poor"]
+
       - name: annual_income
-        description: "Annual income"
+        description: "Customer reported annual income"
         tests:
           - dbt_utils.accepted_range:
               min_value: 0
               max_value: 10000000
+
+      - name: income_bracket
+        description: "Income bracket derived from annual_income"
+        tests:
+          - accepted_values:
+              values: ["Low", "Medium", "High", "Very High"]
+
+      - name: employment_status
+        description: "Customer employment status"
+
+      - name: employer
+        description: "Customer employer name"
+
+      - name: job_title
+        description: "Customer job title"
+
+      - name: education_level
+        description: "Highest education level attained by the customer"
+
+      - name: marital_status
+        description: "Customer marital status"
+
+      - name: number_of_dependents
+        description: "Number of dependents reported by the customer"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 20
+
+      - name: home_ownership
+        description: "Customer home ownership status (e.g., Own, Rent)"
+
+      - name: customer_segment
+        description: "Business-defined customer segment"
+
+      - name: life_stage
+        description: "Customer life stage classification"
+
+      - name: risk_segment
+        description: "Risk-based customer segment"
+
+      - name: loyalty_tier
+        description: "Customer loyalty tier"
+
+      - name: is_active
+        description: "Boolean flag indicating if the customer account is active"
+        tests:
+          - not_null
+
+      - name: preferred_channel
+        description: "Customer preferred communication or service channel"
+
+      - name: marketing_opt_in
+        description: "Boolean flag indicating marketing communication consent"
+        tests:
+          - not_null
+
+      - name: customer_lifetime_value
+        description: "Estimated customer lifetime value"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
       - name: churn_risk_score
-        description: "Churn probability score"
+        description: "Probability score representing customer churn risk"
         tests:
           - dbt_utils.accepted_range:
               min_value: 0
               max_value: 1
               inclusive: true
 
+      - name: churn_risk_category
+        description: "Categorized churn risk derived from churn_risk_score"
+        tests:
+          - accepted_values:
+              values: ["High Risk", "Medium Risk", "Low Risk"]
+
+      - name: last_login_date
+        description: "Most recent login date for the customer"
+
+      - name: acquisition_channel
+        description: "Channel through which the customer was acquired"
+
+      - name: tenure_months
+        description: "Customer tenure in months since signup_date"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: updated_at
+        description: "Timestamp when the customer record was last updated in the staging layer"
+        tests:
+          - not_null
+
   - name: stg_transactions
-    description: "Cleaned transaction data"
+    description: >
+      Cleaned and enriched transaction-level data. This incremental staging model
+      standardizes transaction attributes, derives temporal, behavioral, and fraud
+      indicators, and prepares transaction records for downstream analytics,
+      fraud detection, and financial reporting.
+
     tests:
       - dbt_utils.recency:
           datepart: hour
           field: transaction_date
           interval: 24
+
     columns:
       - name: transaction_id
         description: "Unique transaction identifier"
         tests:
-          - unique
           - not_null
+          - unique
+
       - name: account_id
-        description: "Account identifier"
+        description: "Account identifier associated with the transaction"
         tests:
           - not_null
           - relationships:
               to: ref('stg_accounts')
               field: account_id
+
       - name: customer_id
-        description: "Customer identifier"
+        description: "Customer identifier associated with the transaction"
         tests:
           - not_null
           - relationships:
               to: ref('stg_customers')
               field: customer_id
-      - name: amount
-        description: "Transaction amount"
+
+      - name: merchant_id
+        description: "Merchant identifier associated with the transaction"
+
+      - name: transaction_date
+        description: "Timestamp when the transaction occurred"
         tests:
           - not_null
+
+      - name: transaction_year
+        description: "Year extracted from transaction_date"
+        tests:
+          - not_null
+
+      - name: transaction_month
+        description: "Month extracted from transaction_date"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 12
+
+      - name: transaction_day
+        description: "Day of month extracted from transaction_date"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 31
+
+      - name: transaction_hour
+        description: "Hour of day extracted from transaction_date"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 23
+
+      - name: day_of_week
+        description: "Day of week (0=Sunday, 6=Saturday)"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 6
+
+      - name: is_weekend
+        description: "Boolean flag indicating weekend transactions"
+        tests:
+          - not_null
+
+      - name: is_late_night
+        description: "Boolean flag for late-night transactions (22:00–06:00)"
+        tests:
+          - not_null
+
+      - name: transaction_type
+        description: "Type of transaction (e.g., Purchase, Withdrawal, Transfer)"
+
+      - name: amount
+        description: "Signed transaction amount"
+        tests:
+          - not_null
+
+      - name: amount_abs
+        description: "Absolute value of transaction amount"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: transaction_direction
+        description: "Direction of transaction derived from amount sign"
+        tests:
+          - accepted_values:
+              values: ["Debit", "Credit"]
+
+      - name: currency
+        description: "Transaction currency code (e.g., USD, EUR)"
+
+      - name: channel
+        description: "Transaction channel (e.g., POS, Online, ATM)"
+
+      - name: merchant_category
+        description: "Merchant category description"
+
+      - name: mcc_code
+        description: "Merchant Category Code (MCC)"
+
+      - name: description
+        description: "Cleaned transaction description"
+
+      - name: is_fraud
+        description: "Boolean flag indicating confirmed fraud"
+        tests:
+          - not_null
+
       - name: fraud_score
         description: "Fraud probability score"
         tests:
@@ -88,36 +322,203 @@ models:
               min_value: 0
               max_value: 1
               inclusive: true
+
+      - name: fraud_risk_category
+        description: "Derived fraud risk category based on fraud_score"
+        tests:
+          - accepted_values:
+              values: ["High Risk", "Medium Risk", "Low Risk"]
+
+      - name: is_high_value
+        description: "Flag indicating high-value transactions"
+        tests:
+          - not_null
+
+      - name: location_city
+        description: "City where the transaction occurred"
+
+      - name: location_state
+        description: "State or region of the transaction"
+
+      - name: location_country
+        description: "Country where the transaction occurred"
+
+      - name: latitude
+        description: "Latitude of transaction location"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: -90
+              max_value: 90
+
+      - name: longitude
+        description: "Longitude of transaction location"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: -180
+              max_value: 180
+
+      - name: is_international
+        description: "Boolean flag indicating international transactions"
+        tests:
+          - not_null
+
+      - name: device_id
+        description: "Device identifier used for the transaction"
+
+      - name: ip_address
+        description: "IP address associated with the transaction"
+
+      - name: authorization_code
+        description: "Authorization code returned by payment processor"
+
+      - name: card_last_four
+        description: "Last four digits of the payment card"
+
+      - name: is_recurring
+        description: "Flag indicating recurring transactions"
+        tests:
+          - not_null
+
+      - name: hour_of_day
+        description: "Hour of day feature for behavioral analysis"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 23
+
+      - name: weekend_flag
+        description: "Duplicate weekend flag for model compatibility"
+        tests:
+          - not_null
+
+      - name: distance_from_home_km
+        description: "Distance from customer's home location in kilometers"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: merchant_risk_score
+        description: "Risk score associated with the merchant"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+
+      - name: velocity_24h
+        description: "Number of transactions in the last 24 hours"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: amount_deviation_score
+        description: "Deviation score of transaction amount from customer norm"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: processing_time_ms
+        description: "Transaction processing time in milliseconds"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: decline_reason
+        description: "Reason for transaction decline, if applicable"
+
       - name: transaction_status
-        description: "Transaction status"
+        description: "Final transaction status"
         tests:
           - accepted_values:
               values: ["Approved", "Declined", "Fraud"]
 
+      - name: updated_at
+        description: "Timestamp when the transaction record was last updated"
+        tests:
+          - not_null
+
   - name: stg_accounts
-    description: "Cleaned account data"
+    description: >
+      Cleaned and enriched account-level data. This staging model standardizes
+      account attributes, derives account age, balance segmentation, credit
+      utilization, and account health indicators for downstream analytics
+      and financial reporting.
+
     columns:
       - name: account_id
         description: "Unique account identifier"
         tests:
-          - unique
           - not_null
+          - unique
+
       - name: customer_id
-        description: "Customer identifier"
+        description: "Customer identifier associated with the account"
         tests:
           - not_null
           - relationships:
               to: ref('stg_customers')
               field: customer_id
+
       - name: product_id
-        description: "Product identifier"
+        description: "Product identifier associated with the account"
         tests:
           - not_null
+
+      - name: account_number
+        description: "Masked or internal account number"
+
       - name: account_status
-        description: "Account status"
+        description: "Current status of the account"
         tests:
+          - not_null
           - accepted_values:
               values: ["Active", "Dormant", "Closed"]
+
+      - name: open_date
+        description: "Date when the account was opened"
+        tests:
+          - not_null
+
+      - name: close_date
+        description: "Date when the account was closed, if applicable"
+
+      - name: account_age_months
+        description: "Account age in months from open_date to close_date or today"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: is_active
+        description: "Boolean flag indicating whether the account is active"
+        tests:
+          - not_null
+
+      - name: is_closed
+        description: "Boolean flag indicating whether the account is closed"
+        tests:
+          - not_null
+
+      - name: is_dormant
+        description: "Boolean flag indicating whether the account is dormant"
+        tests:
+          - not_null
+
+      - name: current_balance
+        description: "Current account balance"
+        tests:
+          - not_null
+
+      - name: available_balance
+        description: "Available balance after holds or limits"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: credit_limit
+        description: "Credit limit assigned to the account"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
       - name: credit_utilization_pct
         description: "Credit utilization percentage"
         tests:
@@ -127,37 +528,239 @@ models:
               inclusive: true
               where: "credit_limit IS NOT NULL AND credit_limit > 0"
 
-  - name: stg_credit_applications
-    description: "Credit application staging data"
-    columns:
-      - name: application_id
-        tests:
-          - unique
-          - not_null
-      - name: decision
+      - name: balance_category
+        description: "Categorized balance bucket derived from current_balance"
         tests:
           - accepted_values:
-              values: ["Approved", "Declined", "Pending"]
-      - name: debt_to_income_ratio
+              values: ["Negative", "Zero", "Low", "Medium", "High", "Very High"]
+
+      - name: currency
+        description: "Account currency code (e.g., USD, EUR)"
+
+      - name: interest_rate
+        description: "Interest rate applied to the account"
         tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+
+      - name: minimum_payment
+        description: "Minimum payment due for the current billing cycle"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: payment_due_date
+        description: "Date when the minimum payment is due"
+
+      - name: last_statement_date
+        description: "Date of the last account statement"
+
+      - name: autopay_enabled
+        description: "Boolean flag indicating whether autopay is enabled"
+        tests:
+          - not_null
+
+      - name: overdraft_protection
+        description: "Boolean flag indicating overdraft protection status"
+        tests:
+          - not_null
+
+      - name: primary_account
+        description: "Boolean flag indicating whether this is the primary account"
+        tests:
+          - not_null
+
+      - name: is_past_due
+        description: "Flag indicating whether the account has past-due payments"
+        tests:
+          - not_null
+
+      - name: is_near_limit
+        description: "Flag indicating whether the account is near its credit limit"
+        tests:
+          - not_null
+
+      - name: updated_at
+        description: "Timestamp when the account record was last updated in the staging layer"
+        tests:
+          - not_null
+
+  - name: stg_credit_applications
+    description: >
+      Staging table for credit applications. This model cleans raw ingestion data,
+      standardizes fields, derives risk and approval metrics, and prepares data
+      for downstream credit decision analytics.
+
+    columns:
+      - name: application_id
+        description: "Unique identifier for each credit application"
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: "Unique identifier of the customer submitting the application"
+        tests:
+          - not_null
+
+      - name: product_id
+        description: "Identifier of the credit product being applied for"
+        tests:
+          - not_null
+
+      - name: application_date
+        description: "Date when the credit application was submitted"
+        tests:
+          - not_null
+
+      - name: requested_amount
+        description: "Loan amount requested by the applicant"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: requested_term_months
+        description: "Requested loan term in months"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+
+      - name: credit_score_at_application
+        description: "Customer credit score at the time of application"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 300
+              max_value: 900
+
+      - name: annual_income
+        description: "Reported annual income of the applicant"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: debt_to_income_ratio
+        description: "Debt-to-income (DTI) ratio calculated at application time"
+        tests:
+          - not_null
           - dbt_utils.accepted_range:
               min_value: 0
               max_value: 2
               inclusive: true
 
-  - name: stg_fraud_alerts
-    description: "Fraud alert staging data"
-    columns:
-      - name: alert_id
-        tests:
-          - unique
-          - not_null
-      - name: alert_severity
+      - name: dti_category
+        description: "Categorized DTI risk bucket derived from debt_to_income_ratio"
         tests:
           - accepted_values:
-              values: ["Low", "Medium", "High", "Critical"]
-      - name: investigation_status
+              values: ["Excellent", "Good", "Fair", "Poor"]
+
+      - name: employment_length_years
+        description: "Length of applicant's employment in years"
         tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 60
+
+      - name: decision
+        description: "Final decision on the credit application"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["Approved", "Declined", "Pending"]
+
+      - name: decision_date
+        description: "Date when the credit decision was made"
+
+      - name: approved_amount
+        description: "Approved loan amount, if application was approved"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: approved_rate
+        description: "Approved interest rate for the loan"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+
+      - name: application_channel
+        description: "Channel through which the application was submitted (e.g., Web, Branch, Mobile)"
+
+      - name: approval_probability_score
+        description: "Model-generated probability score indicating likelihood of approval"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+
+      - name: risk_grade
+        description: "Risk grade assigned to the application based on internal scoring"
+
+      - name: processing_days
+        description: "Number of days taken to process the credit application"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: is_approved
+        description: "Boolean flag indicating whether the application was approved"
+        tests:
+          - not_null
+
+      - name: amount_difference
+        description: "Difference between approved amount and requested amount"
+
+      - name: updated_at
+        description: "Timestamp when the record was last updated in the staging layer"
+        tests:
+          - not_null
+
+  - name: stg_fraud_alerts
+    description: >
+      Fraud alert staging data. This model standardizes fraud alert records,
+      derives resolution timing and status flags, and prepares fraud case
+      information for downstream fraud analytics and risk reporting.
+
+    columns:
+      - name: alert_id
+        description: "Unique identifier for each fraud alert"
+        tests:
+          - not_null
+          - unique
+
+      - name: transaction_id
+        description: "Identifier of the transaction that triggered the fraud alert"
+
+      - name: customer_id
+        description: "Identifier of the customer associated with the alert"
+        tests:
+          - not_null
+
+      - name: account_id
+        description: "Account identifier related to the fraud alert"
+
+      - name: alert_date
+        description: "Date when the fraud alert was generated"
+        tests:
+          - not_null
+
+      - name: alert_type
+        description: "Type or category of fraud alert"
+
+      - name: alert_severity
+        description: "Severity level assigned to the fraud alert"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["Low", "Medium", "High", "Critical"]
+
+      - name: investigation_status
+        description: "Current investigation and resolution status of the fraud alert"
+        tests:
+          - not_null
           - accepted_values:
               values:
                 [
@@ -167,6 +770,53 @@ models:
                   "Resolved - Legitimate",
                   "False Positive",
                 ]
+
+      - name: resolution_date
+        description: "Date when the fraud alert investigation was resolved"
+
+      - name: amount_recovered
+        description: "Amount recovered from confirmed fraud cases"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: assigned_to
+        description: "Analyst or team assigned to investigate the alert"
+
+      - name: notes
+        description: "Free-text investigation notes"
+
+      - name: resolution_days
+        description: "Number of days taken to resolve the fraud alert"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: is_resolved
+        description: "Boolean flag indicating whether the fraud alert has been resolved"
+        tests:
+          - not_null
+
+      - name: is_confirmed_fraud
+        description: "Boolean flag indicating whether the alert was confirmed as fraud"
+        tests:
+          - not_null
+
+      - name: is_false_positive
+        description: "Boolean flag indicating whether the alert was a false positive"
+        tests:
+          - not_null
+
+      - name: recovered_amount
+        description: "Recovered amount normalized to zero for non-recovered cases"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: updated_at
+        description: "Timestamp when the fraud alert record was last updated in the staging layer"
+        tests:
+          - not_null
 
   - name: stg_products
     description: >
@@ -997,6 +1647,108 @@ models:
         tests:
           - not_null
 
+  - name: stg_customer_interactions
+    description: >
+      Staging table for customer service interactions. This model cleans and
+      enriches raw interaction data, derives duration, sentiment, and issue
+      severity classifications, and prepares customer service metrics for
+      downstream analytics and reporting.
+
+    columns:
+      - name: interaction_id
+        description: "Unique identifier for each customer interaction"
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: "Unique identifier of the customer involved in the interaction"
+        tests:
+          - not_null
+
+      - name: interaction_date
+        description: "Timestamp when the customer interaction occurred"
+        tests:
+          - not_null
+
+      - name: interaction_year
+        description: "Year extracted from interaction_date"
+        tests:
+          - not_null
+
+      - name: interaction_month
+        description: "Month extracted from interaction_date"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 12
+
+      - name: interaction_type
+        description: "Type of customer interaction (e.g., Call, Email, Chat, Branch)"
+
+      - name: reason
+        description: "Primary reason for the customer interaction"
+
+      - name: duration_minutes
+        description: "Duration of the interaction in minutes"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: duration_category
+        description: "Categorized interaction duration based on duration_minutes"
+        tests:
+          - accepted_values:
+              values: ["Quick", "Standard", "Extended", "Complex"]
+
+      - name: sentiment_score
+        description: "Numeric sentiment score derived from interaction analysis"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: -1
+              max_value: 1
+
+      - name: sentiment_category
+        description: "Categorized sentiment based on sentiment_score"
+        tests:
+          - accepted_values:
+              values: ["Positive", "Neutral", "Negative"]
+
+      - name: satisfaction_rating
+        description: "Customer satisfaction rating following the interaction"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 5
+
+      - name: resolved
+        description: "Boolean flag indicating whether the interaction was resolved"
+        tests:
+          - not_null
+
+      - name: escalated
+        description: "Boolean flag indicating whether the interaction was escalated"
+        tests:
+          - not_null
+
+      - name: agent_id
+        description: "Identifier of the service agent who handled the interaction"
+
+      - name: notes
+        description: "Free-text notes recorded by the service agent"
+
+      - name: issue_severity
+        description: "Derived severity level of the customer issue"
+        tests:
+          - accepted_values:
+              values: ["High", "Medium", "Low"]
+
+      - name: updated_at
+        description: "Timestamp when the record was last updated in the staging layer"
+        tests:
+          - not_null
+
   - name: stg_customer_segments_history
     description: "Cleaned and standardized customer segment history (SCD Type 2) from raw source"
     columns:
@@ -1186,6 +1938,340 @@ models:
 
       - name: dbt_updated_at
         description: "dbt transformation timestamp"
+        tests:
+          - not_null
+
+  - name: stg_economic_indicators
+    description: >
+      Staging table for macroeconomic indicators. This model standardizes
+      time-based economic metrics and derives high-level economic health,
+      labor market, and market volatility classifications for use in
+      credit risk, forecasting, and portfolio analytics.
+
+    columns:
+      - name: date
+        description: "Observation date for the economic indicators"
+        tests:
+          - not_null
+          - unique
+
+      - name: year
+        description: "Calendar year extracted from date"
+        tests:
+          - not_null
+
+      - name: quarter
+        description: "Calendar quarter extracted from date"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 4
+
+      - name: month
+        description: "Calendar month extracted from date"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 12
+
+      - name: gdp_growth_rate
+        description: "Annualized GDP growth rate (%)"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: -50
+              max_value: 50
+
+      - name: unemployment_rate
+        description: "Unemployment rate (%)"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
+
+      - name: inflation_rate
+        description: "Inflation rate (%)"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: -10
+              max_value: 100
+
+      - name: federal_funds_rate
+        description: "Federal funds interest rate (%)"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 30
+
+      - name: sp500_index
+        description: "S&P 500 index level"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: vix_index
+        description: "CBOE Volatility Index (VIX) level"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: consumer_confidence_index
+        description: "Consumer confidence index value"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 200
+
+      - name: housing_price_index
+        description: "Housing price index"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: 10yr_treasury_yield
+        description: "10-year U.S. Treasury yield (%)"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 20
+
+      - name: mortgage_rate_30yr
+        description: "30-year fixed mortgage rate (%)"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 20
+
+      - name: economic_health
+        description: "Derived economic growth classification based on GDP growth"
+        tests:
+          - accepted_values:
+              values:
+                ["Strong Growth", "Moderate Growth", "Slow Growth", "Recession"]
+
+      - name: unemployment_level
+        description: "Derived unemployment severity classification"
+        tests:
+          - accepted_values:
+              values: ["Low", "Normal", "High"]
+
+      - name: market_volatility
+        description: "Derived market volatility classification based on VIX"
+        tests:
+          - accepted_values:
+              values: ["Low Volatility", "Normal Volatility", "High Volatility"]
+
+      - name: updated_at
+        description: "Timestamp when the economic indicator record was last updated"
+        tests:
+          - not_null
+
+  - name: stg_loan_payments
+    description: >
+      Staging table for loan payment transactions. This model cleans and enriches
+      scheduled and actual payment data, derives payment status, completeness,
+      delinquency buckets, and prepares loan servicing metrics for downstream
+      analytics and credit risk reporting.
+
+    columns:
+      - name: payment_id
+        description: "Unique identifier for each loan payment record"
+        tests:
+          - not_null
+          - unique
+
+      - name: account_id
+        description: "Loan account identifier associated with the payment"
+        tests:
+          - not_null
+
+      - name: customer_id
+        description: "Customer identifier associated with the loan payment"
+        tests:
+          - not_null
+
+      - name: scheduled_date
+        description: "Scheduled payment due date"
+        tests:
+          - not_null
+
+      - name: actual_date
+        description: "Actual date when the payment was made"
+
+      - name: scheduled_amount
+        description: "Amount scheduled to be paid"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: actual_amount
+        description: "Actual amount paid toward the scheduled payment"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: is_late
+        description: "Boolean flag indicating whether the payment was late"
+        tests:
+          - not_null
+
+      - name: days_late
+        description: "Number of days the payment was late"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 10000
+
+      - name: late_fee
+        description: "Late fee charged due to delayed payment"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: payment_method
+        description: "Method used to make the payment (e.g., ACH, Card, Cash)"
+
+      - name: outstanding_balance
+        description: "Remaining loan balance after the payment"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: payment_status
+        description: "Derived payment status based on timing and completion"
+        tests:
+          - accepted_values:
+              values: ["Scheduled", "Paid", "Late", "Missed"]
+
+      - name: payment_completeness
+        description: "Indicates whether the scheduled payment was fully paid"
+        tests:
+          - accepted_values:
+              values: ["Full", "Partial", "None"]
+
+      - name: amount_difference
+        description: "Difference between actual_amount and scheduled_amount"
+
+      - name: delinquency_bucket
+        description: "Delinquency bucket based on days late"
+        tests:
+          - accepted_values:
+              values:
+                ["Current", "1-30 Days", "31-60 Days", "61-90 Days", "90+ Days"]
+
+      - name: updated_at
+        description: "Timestamp when the loan payment record was last updated in the staging layer"
+        tests:
+          - not_null
+  - name: stg_marketing_campaigns
+    description: >
+      Staging table for marketing campaigns. This model standardizes campaign
+      attributes, derives performance metrics such as CTR, conversion rate,
+      ROI categorization, and campaign status for downstream marketing
+      analytics and attribution reporting.
+
+    columns:
+      - name: campaign_id
+        description: "Unique identifier for each marketing campaign"
+        tests:
+          - not_null
+          - unique
+
+      - name: campaign_name
+        description: "Name of the marketing campaign"
+
+      - name: campaign_type
+        description: "Type of campaign (e.g., Email, Social, Search, Display)"
+
+      - name: start_date
+        description: "Campaign start date"
+        tests:
+          - not_null
+
+      - name: end_date
+        description: "Campaign end date"
+        tests:
+          - not_null
+
+      - name: target_segment
+        description: "Target customer segment for the campaign"
+
+      - name: budget
+        description: "Allocated campaign budget"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: impressions
+        description: "Number of impressions generated by the campaign"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: clicks
+        description: "Number of clicks generated by the campaign"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: conversions
+        description: "Number of conversions attributed to the campaign"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: cost_per_acquisition
+        description: "Cost incurred per conversion"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: roi
+        description: "Return on investment for the campaign"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: -100
+              max_value: 100
+
+      - name: product_promoted
+        description: "Product or service promoted by the campaign"
+
+      - name: campaign_duration_days
+        description: "Total duration of the campaign in days"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+      - name: click_through_rate
+        description: "Click-through rate (CTR) expressed as a percentage"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
+
+      - name: conversion_rate
+        description: "Conversion rate expressed as a percentage"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
+
+      - name: roi_category
+        description: "Categorized ROI performance bucket"
+        tests:
+          - accepted_values:
+              values: ["Excellent", "Good", "Break Even", "Loss"]
+
+      - name: campaign_status
+        description: "Current lifecycle status of the marketing campaign"
+        tests:
+          - accepted_values:
+              values: ["Scheduled", "Active", "Completed"]
+
+      - name: updated_at
+        description: "Timestamp when the campaign record was last updated in the staging layer"
         tests:
           - not_null
 
