@@ -1,29 +1,65 @@
 {{
     config(
         materialized='table',
-        tags=['gold', 'dimension', 'serving', 'scd2']
+        schema="gold",
+        tags=['gold', 'dimension', 'serving', 'customer']
     )
 }}
 
 WITH customer_current AS (
-    SELECT
-        -- Surrogate Key
-        {{ dbt_utils.generate_surrogate_key(['customer_id', 'updated_at']) }} AS customer_key,
-        
-        -- Natural Key
+    SELECT 
         customer_id,
-        
-        -- Personal Information
+        first_name,
+        last_name,
+        email,
+        phone_clean,
+        date_of_birth,
+        age,
+        address,
+        city,
+        state,
+        zip_code,
+        country,
+        signup_date,
+        credit_score,
+        credit_score_band,
+        annual_income,
+        income_bracket,
+        employment_status,
+        employer,
+        job_title,
+        education_level,
+        marital_status,
+        number_of_dependents,
+        home_ownership,
+        customer_segment,
+        life_stage,
+        risk_segment,
+        loyalty_tier,
+        is_active,
+        preferred_channel,
+        marketing_opt_in,
+        customer_lifetime_value,
+        churn_risk_score,
+        churn_risk_category,
+        last_login_date,
+        acquisition_channel,
+        tenure_months
+    FROM {{ ref('stg_customers') }}
+),
+
+customer_with_surrogate AS (
+    SELECT
+        {{ dbt_utils.generate_surrogate_key(['customer_id']) }} AS customer_key,
+        customer_id AS customer_natural_key,
         first_name,
         last_name,
         first_name || ' ' || last_name AS full_name,
         email,
-        phone_clean AS phone,
+        phone_clean,
         date_of_birth,
         age,
-        
-        -- Age Groups
-        CASE
+        CASE 
             WHEN age < 25 THEN '18-24'
             WHEN age < 35 THEN '25-34'
             WHEN age < 45 THEN '35-44'
@@ -31,58 +67,41 @@ WITH customer_current AS (
             WHEN age < 65 THEN '55-64'
             ELSE '65+'
         END AS age_group,
-        
-        -- Location
+        address,
         city,
         state,
         zip_code,
         country,
-        
-        -- Demographics
-        employment_status,
-        education_level,
-        marital_status,
-        number_of_dependents,
-        home_ownership,
-        
-        -- Financial Profile
+        signup_date,
         credit_score,
         credit_score_band,
         annual_income,
         income_bracket,
-        
-        -- Segmentation
+        employment_status,
+        employer,
+        job_title,
+        education_level,
+        marital_status,
+        number_of_dependents,
+        home_ownership,
         customer_segment,
         life_stage,
         risk_segment,
         loyalty_tier,
-        
-        -- Behavioral
+        is_active,
         preferred_channel,
         marketing_opt_in,
-        acquisition_channel,
-        tenure_months,
-        
-        -- Metrics
         customer_lifetime_value,
         churn_risk_score,
         churn_risk_category,
-        
-        -- Status
-        is_active,
-        signup_date,
         last_login_date,
-        
-        -- SCD Type 2 Columns
-        updated_at AS effective_date,
-        '9999-12-31'::DATE AS end_date,
+        acquisition_channel,
+        tenure_months,
+        CURRENT_TIMESTAMP AS effective_date,
+        '9999-12-31'::TIMESTAMP AS expiration_date,
         TRUE AS is_current,
-        
-        -- Metadata
-        CURRENT_TIMESTAMP AS dw_created_at,
-        CURRENT_TIMESTAMP AS dw_updated_at
-        
-    FROM {{ ref('stg_customers') }}
+        CURRENT_TIMESTAMP AS dbt_updated_at
+    FROM customer_current
 )
 
-SELECT * FROM customer_current
+SELECT * FROM customer_with_surrogate

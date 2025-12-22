@@ -1,57 +1,37 @@
 {{
     config(
         materialized='table',
-        tags=['gold', 'serving', 'dimension']
+        schema="gold",
+        tags=['gold', 'dimension', 'serving', 'merchant']
     )
 }}
 
-WITH source AS (
-    SELECT * FROM {{ ref('stg_merchants') }}
-),
-
-merchant_dimension AS (
+WITH merchant_enhanced AS (
     SELECT
-        -- Surrogate Key
         {{ dbt_utils.generate_surrogate_key(['merchant_id']) }} AS merchant_key,
-        
-        -- Natural Key
-        merchant_id,
-        
-        -- Merchant Details
+        merchant_id AS merchant_natural_key,
         merchant_name,
         category,
-        category_group,
         mcc_code,
-        mcc_category,
-        
-        -- Location
+        category_group,
         city,
         state,
         country,
-        region,
         latitude,
         longitude,
-        
-        -- Risk Profile
+        region,
         risk_rating,
         risk_score,
         avg_transaction_amount,
         transaction_value_segment,
-        
-        -- Merchant Type
         is_online,
         merchant_type,
-        
-        -- Business Metrics
         established_date,
         years_in_business,
         business_maturity,
-        
-        -- Metadata
-        CURRENT_TIMESTAMP AS dw_created_at,
-        CURRENT_TIMESTAMP AS dw_updated_at
-        
-    FROM source
+        mcc_category,
+        CURRENT_TIMESTAMP AS dbt_updated_at
+    FROM {{ ref('stg_merchants') }}
 )
 
-SELECT * FROM merchant_dimension;
+SELECT * FROM merchant_enhanced

@@ -32,24 +32,22 @@ models:
     +tags: ["silver"]
 
   # Gold Layer - Serving - Kimball dimensional model
-  # serving:
-  #   dimensions:
-  #     +materialized: table
-  #     +schema: gold
-  #     +tags: ["gold", "serving", "dimension"]
-  #   facts:
-  #     +materialized: incremental
-  #     +schema: gold
-  #     +tags: ["gold", "serving", "fact"]
-  #     +on_schema_change: "append_new_columns"
-  #   aggregates:
-  #     +materialized: table
-  #     +schema: gold
-  #     +tags: ["gold", "serving", "aggregate"]
-  #   analytics:
-  #     +materialized: view
-  #     +schema: gold
-  #     +tags: ["gold", "serving", "analytics"]
+  serving:
+    +schema: gold
+    +tags: ["gold", "serving"]
+
+    dimensions:
+      +materialized: table
+      +tags: ["dimension"]
+
+    facts:
+      +materialized: incremental
+      +tags: ["fact"]
+      +on_schema_change: append_new_columns
+
+    analytics:
+      +materialized: view
+      +tags: ["analytics"]
 
 vars:
   # Business rules

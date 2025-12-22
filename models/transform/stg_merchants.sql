@@ -2,7 +2,7 @@
     config(
         materialized='table',
         schema='silver',
-        tags=['silver', 'ingestion', 'merchants']
+        tags=['silver', 'transform', 'merchants']
     )
 }}
 

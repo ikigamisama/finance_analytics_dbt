@@ -1,56 +1,24 @@
 {{
     config(
         materialized='incremental',
-        unique_key='transaction_id',
-        tags=['gold', 'fact', 'transactions']
+        schema="gold",
+        unique_key='transaction_key',
+        tags=['gold', 'fact', 'serving', 'transactions']
     )
 }}
 
-WITH transactions AS (
-    SELECT * FROM {{ ref('stg_transactions') }}
-    {% if is_incremental() %}
-    WHERE transaction_date > (SELECT MAX(transaction_date) FROM {{ this }})
-    {% endif %}
-),
-
-customers AS (
-    SELECT customer_key, customer_id FROM {{ ref('dim_customer') }}
-    WHERE is_current = TRUE
-),
-
-products AS (
-    SELECT product_key, product_id FROM {{ ref('dim_product') }}
-),
-
-merchants AS (
-    SELECT merchant_key, merchant_id FROM {{ ref('dim_merchant') }}
-),
-
-accounts AS (
-    SELECT account_id, product_id, customer_id FROM {{ ref('stg_accounts') }}
-),
-
-fact_table AS (
+WITH transaction_facts AS (
     SELECT
-        -- Fact Primary Key
         t.transaction_id,
         
-        -- Foreign Keys (Dimension References)
-        c.customer_key,
-        p.product_key,
-        m.merchant_key,
-        TO_CHAR(t.transaction_date, 'YYYYMMDD')::INTEGER AS date_key,
+        -- Surrogate Keys (Dimension References)
+        {{ dbt_utils.generate_surrogate_key(['t.transaction_id']) }} AS transaction_key,
+        {{ dbt_utils.generate_surrogate_key(['t.customer_id']) }} AS customer_key,
+        {{ dbt_utils.generate_surrogate_key(['t.account_id']) }} AS account_key,
+        {{ dbt_utils.generate_surrogate_key(['t.merchant_id']) }} AS merchant_key,
+        {{ dbt_utils.generate_surrogate_key(['t.transaction_date::date']) }} AS date_key,
         
-        -- Degenerate Dimensions (Transaction-specific attributes)
-        t.account_id,
-        t.transaction_type,
-        t.channel,
-        t.transaction_status,
-        t.merchant_category,
-        t.mcc_code,
-        t.authorization_code,
-        
-        -- Date/Time Attributes
+        -- Degenerate Dimensions (Transaction Attributes)
         t.transaction_date,
         t.transaction_year,
         t.transaction_month,
@@ -59,57 +27,50 @@ fact_table AS (
         t.day_of_week,
         t.is_weekend,
         t.is_late_night,
-        
-        -- Measures (Additive)
-        t.amount AS transaction_amount,
-        t.amount_abs AS transaction_amount_abs,
-        
-        -- Binary Flags (Semi-Additive)
-        t.is_fraud::INTEGER AS fraud_flag,
-        t.is_high_value::INTEGER AS high_value_flag,
-        t.is_international::INTEGER AS international_flag,
-        t.is_recurring::INTEGER AS recurring_flag,
-        CASE WHEN t.transaction_status = 'Approved' THEN 1 ELSE 0 END AS approved_flag,
-        CASE WHEN t.transaction_status = 'Declined' THEN 1 ELSE 0 END AS declined_flag,
-        
-        -- Fraud & Risk Metrics (Non-Additive)
-        t.fraud_score,
-        t.fraud_risk_category,
-        t.merchant_risk_score,
-        t.velocity_24h,
-        t.amount_deviation_score,
-        
-        -- Location Attributes
+        t.transaction_type,
+        t.transaction_direction,
+        t.currency,
+        t.channel,
+        t.merchant_category,
+        t.mcc_code,
+        t.description,
         t.location_city,
         t.location_state,
         t.location_country,
-        t.distance_from_home_km,
+        t.is_international,
+        t.device_id,
+        t.authorization_code,
+        t.card_last_four,
+        t.is_recurring,
+        t.transaction_status,
         
-        -- Performance Metrics
+        -- Measures (Facts)
+        t.amount AS transaction_amount,
+        t.amount_abs AS transaction_amount_abs,
+        t.fraud_score,
+        t.distance_from_home_km,
+        t.merchant_risk_score,
+        t.velocity_24h,
+        t.amount_deviation_score,
         t.processing_time_ms,
         
-        -- Derived Measures
-        CASE 
-            WHEN t.amount < 0 THEN t.amount_abs 
-            ELSE 0 
-        END AS debit_amount,
+        -- Flags (Boolean Facts)
+        t.is_fraud AS is_fraud_flag,
+        t.is_high_value AS is_high_value_flag,
+        CASE WHEN t.fraud_risk_category = 'High Risk' THEN 1 ELSE 0 END AS is_high_risk_flag,
+        CASE WHEN t.decline_reason IS NOT NULL THEN 1 ELSE 0 END AS is_declined_flag,
         
-        CASE 
-            WHEN t.amount > 0 THEN t.amount_abs 
-            ELSE 0 
-        END AS credit_amount,
-        
-        -- Transaction Count (for aggregation)
+        -- Calculated Measures
+        CASE WHEN t.is_fraud THEN t.amount_abs ELSE 0 END AS fraud_amount,
+        CASE WHEN t.decline_reason IS NOT NULL THEN 1 ELSE 0 END AS declined_count,
         1 AS transaction_count,
         
-        -- Metadata
-        CURRENT_TIMESTAMP AS dw_created_at
+        CURRENT_TIMESTAMP AS dbt_updated_at
         
-    FROM transactions t
-    INNER JOIN accounts a ON t.account_id = a.account_id
-    LEFT JOIN customers c ON a.customer_id = c.customer_id
-    LEFT JOIN products p ON a.product_id = p.product_id
-    LEFT JOIN merchants m ON t.merchant_id = m.merchant_id
+    FROM {{ ref('stg_transactions') }} t
+    {% if is_incremental() %}
+    WHERE t.transaction_date > (SELECT MAX(transaction_date) FROM {{ this }})
+    {% endif %}
 )
 
-SELECT * FROM fact_table
+SELECT * FROM transaction_facts;

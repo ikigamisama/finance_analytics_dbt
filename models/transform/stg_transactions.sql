@@ -3,7 +3,7 @@
         materialized='incremental',
         unique_key='transaction_id',
         schema='silver',
-        tags=['silver', 'ingestion', 'transactions'],
+        tags=['silver', 'transform', 'transactions'],
     )
 }}
 

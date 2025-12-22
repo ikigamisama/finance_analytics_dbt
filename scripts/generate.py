@@ -1367,7 +1367,7 @@ class FinancialDataGenerator:
 if __name__ == "__main__":
     generator = FinancialDataGenerator(
         start_date='2010-01-01',
-        num_customers=random.randint(10000, 20000)
+        num_customers=random.randint(10000, 25000)
     )
     datasets = generator.generate_all(num_transactions=100000)
     generator.save_to_csv(datasets, 'data/ingestion')
