@@ -8,11 +8,10 @@ financial_analytics:
       password: "{{ env_var('DB_PASSWORD', 'analytics_password') }}"
       port: 5432
       dbname: finance_analytics
-      schema: public
+      schema: ""
       threads: 8
       keepalives_idle: 0
       connect_timeout: 10
-      search_path: public,bronze,silver,gold
 
     prod:
       type: postgres
@@ -25,4 +24,3 @@ financial_analytics:
       threads: 8
       keepalives_idle: 0
       connect_timeout: 10
-      search_path: public,bronze,silver,gold

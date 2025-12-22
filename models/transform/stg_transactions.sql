@@ -2,7 +2,8 @@
     config(
         materialized='incremental',
         unique_key='transaction_id',
-        tags=['silver', 'ingestion', 'transactions']
+        schema='silver',
+        tags=['silver', 'ingestion', 'transactions'],
     )
 }}
 

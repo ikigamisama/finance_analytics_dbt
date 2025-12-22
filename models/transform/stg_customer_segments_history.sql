@@ -1,6 +1,7 @@
 {{
     config(
         materialized='table',
+        schema='silver',
         tags=['silver', 'ingestion', 'customer_segments_history']
     )
 }}

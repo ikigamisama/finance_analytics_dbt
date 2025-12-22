@@ -1,7 +1,9 @@
 {{
     config(
         materialized='table',
-        tags=['silver', 'ingestion', 'accounts']
+        schema='silver',
+        tags=['silver', 'ingestion', 'accounts'],
+        
     )
 }}
 

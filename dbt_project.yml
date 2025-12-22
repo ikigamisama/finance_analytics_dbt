@@ -17,38 +17,39 @@ clean-targets:
   - "dbt_packages"
 
 models:
-  finance_analytics:
-    # Bronze Layer - Ingestion - Raw data ingestion
-    ingestion:
-      +materialized: table
-      +schema: bronze
-      +tags: ["bronze", "ingestion", "raw"]
+  financial_analytics:
+    +generate_schema_name: false
+  # Bronze Layer - Ingestion - Raw data ingestion
+  ingestion:
+    +materialized: table
+    +schema: bronze
+    +tags: ["bronze"]
 
-    # Silver Layer - Transform - Cleaned and standardized
-    transform:
-      +materialized: table
-      +schema: silver
-      +tags: ["silver", "transform", "cleaned"]
+  # Silver Layer - Transform - Cleaned and standardized
+  transform:
+    +materialized: table
+    +schema: silver
+    +tags: ["silver"]
 
-    # Gold Layer - Serving - Kimball dimensional model
-    # serving:
-    #   dimensions:
-    #     +materialized: table
-    #     +schema: gold
-    #     +tags: ["gold", "serving", "dimension"]
-    #   facts:
-    #     +materialized: incremental
-    #     +schema: gold
-    #     +tags: ["gold", "serving", "fact"]
-    #     +on_schema_change: "append_new_columns"
-    #   aggregates:
-    #     +materialized: table
-    #     +schema: gold
-    #     +tags: ["gold", "serving", "aggregate"]
-    #   analytics:
-    #     +materialized: view
-    #     +schema: gold
-    #     +tags: ["gold", "serving", "analytics"]
+  # Gold Layer - Serving - Kimball dimensional model
+  # serving:
+  #   dimensions:
+  #     +materialized: table
+  #     +schema: gold
+  #     +tags: ["gold", "serving", "dimension"]
+  #   facts:
+  #     +materialized: incremental
+  #     +schema: gold
+  #     +tags: ["gold", "serving", "fact"]
+  #     +on_schema_change: "append_new_columns"
+  #   aggregates:
+  #     +materialized: table
+  #     +schema: gold
+  #     +tags: ["gold", "serving", "aggregate"]
+  #   analytics:
+  #     +materialized: view
+  #     +schema: gold
+  #     +tags: ["gold", "serving", "analytics"]
 
 vars:
   # Business rules
