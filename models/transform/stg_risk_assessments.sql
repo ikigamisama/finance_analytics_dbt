@@ -56,8 +56,8 @@ cleaned AS (
         TRIM(assessment_notes) AS assessment_notes,
         
         -- Metadata
-        created_at,
-        CURRENT_TIMESTAMP AS dbt_updated_at
+        
+        CURRENT_TIMESTAMP AS created_at
         
     FROM source
     WHERE assessment_id IS NOT NULL

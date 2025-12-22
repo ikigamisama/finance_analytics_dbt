@@ -569,6 +569,15 @@ class FinancialDataGenerator:
 
         economic_data.index.name = "date"
         economic_data = economic_data.ffill().bfill().reset_index()
+        rename_map = {
+            'GDP': 'gdp_growth_rate',
+            'CPIAUCSL': 'inflation_rate'
+        }
+
+        economic_data.rename(
+            columns={v: k for k, v in fred_series.items() if v in rename_map}, inplace=True)
+        economic_data.rename(columns=rename_map, inplace=True)
+
         columns_to_drop = ['gdp', 'cpi']
         economic_data.drop(columns=[
                            col for col in columns_to_drop if col in economic_data.columns], inplace=True)

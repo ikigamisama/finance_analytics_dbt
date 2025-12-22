@@ -63,4 +63,4 @@ cleaned AS (
     WHERE alert_id IS NOT NULL
 )
 
-SELECT * FROM cleaned;
+SELECT * FROM cleaned

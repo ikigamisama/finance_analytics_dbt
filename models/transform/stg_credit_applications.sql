@@ -1,7 +1,7 @@
 {{
     config(
         materialized='table',
-        tags=['silver', 'ingestion', 'credit']
+        tags=['silver', 'ingestion', 'credit_applications']
     )
 }}
 
@@ -14,7 +14,7 @@ cleaned AS (
         application_id,
         customer_id,
         product_id,
-        application_date,
+        application_date::timestamp AS application_date,
         
         -- Application Details
         requested_amount,
@@ -34,7 +34,7 @@ cleaned AS (
         
         -- Decision
         decision,
-        decision_date,
+        decision_date::timestamp AS decision_date,
         approved_amount,
         approved_rate,
         application_channel,
@@ -44,7 +44,7 @@ cleaned AS (
         risk_grade,
         
         -- Processing Time
-        EXTRACT(DAY FROM (decision_date - application_date)) AS processing_days,
+        EXTRACT(DAY FROM (decision_date::timestamp - application_date::timestamp)) AS processing_days,
         
         -- Approval Flag
         CASE WHEN decision = 'Approved' THEN TRUE ELSE FALSE END AS is_approved,

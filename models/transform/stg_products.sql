@@ -105,4 +105,4 @@ cleaned AS (
       AND product_name IS NOT NULL
 )
 
-SELECT * FROM cleaned;
+SELECT * FROM cleaned

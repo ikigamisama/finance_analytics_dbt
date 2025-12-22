@@ -62,8 +62,7 @@ cleaned AS (
         TRIM(internal_notes) AS internal_notes,
         
         -- Metadata
-        created_at,
-        CURRENT_TIMESTAMP AS dbt_updated_at
+        CURRENT_TIMESTAMP AS created_at
         
     FROM source
     WHERE report_id IS NOT NULL

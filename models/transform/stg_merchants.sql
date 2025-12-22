@@ -109,4 +109,4 @@ cleaned AS (
       AND merchant_name IS NOT NULL
 )
 
-SELECT * FROM cleaned;
+SELECT * FROM cleaned

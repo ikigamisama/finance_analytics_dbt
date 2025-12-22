@@ -1,7 +1,7 @@
 {{
     config(
         materialized='table',
-        tags=['silver', 'ingestion', 'economic']
+        tags=['silver', 'ingestion', 'economic_indicators']
     )
 }}
 
@@ -54,4 +54,4 @@ cleaned AS (
     WHERE date IS NOT NULL
 )
 
-SELECT * FROM cleaned;
+SELECT * FROM cleaned

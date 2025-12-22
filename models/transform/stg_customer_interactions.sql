@@ -1,7 +1,7 @@
 {{
     config(
         materialized='table',
-        tags=['silver', 'ingestion', 'service']
+        tags=['silver', 'ingestion', 'customer_interactions']
     )
 }}
 
@@ -13,7 +13,7 @@ cleaned AS (
     SELECT
         interaction_id,
         customer_id,
-        interaction_date,
+        interaction_date::timestamp AS interaction_date,
         EXTRACT(YEAR FROM interaction_date) AS interaction_year,
         EXTRACT(MONTH FROM interaction_date) AS interaction_month,
         

@@ -5,3 +5,4 @@ bin/
 data/ingestion/
 dbt_packages/
 target/
+logs/

@@ -52,8 +52,7 @@ cleaned AS (
         TRIM(manager_name) AS manager_name,
         
         -- Metadata
-        created_at,
-        CURRENT_TIMESTAMP AS dbt_updated_at
+        CURRENT_TIMESTAMP AS  created_at
         
     FROM source
     WHERE branch_id IS NOT NULL
