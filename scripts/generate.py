@@ -82,8 +82,8 @@ class FinancialDataGenerator:
                 "group": 'personal', "options": {"blank_percentage": 0}},
             {"label": "category", "key_label": "custom_list", "group": 'basic', "options": {
                 "custom_format": "Grocery,Restaurant,Gas Station,Retail,Entertainment,Healthcare,Utilities,Travel,Online Shopping,Services"}},
-            {"label": "mcc_code", "key_label": "character_sequence",
-                "group": "advanced", "options": {'format': "MCC_#####"}},
+            {"label": "mcc_code", "key_label": "number",
+                "group": "basic", "options": {'min': 1000, 'max': 9999}},
             {"label": "city", "key_label": "lambda", "group": "advanced",
                 "options": {'func': lambda row: row['_location']['city']}},
             {"label": "state", "key_label": "lambda", "group": "advanced",
@@ -112,6 +112,8 @@ class FinancialDataGenerator:
         ]
         self.merchants = pd.DataFrame(
             SyntheticDataCrafter(schema_merchants).many(random.randint(num_merchants, (num_merchants * 2))).data)
+        self.merchants['established_date'] = pd.to_datetime(
+            self.merchants['established_date'])
         self.merchants = self.merchants.drop(columns=['_location'])
         return self.merchants
 
@@ -377,6 +379,8 @@ class FinancialDataGenerator:
             schema_transactions).many(random.randint(num_transactions, (num_transactions * 2))).data)
         self.transactions = self.transactions.drop(
             columns=['_account', '_merchant'])
+        self.transactions['transaction_date'] = pd.to_datetime(
+            self.transactions['transaction_date'])
         self.transactions = self.transactions.sort_values(
             'transaction_date').reset_index(drop=True)
         return self.transactions
@@ -533,54 +537,39 @@ class FinancialDataGenerator:
 
         self.customer_interactions = pd.DataFrame(SyntheticDataCrafter(
             schema_customer_interactions).many(random.randint(num_interactions, (num_interactions * 2))).data)
+        self.customer_interactions['interaction_date'] = pd.to_datetime(
+            self.customer_interactions['interaction_date'])
         self.customer_interactions = self.customer_interactions.drop(columns=[
                                                                      '_customer'])
         return self.customer_interactions
 
     def generate_economic_indicators(self):
-        economic_data = None
-
         date_range = pd.date_range(
             start=self.start_date, end=self.end_date, freq='D')
-        daily_index = pd.DataFrame(index=date_range)
-        daily_index.index.name = "date"
+        economic_data = pd.DataFrame(index=date_range)
+        economic_data.index.name = "date"
 
         fred_series = {
             "SP500": "sp500_index",
             "VIXCLS": "vix_index",
             "DGS10": "10yr_treasury_yield",
-            "GDP": "gdp",
+            "GDP": "gdp_growth_rate",               # rename directly here
             "UNRATE": "unemployment_rate",
-            "CPIAUCSL": "cpi",
+            "CPIAUCSL": "inflation_rate",          # rename directly here
             "FEDFUNDS": "federal_funds_rate",
             "MORTGAGE30US": "mortgage_rate_30yr",
             "UMCSENT": "consumer_confidence_index",
             "CSUSHPINSA": "housing_price_index"
         }
 
-        economic_data = daily_index.copy()
-        for i, (fred_code, col_name) in enumerate(fred_series.items(), start=1):
+        for fred_code, col_name in fred_series.items():
             fred_df = web.DataReader(
                 fred_code, "fred", self.start_date, self.end_date)
             fred_df.index = pd.to_datetime(fred_df.index)
             fred_df = fred_df.rename(columns={fred_df.columns[0]: col_name})
-
             economic_data = economic_data.join(fred_df, how="left")
 
-        economic_data.index.name = "date"
         economic_data = economic_data.ffill().bfill().reset_index()
-        rename_map = {
-            'GDP': 'gdp_growth_rate',
-            'CPIAUCSL': 'inflation_rate'
-        }
-
-        economic_data.rename(
-            columns={v: k for k, v in fred_series.items() if v in rename_map}, inplace=True)
-        economic_data.rename(columns=rename_map, inplace=True)
-
-        columns_to_drop = ['gdp', 'cpi']
-        economic_data.drop(columns=[
-                           col for col in columns_to_drop if col in economic_data.columns], inplace=True)
 
         desired_columns = [
             'date',
@@ -641,6 +630,8 @@ class FinancialDataGenerator:
 
         self.marketing_campaigns = pd.DataFrame(SyntheticDataCrafter(
             schema_marketing_campaigns).many(random.randint(num_campaigns, (num_campaigns * 2))).data)
+        self.marketing_campaigns['start_date'] = pd.to_datetime(
+            self.marketing_campaigns['start_date'])
         return self.marketing_campaigns
 
     def generate_loan_payments(self, num_payments=10000):

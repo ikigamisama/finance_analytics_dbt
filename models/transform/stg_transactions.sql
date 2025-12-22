@@ -22,7 +22,7 @@ cleaned AS (
         merchant_id,
         
         -- Transaction Details
-        transaction_date::timestamp as transaction_date,
+        transaction_date,
         EXTRACT(YEAR FROM transaction_date) AS transaction_year,
         EXTRACT(MONTH FROM transaction_date) AS transaction_month,
         EXTRACT(DAY FROM transaction_date) AS transaction_day,

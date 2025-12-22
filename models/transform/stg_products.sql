@@ -28,7 +28,7 @@ cleaned AS (
         
         -- Financial Terms
         interest_rate,
-        ROUND(interest_rate * 100, 2) AS interest_rate_pct,
+        ROUND((interest_rate * 100)::NUMERIC, 2) AS interest_rate_pct,
         min_balance,
         monthly_fee,
         overdraft_limit,
