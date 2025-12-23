@@ -21,10 +21,8 @@
 - [Analytics Suite](#analytics-suite)
 - [Data Models](#data-models)
 - [Visualizations](#visualizations)
-- [Deployment](#deployment)
 - [Configuration](#configuration)
 - [Usage Examples](#usage-examples)
-- [Contributing](#contributing)
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
 
@@ -32,23 +30,22 @@
 
 ## 🎯 Overview
 
-This platform provides a complete financial analytics solution from data generation to interactive visualizations, implementing:
+This platform provides a complete financial analytics solution implementing:
 
-- **Medallion Architecture** (Bronze/Silver/Gold layers)
+- **Medallion Architecture** (Bronze → Silver → Gold layers)
 - **Kimball Dimensional Modeling** (Star schema with SCD Type 2)
-- **8 Analytics Types** (Descriptive, Diagnostic, Exploratory, Inferential, Predictive, Prescriptive, Causal, Real-Time)
-- **Interactive Visualizations** (28+ Plotly charts with HTML reports)
-- **90+ ML Features** for predictive modeling
-- **Production-Ready** deployment scripts and automation
+- **8 Analytics Types** (60 SQL models covering all analytics categories)
+- **92 Interactive Visualizations** (8 Python scripts with Plotly charts)
+- **13 Fact Tables** + **9 Dimension Tables**
+- **Production-Ready** with complete dbt transformations
 
 ### Key Capabilities
 
-✅ **Data Generation**: Synthetic financial data generator (1000 customers, 50K+ transactions)  
-✅ **ETL Pipeline**: dbt-powered transformation (30+ models)  
-✅ **Dimensional Model**: 4 dimensions, 3 facts, 8 analytics views  
-✅ **Visual Analytics**: 8 Python scripts generating interactive HTML reports  
-✅ **ML Ready**: Feature store with 90+ pre-engineered features  
-✅ **Real-Time**: Live monitoring dashboard with auto-refresh
+✅ **ETL Pipeline**: dbt-powered transformation (22 staging models)  
+✅ **Dimensional Model**: 9 dimensions, 13 facts, 60 analytics models  
+✅ **Visual Analytics**: 8 Python scripts generating 92 interactive charts  
+✅ **Star Schema**: Full Kimball methodology implementation  
+✅ **Real-Time Analytics**: Live monitoring with multiple dashboards
 
 ---
 
@@ -58,67 +55,107 @@ This platform provides a complete financial analytics solution from data generat
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    DATA GENERATION                          │
-│              Python Synthetic Data Generator                │
-│         (11 tables: customers, transactions, etc.)          │
+│              BRONZE LAYER (Raw Data Ingestion)              │
+│  PostgreSQL Schema: ingestion_raw_data                      │
+│  Materialization: External Tables / Raw CSVs                │
+│                                                             │
+│  • products              • merchants         • customers    │
+│  • accounts              • transactions                     │
+│  • credit_applications   • fraud_alerts                     │
+│  • customer_interactions • loan_payments                    │
+│  • economic_indicators   • marketing_campaigns              │
+│  • branch_locations      • atm_locations                    │
+│  • account_events        • customer_segments_history        │
+│  • regulatory_reports    • risk_assessments                 │
 └────────────────────┬────────────────────────────────────────┘
-                     │ CSV Files
+                     │ dbt run --select tag:silver
                      ↓
 ┌─────────────────────────────────────────────────────────────┐
-│              Ingestion LAYER (Raw Data)                     │
-│  PostgreSQL Schema: bronze | Materialization: Table         │
-│  • products       • merchants      • customers              │
-│  • accounts       • transactions   • credit_applications    │
-│  • fraud_alerts   • interactions   • economic_indicators    │
-│  • campaigns      • loan_payments                           │
-└────────────────────┬────────────────────────────────────────┘
-                     │ dbt run --select silver.*
-                     ↓
-┌─────────────────────────────────────────────────────────────┐
-│          Transform LAYER (Cleaned & Validated)              │
+│         SILVER LAYER (Cleaned & Validated Data)             │
 │  PostgreSQL Schema: silver | Materialization: Table/Inc     │
-│  • stg_customers         • stg_transactions                 │
-│  • stg_accounts          • stg_credit_applications          │
-│  • stg_fraud_alerts      • stg_customer_interactions        │
-│  • stg_loan_payments     • stg_economic_indicators          │
-│  • stg_marketing_campaigns                                  │
+│                                                             │
+│  STAGING MODELS (22 models):                                │
+│  • stg_customers              • stg_transactions            │
+│  • stg_accounts               • stg_products                │
+│  • stg_merchants              • stg_credit_applications     │
+│  • stg_fraud_alerts           • stg_customer_interactions   │
+│  • stg_loan_payments          • stg_economic_indicators     │
+│  • stg_marketing_campaigns    • stg_branch_locations        │
+│  • stg_atm_locations          • stg_account_events          │
+│  • stg_customer_segments_history                            │
+│  • stg_regulatory_reports     • stg_risk_assessments        │
 └────────────────────┬────────────────────────────────────────┘
-                     │ dbt run --select gold.*
+                     │ dbt run --select tag:gold
                      ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                Serving LAYER (Business Ready)               │
+│           GOLD LAYER (Business-Ready Star Schema)           │
 │       PostgreSQL Schema: gold | Kimball Star Schema         │
 │                                                             │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │  DIMENSIONS (SCD Type 2)                             │   │
-│  │  • dim_customer   • dim_product                      │   │
-│  │  • dim_merchant   • dim_date (2020-2030)             │   │
+│  │  DIMENSIONS (9 tables - SCD Type 1 & Type 2)         │   │
+│  │  • dim_customer (SCD Type 2)                         │   │
+│  │  • dim_product                                       │   │
+│  │  • dim_merchant                                      │   │
+│  │  • dim_date (2020-2030 conformed dimension)          │   │
+│  │  • dim_account (SCD Type 2)                          │   │
+│  │  • dim_location (branches + ATMs)                    │   │
+│  │  • dim_economic_indicators                           │   │
+│  │  • dim_campaign                                      │   │
+│  │  • dim_agent                                         │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                             │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │  FACTS (Transactional & Snapshots)                   │   │
-│  │  • fact_transactions (incremental)                   │   │
-│  │  • fact_account_daily_snapshot                       │   │
-│  │  • fact_customer_monthly (aggregates)                │   │
+│  │  FACTS (13 tables - Multiple grain types)            │   │
+│  │  • fact_transactions (atomic, incremental)           │   │
+│  │  • fact_account_daily_snapshot (periodic)            │   │
+│  │  • fact_customer_monthly_summary (aggregated)        │   │
+│  │  • fact_loan_payments                                │   │
+│  │  • fact_fraud_alerts (accumulating snapshot)         │   │
+│  │  • fact_credit_applications                          │   │
+│  │  • fact_customer_interactions                        │   │
+│  │  • fact_account_events                               │   │
+│  │  • fact_customer_segment_history (SCD Type 2)        │   │
+│  │  • fact_regulatory_reports                           │   │
+│  │  • fact_risk_assessments                             │   │
+│  │  • fact_marketing_campaigns                          │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                             │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │  ANALYTICS VIEWS (8 Types)                           │   │
-│  │  • descriptive_analytics    • diagnostic_analytics   │   │
-│  │  • exploratory_analytics    • inferential_analytics  │   │
-│  │  • predictive_analytics     • prescriptive_analytics │   │
-│  │  • causal_analytics         • realtime_analytics     │   │
+│  │  ANALYTICS (60 models across 8 categories)           │   │
+│  │                                                       │   │
+│  │  📊 01_descriptive_analytics/ (16 models)            │   │
+│  │     Customer overview, transactions, accounts, etc.  │   │
+│  │                                                       │   │
+│  │  🔍 02_diagnostic_analytics/ (9 models)              │   │
+│  │     Churn, fraud patterns, loan defaults, etc.       │   │
+│  │                                                       │   │
+│  │  🔬 03_exploratory_analytics/ (8 models)             │   │
+│  │     Behavior clusters, time patterns, cross-sell     │   │
+│  │                                                       │   │
+│  │  📈 04_inferential_analytics/ (7 models)             │   │
+│  │     Statistical tests, A/B tests, confidence         │   │
+│  │                                                       │   │
+│  │  🔮 05_predictive_analytics/ (5 models)              │   │
+│  │     Churn prediction, forecasts, risk scores         │   │
+│  │                                                       │   │
+│  │  💡 06_prescriptive_analytics/ (5 models)            │   │
+│  │     Retention actions, recommendations, optimization │   │
+│  │                                                       │   │
+│  │  🎯 07_causal_analytics/ (4 models)                  │   │
+│  │     Impact analysis, elasticity, attribution         │   │
+│  │                                                       │   │
+│  │  ⚡ 08_realtime_analytics/ (6 models)                │   │
+│  │     Live monitoring, fraud alerts, system health     │   │
 │  └──────────────────────────────────────────────────────┘   │
 └────────────────────┬────────────────────────────────────────┘
                      │
                      ↓
 ┌─────────────────────────────────────────────────────────────┐
-│              CONSUMPTION LAYER                              │
-│  • Python Analytics Scripts (8 scripts, 28 charts)          │
-│  • Interactive HTML Reports (Plotly visualizations)         │
-│  • BI Dashboards (Tableau, Power BI, Looker)                │
-│  • ML Models (Predictive features ready)                    │
-│  • APIs & Applications                                      │
+│              CONSUMPTION LAYER (Visualizations)             │
+│  • Python Analytics Scripts (8 files, 92 charts total)      │
+│  • Interactive HTML Reports (Plotly)                        │
+│  • BI Tool Integration (Tableau, Power BI, Looker)          │
+│  • ML Model Features Ready                                  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -128,55 +165,40 @@ This platform provides a complete financial analytics solution from data generat
 
 ### Data Platform
 
-- **Synthetic Data Generation**
-
-  - 1,000 customers with realistic demographics
-  - 50,000+ transactions across multiple channels
-  - 11 interconnected tables with referential integrity
-  - Configurable parameters for volume and characteristics
-
 - **ETL Pipeline (dbt)**
 
-  - 30+ transformation models
+  - 22 staging transformation models
+  - 9 dimension tables (SCD Type 1 & Type 2)
+  - 13 fact tables (atomic, snapshot, aggregated)
+  - 60 analytics models across 8 categories
   - Incremental loading for large tables
-  - Data quality tests (50+ automated checks)
-  - Documentation generation
-  - Lineage tracking
+  - Full Kimball star schema implementation
 
 - **Dimensional Model**
-  - 4 dimension tables (customer, product, merchant, date)
-  - 3 fact tables (transactions, account snapshots, monthly aggregates)
-  - SCD Type 2 for customer dimension
+  - 9 dimension tables with surrogate keys
+  - 13 fact tables with multiple grain types
+  - SCD Type 2 for customer & account dimensions
+  - Conformed date dimension (2020-2030)
   - Pre-aggregated metrics for performance
 
-### Analytics Suite
+### Analytics Suite (60 Models)
 
-- **8 Analytics Types Implemented**
+- **8 Analytics Categories**
 
-  - Descriptive: What happened? (KPIs, trends, summaries)
-  - Diagnostic: Why did it happen? (Root cause analysis)
-  - Exploratory: What patterns exist? (EDA, clustering)
-  - Inferential: Can we generalize? (Statistical tests)
-  - Predictive: What will happen? (ML features, risk scores)
-  - Prescriptive: What should we do? (Recommendations)
-  - Causal: What causes what? (Attribution, impact)
-  - Real-Time: What's happening now? (Live monitoring)
+  1. **Descriptive** (16 models): KPIs, trends, distributions
+  2. **Diagnostic** (9 models): Root cause, drill-downs
+  3. **Exploratory** (8 models): Patterns, clusters, correlations
+  4. **Inferential** (7 models): Statistical tests, confidence intervals
+  5. **Predictive** (5 models): Forecasts, risk scores
+  6. **Prescriptive** (5 models): Recommendations, optimization
+  7. **Causal** (4 models): Impact analysis, attribution
+  8. **Real-Time** (6 models): Live monitoring, alerts
 
-- **Visual Analytics**
-  - 8 Python scripts with Plotly charts
-  - 28+ interactive visualizations
+- **92 Interactive Visualizations**
+  - 8 Python scripts using Plotly
   - Professional HTML reports
-  - Export capabilities (PNG, SVG)
   - Mobile-responsive design
-
-### Machine Learning Ready
-
-- **ML Features** for:
-  - Churn prediction
-  - Fraud detection
-  - Credit risk scoring
-  - Customer lifetime value prediction
-  - Next best offer recommendations
+  - Export capabilities (PNG, SVG)
 
 ---
 
@@ -192,12 +214,13 @@ This platform provides a complete financial analytics solution from data generat
 - 10GB disk space
 
 # Software
-- Git
-- pip
-- psql (PostgreSQL client)
+- dbt-core
+- psycopg2
+- plotly
+- pandas
 ```
 
-### Installation (5 Minutes)
+### Installation
 
 ```bash
 # 1. Clone repository
@@ -206,43 +229,30 @@ cd financial-analytics-platform
 
 # 2. Create virtual environment
 python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Install dbt packages
+# 4. Configure database connection
+# Edit profiles.yml with your PostgreSQL credentials
+
+# 5. Install dbt packages
 dbt deps
 
-# 5. Setup environment variables
-cat > .env <<EOF
-DB_HOST=localhost
-DB_USER=postgres
-DB_PASSWORD=your_password
-DB_NAME=financial_analytics
-EOF
+# 6. Run transformations
+dbt run                          # Run all models
+dbt run --select tag:silver      # Run silver layer only
+dbt run --select tag:gold        # Run gold layer only
 
-# 6. Create database and schemas
-psql -U postgres -c "CREATE DATABASE financial_analytics;"
-psql -U postgres -d financial_analytics -f setup_postgres.sql
+# 7. Generate visualizations
+cd visualizations
+python 01_descriptive_analytics.py
+python 02_diagnostic_analytics.py
+# ... run other scripts
 
-# 7. Generate synthetic data
-python generate_financial_data.py
-
-# 8. Run dbt transformations
-dbt run
-
-```
-
-### Verify Installation
-
-```bash
-# Check data in Gold layer
-psql -d financial_analytics -c "SELECT COUNT(*) FROM gold.fact_transactions;"
-
-# View generated reports
-ls -lh reports/
-
+# 8. View reports
+open outputs/descriptive/*.html
 ```
 
 ---
@@ -253,390 +263,264 @@ ls -lh reports/
 financial-analytics-platform/
 │
 ├── README.md                          # This file
-├── requirements.txt                   # Python dependencies
-├── .env                               # Environment variables
-├── .gitignore                         # Git ignore rules
-├── Makefile                           # Common commands
-│
 ├── dbt_project.yml                    # dbt configuration
 ├── profiles.yml                       # Database connections
-├── packages.yml                       # dbt packages
 │
-├── generate_financial_data.py         # ✅ Enhanced data generator
-├── setup_postgres.sql                 # ✅ Database setup script
-│
-├── models/                            # dbt models
-│   ├── ingestion/
-│   │   └── sources.yml                # ✅ Source definitions
+├── models/                            # dbt models (104+ files)
 │   │
-│   ├── transform/                        # ✅ Staging models (9 files)
+│   ├── ingestion/
+│   │   └── sources.yml
+│   │
+│   │
+│   ├── transform/                        # Silver schema layer (22 models)
 │   │   ├── stg_customers.sql
 │   │   ├── stg_transactions.sql
 │   │   ├── stg_accounts.sql
+│   │   ├── stg_products.sql
+│   │   ├── stg_merchants.sql
 │   │   ├── stg_credit_applications.sql
 │   │   ├── stg_fraud_alerts.sql
 │   │   ├── stg_customer_interactions.sql
 │   │   ├── stg_loan_payments.sql
 │   │   ├── stg_economic_indicators.sql
-│   │   └── stg_marketing_campaigns.sql
+│   │   ├── stg_marketing_campaigns.sql
+│   │   ├── stg_branch_locations.sql
+│   │   ├── stg_atm_locations.sql
+│   │   ├── stg_account_events.sql
+│   │   ├── stg_customer_segments_history.sql
+│   │   ├── stg_regulatory_reports.sql
+│   │   └── stg_risk_assessments.sql
+│   │   └── schema.yml
 │   │
-│   ├── serving/                          # Gold layer models
-│   │   ├── dimensions/                # ✅ Dimension tables (4 files)
-│   │   │   ├── dim_customer.sql
-│   │   │   ├── dim_date.sql
-│   │   │   ├── dim_product.sql
-│   │   │   └── dim_merchant.sql
-│   │   │
-│   │   ├── facts/                     # ✅ Fact tables (3 files)
-│   │   │   ├── fact_transactions.sql
-│   │   │   ├── fact_account_daily_snapshot.sql
-│   │   │   └── fact_customer_monthly.sql
-│   │   │
-│   │   └── analytics/                 # ✅ Analytics views (8 files)
-│   │       ├── descriptive_analytics.sql
-│   │       ├── diagnostic_analytics.sql
-│   │       ├── exploratory_analytics.sql
-│   │       ├── inferential_analytics.sql
-│   │       ├── predictive_analytics.sql
-│   │       ├── prescriptive_analytics.sql
-│   │       ├── causal_analytics.sql
-│   │       └── realtime_analytics.sql
-│   │
-│   └── schema.yml                     # ✅ Model tests & documentation
+│   └── gold/                          # Gold layer (82 models)
+│       │
+│       ├── dimensions/                # 9 dimension tables
+│       │   ├── dim_customer.sql
+│       │   ├── dim_product.sql
+│       │   ├── dim_merchant.sql
+│       │   ├── dim_date.sql
+│       │   ├── dim_account.sql
+│       │   ├── dim_location.sql
+│       │   ├── dim_economic_indicators.sql
+│       │   ├── dim_campaign.sql
+│       │   └── dim_agent.sql
+│       │
+│       ├── facts/                     # 13 fact tables
+│       │   ├── fact_transactions.sql
+│       │   ├── fact_account_daily_snapshot.sql
+│       │   ├── fact_customer_monthly_summary.sql
+│       │   ├── fact_loan_payments.sql
+│       │   ├── fact_fraud_alerts.sql
+│       │   ├── fact_credit_applications.sql
+│       │   ├── fact_customer_interactions.sql
+│       │   ├── fact_account_events.sql
+│       │   ├── fact_customer_segment_history.sql
+│       │   ├── fact_regulatory_reports.sql
+│       │   ├── fact_risk_assessments.sql
+│       │   └── fact_marketing_campaigns.sql
+│       │
+│       └── analytics/                 # 60 analytics models
+│           ├── 01_descriptive_analytics/       (16 models)
+│           ├── 02_diagnostic_analytics/        (9 models)
+│           ├── 03_exploratory_analytics/       (8 models)
+│           ├── 04_inferential_analytics/       (7 models)
+│           ├── 05_predictive_analytics/        (5 models)
+│           ├── 06_prescriptive_analytics/      (5 models)
+│           ├── 07_causal_analytics/            (4 models)
+│           └── 08_realtime_analytics/          (6 models)
 │
-├── macros/
-│   └── custom_macros.sql              # ✅ Custom dbt macros
+├── visualizations/                    # Python visualization scripts
+│   ├── 01_descriptive_analytics.py       (14 charts)
+│   ├── 02_diagnostic_analytics.py        (13 charts)
+│   ├── 03_exploratory_analytics.py       (13 charts)
+│   ├── 04_inferential_analytics.py       (10 charts)
+│   ├── 05_predictive_analytics.py        (10 charts)
+│   ├── 06_prescriptive_analytics.py      (10 charts)
+│   ├── 07_causal_analytics.py            (8 charts)
+│   └── 08_realtime_analytics.py          (11 charts)
 │
-├── tests/                             # Custom dbt tests
-│   └── custom/
-│
-├── analyses/                          # Ad-hoc SQL analyses
-│
-├── seeds/                             # Static reference data
-│
-├── scripts/                           # ✅ Utility scripts
-│   ├── generate.py                    # Initial setup
-│
-├── analytics_viz/                     # ✅ Visual analytics (8 scripts)
-│   ├── 01_descriptive_analytics.py
-│   ├── 02_diagnostic_analytics.py
-│   ├── 03_exploratory_analytics.py
-│   ├── 04_inferential_analytics.py
-│   ├── 05_predictive_analytics.py
-│   ├── 06_prescriptive_analytics.py
-│   ├── 07_causal_analytics.py
-│   ├── 08_realtime_analytics.py                # Master runner
-│
-│
-├── reports/                           # 📊 Generated HTML reports
-│   └── *.html                         # Interactive visualizations
-│
-│
+└── outputs/                           # Generated HTML reports
+    ├── descriptive/                   # 14 HTML files
+    ├── diagnostic/                    # 13 HTML files
+    ├── exploratory/                   # 13 HTML files
+    ├── inferential/                   # 10 HTML files
+    ├── predictive/                    # 10 HTML files
+    ├── prescriptive/                  # 10 HTML files
+    ├── causal/                        # 8 HTML files
+    └── realtime/                      # 11 HTML files
 ```
 
-**Total Files**: 50+ production files  
-**Lines of Code**: 5,000+ (Python + SQL)  
-**Data Models**: 30+ dbt models  
-**Visualizations**: 28 interactive charts
+**Total**:
+
+- **104 dbt Models** (22 silver + 9 dimensions + 13 facts + 60 analytics)
+- **8 Python Visualization Scripts**
+- **92 Interactive Charts** (89 + 3 engagement charts)
 
 ---
 
 ## 📊 Analytics Suite
 
-### 1. Descriptive Analytics
+### Complete Model List
 
-**Question**: What happened?
+#### 01 Descriptive Analytics (16 models)
 
-**Outputs**:
+1. analytics_customer_overview
+2. analytics_customer_by_segment
+3. analytics_customer_by_age_group
+4. analytics_customer_by_geography
+5. analytics_transaction_summary
+6. analytics_transaction_by_channel
+7. analytics_transaction_by_category
+8. analytics_daily_transaction_trend
+9. analytics_monthly_transaction_trend
+10. analytics_account_summary
+11. analytics_account_by_product
+12. analytics_account_balance_distribution
+13. analytics_product_summary
+14. analytics_fraud_summary
+15. analytics_loan_payment_summary
+16. analytics_customer_engagement_metrics ✨ NEW
 
-- Key performance indicators (KPIs)
-- Transaction volume trends
-- Customer demographics
-- Product performance
-- Channel distribution
-- Top merchants
-- Account status
+#### 02 Diagnostic Analytics (9 models)
 
-**Visualizations** (9 charts):
+1. analytics_churn_analysis
+2. analytics_fraud_pattern_analysis
+3. analytics_loan_default_drivers
+4. analytics_transaction_decline_analysis
+5. analytics_customer_satisfaction_drivers
+6. analytics_credit_application_rejection_analysis
+7. analytics_account_closure_analysis
+8. analytics_revenue_variance_analysis
+9. analytics_marketing_campaign_performance_drivers
 
-- KPI Dashboard
-- Monthly trends
-- Channel pie/bar charts
-- Customer segmentation
-- Product treemap
-- Merchant rankings
+#### 03 Exploratory Analytics (8 models)
 
-**Run**: `python analytics_viz/01_descriptive_analytics.py`
+1. analytics_customer_behavior_clusters
+2. analytics_transaction_time_patterns
+3. analytics_product_cross_sell_patterns
+4. analytics_merchant_spending_patterns
+5. analytics_credit_score_behavior_correlation
+6. analytics_geographic_clustering
+7. analytics_seasonal_patterns
+8. analytics_account_lifecycle_patterns
 
----
+#### 04 Inferential Analytics (7 models)
 
-### 2. Diagnostic Analytics
+1. analytics_customer_segment_statistical_comparison
+2. analytics_ab_test_channel_performance
+3. analytics_credit_approval_hypothesis_test
+4. analytics_fraud_detection_accuracy
+5. analytics_customer_lifetime_value_distribution
+6. analytics_transaction_amount_normality_test
+7. analytics_churn_rate_confidence_intervals
 
-**Question**: Why did it happen?
+#### 05 Predictive Analytics (5 models)
 
-**Outputs**:
+1. analytics_customer_churn_prediction
+2. analytics_transaction_volume_forecast
+3. analytics_loan_default_prediction
+4. analytics_customer_lifetime_value_prediction
+5. analytics_fraud_risk_forecast
 
-- Fraud pattern analysis
-- Churn root causes
-- Transaction decline reasons
-- Delinquency factors
-- Customer service issues
+#### 06 Prescriptive Analytics (5 models)
 
-**Visualizations** (5 charts):
+1. analytics_customer_retention_actions
+2. analytics_product_recommendation
+3. analytics_credit_limit_optimization
+4. analytics_marketing_budget_allocation
+5. analytics_branch_staffing_optimization
 
-- Fraud by channel
-- Fraud heatmap by hour
-- Churn by tenure
-- Decline reasons
-- Service issues
+#### 07 Causal Analytics (4 models)
 
-**Run**: `python analytics_viz/02_diagnostic_analytics.py`
+1. analytics_credit_score_impact_analysis
+2. analytics_campaign_causal_impact
+3. analytics_interest_rate_behavior_impact
+4. analytics_branch_proximity_impact
 
----
+#### 08 Real-time Analytics (6 models)
 
-### 3. Exploratory Analytics (EDA)
-
-**Question**: What patterns exist?
-
-**Outputs**:
-
-- Spending behavior patterns
-- Customer clustering
-- Feature correlations
-- Geographic patterns
-- Outlier detection
-
-**Visualizations** (3 charts):
-
-- Spending treemap
-- Customer cluster scatter
-- Correlation heatmap
-
-**Run**: `python analytics_viz/03_exploratory_analytics.py`
-
----
-
-### 4. Inferential Analytics
-
-**Question**: Can we generalize?
-
-**Outputs**:
-
-- Statistical significance tests
-- Confidence intervals
-- Cohort analysis
-- A/B test results
-
-**Visualizations** (2 charts):
-
-- 95% confidence intervals
-- Cohort retention heatmap
-
-**Run**: `python analytics_viz/04_inferential_analytics.py`
-
----
-
-### 5. Predictive Analytics
-
-**Question**: What will happen?
-
-**Outputs**:
-
-- Churn risk scores
-- Fraud predictions
-- Credit risk assessment
-- Customer lifetime value
-- 90+ ML features
-
-**Visualizations** (4 charts):
-
-- Churn risk distribution
-- Risk scatter plot
-- Risk categories
-- Feature importance
-
-**Run**: `python analytics_viz/05_predictive_analytics.py`
-
----
-
-### 6. Prescriptive Analytics
-
-**Question**: What should we do?
-
-**Outputs**:
-
-- Next best offer recommendations
-- Retention action plans
-- Intervention budgets
-- Expected ROI
-
-**Visualizations** (3 charts):
-
-- Next best offer matrix
-- Retention waterfall
-- Budget allocation
-
-**Run**: `python analytics_viz/06_prescriptive_analytics.py`
-
----
-
-### 7. Causal Analytics
-
-**Question**: What causes what?
-
-**Outputs**:
-
-- Marketing attribution
-- Economic impact analysis
-- Product impact on CLV
-
-**Visualizations** (2 charts):
-
-- Campaign attribution
-- Economic impact trends
-
-**Run**: `python analytics_viz/07_causal_analytics.py`
-
----
-
-### 8. Real-Time Analytics
-
-**Question**: What's happening now?
-
-**Outputs**:
-
-- Live transaction monitoring
-- System health indicators
-- Active fraud alerts
-- Performance metrics
-
-**Visualizations** (1 dashboard):
-
-- Real-time dashboard (auto-refresh)
-
-**Run**: `python analytics_viz/08_realtime_analytics.py`
+1. analytics_realtime_transaction_monitoring
+2. analytics_realtime_fraud_alerts
+3. analytics_realtime_customer_activity
+4. analytics_realtime_system_health
+5. analytics_realtime_trending_merchants
+6. analytics_realtime_account_alerts
 
 ---
 
 ## 🗄️ Data Models
 
-### Bronze Layer (11 Tables)
+### Gold Layer Summary
 
-Raw data loaded from CSV files
+**Dimensions (9 tables)**:
 
-```sql
-bronze.products              -- Product catalog
-bronze.merchants             -- Merchant master
-bronze.customers             -- Customer demographics
-bronze.accounts              -- Account information
-bronze.transactions          -- Transaction details (partitioned)
-bronze.credit_applications   -- Credit history
-bronze.fraud_alerts          -- Fraud detection
-bronze.customer_interactions -- Service interactions
-bronze.economic_indicators   -- Macro indicators
-bronze.marketing_campaigns   -- Campaign data
-bronze.loan_payments         -- Payment history
-```
+- dim_customer (SCD Type 2)
+- dim_product
+- dim_merchant
+- dim_date (conformed, 2020-2030)
+- dim_account (SCD Type 2)
+- dim_location
+- dim_economic_indicators
+- dim_campaign
+- dim_agent
 
-### Silver Layer (9 Models)
+**Facts (13 tables)**:
 
-Cleaned and validated data
+- fact_transactions (atomic, incremental)
+- fact_account_daily_snapshot (periodic snapshot)
+- fact_customer_monthly_summary (aggregated)
+- fact_loan_payments
+- fact_fraud_alerts (accumulating snapshot)
+- fact_credit_applications
+- fact_customer_interactions
+- fact_account_events
+- fact_customer_segment_history (SCD Type 2)
+- fact_regulatory_reports
+- fact_risk_assessments
+- fact_marketing_campaigns
 
-```sql
-silver.stg_customers              -- Enhanced customer data
-silver.stg_transactions           -- Validated transactions
-silver.stg_accounts               -- Account metrics
-silver.stg_credit_applications    -- Credit staging
-silver.stg_fraud_alerts           -- Fraud staging
-silver.stg_customer_interactions  -- Interaction staging
-silver.stg_loan_payments          -- Payment staging
-silver.stg_economic_indicators    -- Economic staging
-silver.stg_marketing_campaigns    -- Campaign staging
-```
-
-### Gold Layer - Dimensions (4 Tables)
-
-```sql
-gold.dim_customer    -- SCD Type 2, 30+ attributes
-gold.dim_date        -- 2020-2030, 25+ attributes
-gold.dim_product     -- Product hierarchy
-gold.dim_merchant    -- Geographic & risk attributes
-```
-
-### Gold Layer - Facts (3 Tables)
-
-```sql
-gold.fact_transactions            -- Transaction details (40+ measures)
-gold.fact_account_daily_snapshot  -- Daily account balances
-gold.fact_customer_monthly        -- Monthly aggregates (30+ metrics)
-```
-
-### Gold Layer - Analytics (8 Views)
-
-```sql
-gold.descriptive_analytics   -- KPIs & summaries
-gold.diagnostic_analytics    -- Root cause analysis
-gold.exploratory_analytics   -- Pattern discovery
-gold.inferential_analytics   -- Statistical tests
-gold.predictive_analytics    -- ML features (90+)
-gold.prescriptive_analytics  -- Recommendations
-gold.causal_analytics        -- Attribution
-gold.realtime_analytics      -- Live monitoring
-```
+**Analytics (60 models across 8 categories)**
 
 ---
 
 ## 📈 Visualizations
 
-### Chart Types
+### Chart Distribution
 
-| Type              | Count | Use Cases                  |
-| ----------------- | ----- | -------------------------- |
-| **Bar Charts**    | 8     | Comparisons, rankings      |
-| **Line Charts**   | 4     | Trends over time           |
-| **Pie Charts**    | 3     | Proportions, distributions |
-| **Scatter Plots** | 3     | Correlations, clusters     |
-| **Heatmaps**      | 3     | Patterns, cohorts          |
-| **Treemaps**      | 2     | Hierarchical data          |
-| **Histograms**    | 2     | Distributions              |
-| **Indicators**    | 2     | KPIs, metrics              |
-| **Waterfall**     | 1     | Sequential impact          |
+| Analytics Type   | Charts | Description                             |
+| ---------------- | ------ | --------------------------------------- |
+| **Descriptive**  | 17     | KPIs, trends, distributions             |
+| **Diagnostic**   | 13     | Root cause analysis, drill-downs        |
+| **Exploratory**  | 13     | Patterns, clusters, correlations        |
+| **Inferential**  | 10     | Statistical tests, confidence intervals |
+| **Predictive**   | 10     | Forecasts, predictions, risk scores     |
+| **Prescriptive** | 10     | Recommendations, optimizations          |
+| **Causal**       | 8      | Causal effects, attribution             |
+| **Real-time**    | 11     | Live monitoring, alerts                 |
 
-**Total**: 28 interactive charts
+**Total: 92 Interactive Charts**
 
-### Report Features
+### Chart Types Used
 
-✅ **Interactive**: Zoom, pan, hover for details  
-✅ **Responsive**: Works on desktop/tablet/mobile  
-✅ **Exportable**: Save charts as PNG/SVG  
-✅ **Professional**: Clean, modern design  
-✅ **Self-contained**: Single HTML file per report
-
-### Sample Output
-
-```bash
-$ python analytics_viz/01_descriptive_analytics.py
-
-Fetching data from Gold layer...
-Creating visualizations...
-✓ Report generated successfully!
-📄 Saved to: reports/01_descriptive_analytics_20250101_120530.html
-🌐 Open in browser to view interactive charts
-```
+✅ KPI Cards & Indicators  
+✅ Bar Charts (grouped, stacked, horizontal)  
+✅ Line & Area Charts  
+✅ Pie & Donut Charts  
+✅ Scatter & Bubble Plots  
+✅ 3D Scatter Plots  
+✅ Heatmaps & Correlation Matrices  
+✅ Box & Violin Plots  
+✅ Waterfall Charts  
+✅ Funnel Charts  
+✅ Sankey Diagrams  
+✅ Network Graphs  
+✅ Treemaps & Sunburst  
+✅ Radar Charts  
+✅ Gauge Charts  
+✅ Error Bars & Forest Plots  
+✅ Geographic Maps (Choropleth, Bubble)
 
 ---
-
-## 🚀 Deployment
-
-### Production Deployment
-
-```bash
-
-# With validation
-dbt run --target prod --full-refresh
-dbt test --target prod
-dbt docs generate --target prod
-```
 
 ## ⚙️ Configuration
 
@@ -651,191 +535,92 @@ financial_analytics:
     dev:
       type: postgres
       host: localhost
-      user: "{{ env_var('DB_USER') }}"
-      password: "{{ env_var('DB_PASSWORD') }}"
+      user: postgres
+      password: your_password
       port: 5432
-      dbname: financial_analytics
+      dbname: banking_db
       schema: public
       threads: 4
-
-    prod:
-      type: postgres
-      host: "{{ env_var('PROD_DB_HOST') }}"
-      user: "{{ env_var('PROD_DB_USER') }}"
-      password: "{{ env_var('PROD_DB_PASSWORD') }}"
-      port: 5432
-      dbname: financial_analytics_prod
-      schema: public
-      threads: 8
 ```
 
-### Environment Variables
-
-**File**: `.env`
+### Environment Setup
 
 ```bash
-# Database
-DB_HOST=localhost
-DB_USER=postgres
-DB_PASSWORD=your_password
-DB_NAME=financial_analytics
-DB_PORT=5432
-
-# Production
-PROD_DB_HOST=prod-server.example.com
-PROD_DB_USER=prod_user
-PROD_DB_PASSWORD=prod_password
-
-# Analytics
-REPORT_OUTPUT_DIR=reports
-ENABLE_EMAIL_REPORTS=false
-EMAIL_RECIPIENTS=team@company.com
+# Set connection string for visualizations
+export CONNECTION_STRING="postgresql://user:password@localhost:5432/banking_db"
 ```
 
-### Data Generation Configuration
+---
 
-**File**: `generate_financial_data.py`
+## 💡 Usage Examples
 
-```python
-generator = EnhancedFinancialDataGenerator(
-    start_date='2023-01-01',      # Start date for data
-    num_customers=1000             # Number of customers
-)
-
-data = generator.generate_all(
-    num_transactions=50000         # Number of transactions
-)
-```
-
-### Querying Data
-
-```sql
--- Get high-risk churn customers
-SELECT
-    customer_id,
-    churn_risk_score,
-    customer_lifetime_value,
-    total_transactions_90d
-FROM gold.predictive_analytics
-WHERE churn_risk_score > 0.7
-ORDER BY customer_lifetime_value DESC;
-
--- Fraud analysis by merchant
-SELECT
-    m.merchant_name,
-    m.category,
-    COUNT(*) as fraud_count,
-    SUM(f.transaction_amount_abs) as fraud_amount
-FROM gold.fact_transactions f
-JOIN gold.dim_merchant m ON f.merchant_key = m.merchant_key
-WHERE f.is_fraud = TRUE
-  AND f.transaction_date >= CURRENT_DATE - INTERVAL '30 days'
-GROUP BY m.merchant_name, m.category
-ORDER BY fraud_count DESC;
-
--- Monthly KPIs
-SELECT
-    TO_CHAR(transaction_date, 'YYYY-MM') as month,
-    COUNT(*) as transactions,
-    COUNT(DISTINCT customer_key) as active_customers,
-    SUM(transaction_amount_abs) as volume,
-    AVG(transaction_amount_abs) as avg_transaction
-FROM gold.fact_transactions
-GROUP BY TO_CHAR(transaction_date, 'YYYY-MM')
-ORDER BY month DESC;
-```
-
-### dbt Commands
+### Running dbt Models
 
 ```bash
 # Run all models
 dbt run
 
 # Run specific layer
-dbt run --select silver.*
-dbt run --select gold.dimensions.*
-dbt run --select gold.facts.*
+dbt run --select tag:silver
+dbt run --select tag:gold
 
-# Run specific model
-dbt run --select fact_transactions
+# Run specific analytics category
+dbt run --select gold.analytics.01_descriptive_analytics.*
 
 # Run with full refresh
-dbt run --full-refresh
-
-# Run modified models only
-dbt run --select state:modified+
+dbt run --full-refresh --select fact_transactions
 
 # Run tests
 dbt test
-dbt test --select silver.*
-
-# Generate documentation
-dbt docs generate
-dbt docs serve
-
-# Compile without running
-dbt compile
-
-# Debug connection
-dbt debug
 ```
 
----
-
-## 🤝 Contributing
-
-### Development Workflow
-
-1. **Create Feature Branch**
+### Generating Visualizations
 
 ```bash
-git checkout -b feature/your-feature-name
+# Navigate to visualizations folder
+cd visualizations
+
+# Set database connection
+export CONNECTION_STRING="postgresql://postgres:password@localhost:5432/banking_db"
+
+# Run individual analytics
+python 01_descriptive_analytics.py
+python 02_diagnostic_analytics.py
+python 03_exploratory_analytics.py
+python 04_inferential_analytics.py
+python 05_predictive_analytics.py
+python 06_prescriptive_analytics.py
+python 07_causal_analytics.py
+python 08_realtime_analytics.py
+
+# View generated reports
+open outputs/descriptive/*.html
 ```
 
-2. **Make Changes**
+### Querying Analytics
 
-```bash
-# Edit files
-# Add tests
-# Update documentation
+```sql
+-- Get customer churn predictions
+SELECT
+    customer_natural_key,
+    predicted_churn_risk_pct,
+    clv_at_risk,
+    days_since_login,
+    transaction_count_90d
+FROM analytics_customer_churn_prediction
+WHERE predicted_churn_risk_pct > 70
+ORDER BY clv_at_risk DESC
+LIMIT 100;
+
+-- Monthly transaction trends
+SELECT * FROM analytics_monthly_transaction_trend
+ORDER BY year DESC, month DESC;
+
+-- Real-time fraud alerts
+SELECT * FROM analytics_realtime_fraud_alerts
+ORDER BY transaction_date DESC
+LIMIT 50;
 ```
-
-3. **Test Locally**
-
-```bash
-dbt run
-dbt test
-python analytics_viz/run_all_viz.py
-```
-
-4. **Commit & Push**
-
-```bash
-git add .
-git commit -m "feat: your feature description"
-git push origin feature/your-feature-name
-```
-
-5. **Create Pull Request**
-
-- Describe changes
-- Link related issues
-- Request review
-
-### Code Style
-
-- **Python**: Follow PEP 8
-- **SQL**: Lowercase keywords, 4-space indent
-- **dbt**: Use Jinja formatting
-- **Documentation**: Update README for new features
-
-### Adding New Analytics
-
-1. Create SQL view in `models/gold/analytics/`
-2. Add Python visualization script in `analytics_viz/`
-3. Update `run_all_viz.py`
-4. Add documentation
-5. Create tests
 
 ---
 
@@ -843,77 +628,48 @@ git push origin feature/your-feature-name
 
 ### Common Issues
 
-#### Issue: Database Connection Failed
+**Issue: dbt connection failed**
 
 ```bash
-# Solution 1: Check PostgreSQL is running
-sudo systemctl status postgresql
+# Test connection
+dbt debug
 
-# Solution 2: Verify credentials
-psql -h localhost -U postgres -d financial_analytics -c "SELECT 1;"
-
-# Solution 3: Check .env file
-cat .env | grep DB_
+# Check profiles.yml
+cat ~/.dbt/profiles.yml
 ```
 
-#### Issue: dbt Models Failing
+**Issue: Visualization script fails**
 
 ```bash
-# Solution 1: Check compiled SQL
-dbt compile
-cat target/compiled/financial_analytics/models/...
+# Check database connection
+python -c "import psycopg2; print('OK')"
 
-# Solution 2: Run with debug logging
-dbt run --debug --select failing_model
-
-# Solution 3: Check for missing dependencies
-dbt deps
+# Verify data exists
+psql -d banking_db -c "SELECT COUNT(*) FROM fact_transactions;"
 ```
 
-#### Issue: Visualizations Not Generating
+**Issue: Missing analytics tables**
 
 ```bash
-# Solution 1: Check Python dependencies
-pip list | grep plotly
+# Run gold layer models
+dbt run --select tag:gold
 
-# Solution 2: Verify database connection
-python -c "import psycopg2; conn = psycopg2.connect('dbname=financial_analytics user=postgres'); print('OK')"
-
-# Solution 3: Check Gold layer data
-psql -d financial_analytics -c "SELECT COUNT(*) FROM gold.fact_transactions;"
+# Check created tables
+psql -d banking_db -c "\dt gold.*"
 ```
-
-#### Issue: Out of Memory
-
-```python
-# Solution: Limit data in queries
-query = """
-SELECT * FROM gold.fact_transactions
-LIMIT 10000  -- Add LIMIT
-"""
-```
-
-### Getting Help
-
-- **Documentation**: Check `docs/` directory
-- **Email**: ikigamidevs@gmail.com
 
 ---
 
-## 📚 Additional Resources
+## 📝 License
 
-### Documentation
-
-- [Quick Start Guide](docs/QUICKSTART.md) - 5-minute setup
-- [Complete Project Guide](docs/COMPLETE_PROJECT_GUIDE.md) - Detailed documentation
-- [Project Summary](docs/PROJECT_SUMMARY.md) - Executive overview
-- [Analytics Summary](docs/ANALYTICS_SUMMARY.md) - Analytics details
-
-### External Resources
-
-- **dbt**: https://docs.getdbt.com/
-- **Plotly**: https://plotly.com/python/
-- **Kimball Method**: https://www.kimballgroup.com/
-- **Medallion Architecture**: https://databricks.com/glossary/medallion-architecture
+MIT License - See LICENSE file for details
 
 ---
+
+## 📧 Contact
+
+**Email**: ikigamidevs@gmail.com
+
+---
+
+**Built with ❤️ using dbt, PostgreSQL, Python & Plotly**
