@@ -1,0 +1,388 @@
+version: 2
+
+models:
+  - name: analytics_realtime_transaction_monitoring
+    description: >
+      Provides live transaction volume, velocity, fraud, decline rates,
+      and channel distribution for real-time operational monitoring.
+    columns:
+      - name: snapshot_time
+        description: Timestamp when the real-time snapshot was generated
+
+      - name: current_hour
+        description: Start of the current hour for aggregation reference
+
+      - name: transactions_current_hour
+        description: Total number of transactions in the current hour
+
+      - name: volume_current_hour
+        description: Total transaction volume in the current hour
+
+      - name: transactions_last_15min
+        description: Number of transactions in the last 15 minutes
+
+      - name: volume_last_15min
+        description: Transaction volume in the last 15 minutes
+
+      - name: transactions_last_5min
+        description: Number of transactions in the last 5 minutes
+
+      - name: transactions_per_minute_15min
+        description: Average transactions per minute over the last 15 minutes
+
+      - name: transactions_per_minute_5min
+        description: Average transactions per minute over the last 5 minutes
+
+      - name: fraud_alerts_15min
+        description: Number of fraud alerts triggered in the last 15 minutes
+
+      - name: declined_15min
+        description: Number of declined transactions in the last 15 minutes
+
+      - name: fraud_rate_pct_15min
+        description: Percentage of transactions flagged as fraud in the last 15 minutes
+
+      - name: decline_rate_pct_15min
+        description: Percentage of declined transactions in the last 15 minutes
+
+      - name: avg_amount_current_hour
+        description: Average transaction amount during the current hour
+
+      - name: unique_customers_current_hour
+        description: Count of unique customers transacting in the current hour
+
+      - name: avg_transactions_per_customer
+        description: Average transactions per active customer
+
+      - name: transactions_same_hour_yesterday
+        description: Transaction count during the same hour yesterday
+
+      - name: change_vs_yesterday_pct
+        description: Percentage change versus the same hour yesterday
+
+      - name: system_status
+        description: Operational status indicator based on volume, fraud, and declines
+
+      - name: mobile_15min
+        description: Mobile transactions in the last 15 minutes
+
+      - name: online_15min
+        description: Online transactions in the last 15 minutes
+
+      - name: atm_15min
+        description: ATM transactions in the last 15 minutes
+
+      - name: branch_15min
+        description: Branch transactions in the last 15 minutes
+
+      - name: mobile_pct
+        description: Percentage of mobile transactions in the last 15 minutes
+
+      - name: online_pct
+        description: Percentage of online transactions in the last 15 minutes
+
+  - name: analytics_realtime_fraud_alerts
+    description: >
+      Live fraud alert feed highlighting high-risk transactions,
+      prioritization, and recommended actions for investigation.
+    columns:
+      - name: transaction_id
+        description: Unique transaction identifier
+        tests:
+          - not_null
+
+      - name: transaction_date
+        description: Timestamp when the transaction occurred
+
+      - name: minutes_ago
+        description: Minutes elapsed since the transaction occurred
+
+      - name: customer_key
+        description: Surrogate key identifying the customer
+
+      - name: customer_segment
+        description: Customer segmentation category
+
+      - name: churn_risk_category
+        description: Customer churn risk classification
+
+      - name: transaction_amount_abs
+        description: Absolute transaction amount
+
+      - name: merchant_category
+        description: Merchant category classification
+
+      - name: channel
+        description: Transaction channel used
+
+      - name: is_international
+        description: Indicates whether the transaction is international
+
+      - name: location_city
+        description: City where the transaction occurred
+
+      - name: location_country
+        description: Country where the transaction occurred
+
+      - name: fraud_score_pct
+        description: Fraud risk score expressed as a percentage
+
+      - name: fraud_risk_category
+        description: Fraud risk classification label
+
+      - name: confirmed_fraud
+        description: Indicator of confirmed fraud transaction
+
+      - name: distance_from_home_km
+        description: Distance from customer home location in kilometers
+
+      - name: merchant_risk_score
+        description: Risk score associated with the merchant
+
+      - name: velocity_24h
+        description: Transaction velocity over the last 24 hours
+
+      - name: amount_deviation_score
+        description: Deviation score from normal transaction amounts
+
+      - name: alert_priority
+        description: Priority level assigned to the fraud alert
+
+      - name: recommended_action
+        description: Suggested action for fraud investigation
+
+      - name: investigation_status
+        description: Current investigation status of the fraud alert
+
+      - name: assigned_to
+        description: Analyst or system assigned to investigate
+
+      - name: alert_generated_at
+        description: Timestamp when the alert was generated
+
+  - name: analytics_realtime_customer_activity
+    description: >
+      Tracks real-time customer transaction behavior, identifying
+      unusual patterns, fraud indicators, and activity intensity.
+    columns:
+      - name: customer_key
+        description: Surrogate customer identifier
+        tests:
+          - not_null
+
+      - name: customer_natural_key
+        description: Business customer identifier
+
+      - name: customer_segment
+        description: Customer segmentation category
+
+      - name: churn_risk_category
+        description: Churn risk classification
+
+      - name: transactions_last_hour
+        description: Number of transactions in the last hour
+
+      - name: volume_last_hour
+        description: Transaction volume in the last hour
+
+      - name: last_transaction_time
+        description: Timestamp of the most recent transaction
+
+      - name: minutes_since_last_transaction
+        description: Minutes elapsed since the last transaction
+
+      - name: channels_used
+        description: Channels used by the customer in the last hour
+
+      - name: categories_used
+        description: Merchant categories used in the last hour
+
+      - name: fraud_alerts
+        description: Count of fraud alerts in the last hour
+
+      - name: high_value_transactions
+        description: Count of high-value transactions
+
+      - name: international_transactions
+        description: Number of international transactions
+
+      - name: activity_level
+        description: Classified customer activity intensity
+
+      - name: unusual_frequency
+        description: Flag indicating unusually high transaction frequency
+
+      - name: unusual_volume
+        description: Flag indicating unusually high transaction volume
+
+      - name: activity_status
+        description: Overall real-time activity status indicator
+
+      - name: snapshot_time
+        description: Timestamp when the snapshot was generated
+
+  - name: analytics_realtime_system_health
+    description: >
+      Monitors real-time transaction throughput, processing performance,
+      fraud activity, and channel availability for system operations.
+    columns:
+      - name: snapshot_time
+        description: Timestamp of system health snapshot
+
+      - name: transactions_5min
+        description: Number of transactions processed in the last 5 minutes
+
+      - name: transactions_per_minute
+        description: Average transaction throughput per minute
+
+      - name: transactions_15min
+        description: Number of transactions processed in the last 15 minutes
+
+      - name: avg_processing_time_ms
+        description: Average transaction processing time in milliseconds
+
+      - name: p95_processing_time_ms
+        description: 95th percentile processing time in milliseconds
+
+      - name: success_rate_pct
+        description: Percentage of successful (non-declined) transactions
+
+      - name: high_risk_transactions
+        description: Number of high-risk transactions detected
+
+      - name: system_status
+        description: Overall system health status
+
+      - name: performance_status
+        description: Performance quality classification
+
+      - name: mobile_status
+        description: Availability status of the mobile channel
+
+      - name: online_status
+        description: Availability status of the online channel
+
+      - name: atm_status
+        description: Availability status of the ATM channel
+
+      - name: branch_status
+        description: Availability status of the branch channel
+
+      - name: mobile_transactions_5min
+        description: Mobile transactions in the last 5 minutes
+
+      - name: online_transactions_5min
+        description: Online transactions in the last 5 minutes
+
+      - name: atm_transactions_5min
+        description: ATM transactions in the last 5 minutes
+
+      - name: branch_transactions_5min
+        description: Branch transactions in the last 5 minutes
+
+  - name: analytics_realtime_trending_merchants
+    description: >
+      Identifies merchants with rapidly changing transaction activity
+      using real-time velocity and growth indicators.
+    columns:
+      - name: merchant_name
+        description: Merchant name
+        tests:
+          - not_null
+
+      - name: category
+        description: Merchant category
+
+      - name: merchant_type
+        description: Merchant type classification
+
+      - name: transactions_current_hour
+        description: Transactions recorded in the current hour
+
+      - name: volume_current_hour
+        description: Transaction volume in the current hour
+
+      - name: transactions_15min
+        description: Transactions in the last 15 minutes
+
+      - name: unique_customers_current_hour
+        description: Unique customers transacting in the current hour
+
+      - name: transactions_previous_hour
+        description: Transactions recorded in the previous hour
+
+      - name: transaction_change
+        description: Change in transaction count compared to previous hour
+
+      - name: growth_rate_pct
+        description: Percentage growth compared to previous hour
+
+      - name: velocity_per_minute
+        description: Transactions per minute in the last 15 minutes
+
+      - name: trend_indicator
+        description: Visual trend classification label
+
+      - name: activity_rank
+        description: Rank based on transaction activity
+
+      - name: snapshot_time
+        description: Timestamp when snapshot was generated
+
+  - name: analytics_realtime_account_alerts
+    description: >
+      Generates real-time alerts for account health issues such as past due
+      payments, high utilization, and low available balances.
+    columns:
+      - name: account_natural_key
+        description: Business account identifier
+        tests:
+          - not_null
+
+      - name: customer_natural_key
+        description: Business customer identifier
+
+      - name: customer_segment
+        description: Customer segmentation category
+
+      - name: product_name
+        description: Name of the associated financial product
+
+      - name: account_status
+        description: Current account status
+
+      - name: current_balance
+        description: Current outstanding account balance
+
+      - name: available_balance
+        description: Available balance on the account
+
+      - name: credit_limit
+        description: Credit limit assigned to the account
+
+      - name: credit_utilization_pct
+        description: Credit utilization percentage
+
+      - name: is_past_due
+        description: Indicates whether the account is past due
+
+      - name: is_near_limit
+        description: Indicates whether the account is near its credit limit
+
+      - name: payment_due_date
+        description: Payment due date for the account
+
+      - name: alert_type
+        description: Classified alert type for account health
+
+      - name: alert_priority
+        description: Numerical priority ranking for alerts
+
+      - name: recommended_action
+        description: Suggested remediation or follow-up action
+
+      - name: days_until_due
+        description: Days remaining until payment due date
+
+      - name: alert_time
+        description: Timestamp when the alert was generated

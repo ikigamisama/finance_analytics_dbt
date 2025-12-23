@@ -1,0 +1,1259 @@
+version: 2
+
+models:
+  - name: fact_account_daily_snapshot
+    description: >
+      Daily snapshot of account balances, statuses, and transaction activity. 
+      Captures both account-level metrics and daily transaction aggregates.
+    schema: gold
+    tags: ["gold", "fact", "serving", "account_snapshot"]
+    columns:
+      - name: account_key
+        description: Surrogate key for the account.
+        tests:
+          - not_null
+          - unique
+
+      - name: snapshot_date_key
+        description: Surrogate key for the snapshot date.
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: Original customer identifier from the source system.
+        tests:
+          - not_null
+
+      - name: customer_key
+        description: Surrogate key for the customer.
+
+      - name: product_key
+        description: Surrogate key for the product associated with the account.
+
+      - name: snapshot_date
+        description: Date of the snapshot.
+        tests:
+          - not_null
+
+      - name: current_balance
+        description: Current account balance.
+
+      - name: available_balance
+        description: Balance available for spending.
+
+      - name: credit_limit
+        description: Credit limit of the account.
+
+      - name: credit_utilization_pct
+        description: Percentage of credit used.
+
+      - name: account_age_months
+        description: Age of the account in months.
+
+      - name: active_account_count
+        description: Flag (1/0) indicating if the account is active.
+
+      - name: closed_account_count
+        description: Flag (1/0) indicating if the account is closed.
+
+      - name: dormant_account_count
+        description: Flag (1/0) indicating if the account is dormant.
+
+      - name: past_due_count
+        description: Flag (1/0) indicating if the account is past due.
+
+      - name: near_limit_count
+        description: Flag (1/0) indicating if the account is near its credit limit.
+
+      - name: daily_transaction_count
+        description: Number of transactions on the snapshot date.
+
+      - name: daily_transaction_amount
+        description: Total transaction amount on the snapshot date.
+
+      - name: daily_debit_count
+        description: Count of debit transactions on the snapshot date.
+
+      - name: daily_credit_count
+        description: Count of credit transactions on the snapshot date.
+
+      - name: account_count
+        description: Count of accounts (always 1 per row).
+
+      - name: dbt_updated_at
+        description: Timestamp of when the row was updated in dbt.
+        tests:
+          - not_null
+
+  - name: fact_account_events
+    description: >
+      Fact table capturing account-related events, their attributes, value changes, 
+      approval flags, and type categories for analytics purposes.
+    schema: gold
+    tags: ["gold", "fact", "serving", "account_events"]
+    columns:
+      - name: event_key
+        description: Surrogate key for the account event.
+        tests:
+          - not_null
+          - unique
+
+      - name: account_key
+        description: Surrogate key for the associated account.
+        tests:
+          - not_null
+
+      - name: customer_key
+        description: Surrogate key for the customer.
+
+      - name: product_key
+        description: Surrogate key for the product associated with the event.
+
+      - name: event_date_key
+        description: Surrogate key representing the date of the event.
+
+      - name: event_id
+        description: Original identifier of the event from the source system.
+        tests:
+          - not_null
+
+      - name: event_date
+        description: Date and timestamp when the event occurred.
+        tests:
+          - not_null
+
+      - name: event_type
+        description: Specific type of the event (e.g., 'Account Opened', 'Balance Update').
+
+      - name: event_category
+        description: Category assigned to the event in the source system.
+
+      - name: triggered_by
+        description: User or system that triggered the event.
+
+      - name: channel
+        description: Channel through which the event was initiated (e.g., Web, Mobile).
+
+      - name: processed_by
+        description: System or user that processed the event.
+
+      - name: approval_status
+        description: Status of approval for the event (e.g., 'Approved', 'Pending', 'Rejected').
+
+      - name: old_value
+        description: Original value before the event change.
+
+      - name: new_value
+        description: New value after the event change.
+
+      - name: value_change
+        description: Numeric difference between new_value and old_value if both are numeric.
+
+      - name: reversible_flag
+        description: Flag (1/0) indicating if the event is reversible.
+
+      - name: requires_approval_flag
+        description: Flag (1/0) indicating if the event requires approval.
+
+      - name: approved_flag
+        description: Flag (1/0) indicating if the event is approved.
+
+      - name: pending_flag
+        description: Flag (1/0) indicating if the event is pending.
+
+      - name: rejected_flag
+        description: Flag (1/0) indicating if the event is rejected.
+
+      - name: event_type_category
+        description: Categorization of event_type into Lifecycle, Financial, Administrative, or Other.
+
+      - name: event_count
+        description: Count of events (always 1 per row).
+
+      - name: dbt_updated_at
+        description: Timestamp when the row was processed/updated in dbt.
+        tests:
+          - not_null
+
+  - name: fact_credit_applications
+    description: >
+      Fact table capturing credit application details, including application metrics, 
+      decision outcomes, risk grades, and financial measures for analytics.
+    schema: gold
+    tags: ["gold", "fact", "serving", "credit_applications"]
+    columns:
+      - name: application_key
+        description: Surrogate key for the credit application.
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_key
+        description: Surrogate key for the customer submitting the application.
+        tests:
+          - not_null
+
+      - name: product_key
+        description: Surrogate key for the product associated with the application.
+
+      - name: application_date_key
+        description: Surrogate key representing the application date.
+        tests:
+          - not_null
+
+      - name: decision_date_key
+        description: Surrogate key representing the decision date.
+
+      - name: application_id
+        description: Original identifier of the credit application from the source system.
+        tests:
+          - not_null
+
+      - name: application_date
+        description: Date when the application was submitted.
+
+      - name: decision_date
+        description: Date when the application decision was made.
+
+      - name: decision
+        description: Outcome of the credit application (e.g., 'Approved', 'Denied').
+
+      - name: application_channel
+        description: Channel through which the application was submitted (e.g., Online, Branch).
+
+      - name: risk_grade
+        description: Risk grade assigned to the application.
+
+      - name: dti_category
+        description: Debt-to-income category of the applicant.
+
+      - name: requested_amount
+        description: Amount requested in the application.
+
+      - name: requested_term_months
+        description: Requested term length in months.
+
+      - name: credit_score_at_application
+        description: Applicant's credit score at the time of application.
+
+      - name: annual_income
+        description: Annual income of the applicant.
+
+      - name: debt_to_income_ratio
+        description: Debt-to-income ratio of the applicant.
+
+      - name: employment_length_years
+        description: Number of years the applicant has been employed.
+
+      - name: approved_amount
+        description: Approved loan amount.
+
+      - name: approved_rate
+        description: Approved interest rate.
+
+      - name: approval_probability_score
+        description: Probability score predicting likelihood of approval.
+
+      - name: processing_days
+        description: Number of days between application and decision.
+
+      - name: amount_difference
+        description: Difference between requested and approved amounts.
+
+      - name: approved_flag
+        description: Flag (1/0) indicating if the application was approved.
+
+      - name: denied_flag
+        description: Flag (1/0) indicating if the application was denied.
+
+      - name: application_count
+        description: Count of applications (always 1 per row).
+
+      - name: dbt_updated_at
+        description: Timestamp when the row was processed/updated in dbt.
+        tests:
+          - not_null
+
+  - name: fact_customer_interactions
+    description: >
+      Fact table capturing customer interactions, including interaction details, 
+      measures, flags, and categorization for analytics and customer experience reporting.
+    schema: gold
+    tags: ["gold", "fact", "serving", "customer_interactions"]
+    columns:
+      - name: interaction_key
+        description: Surrogate key for the customer interaction.
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_key
+        description: Surrogate key for the customer.
+        tests:
+          - not_null
+
+      - name: interaction_date_key
+        description: Surrogate key representing the date of interaction.
+        tests:
+          - not_null
+
+      - name: interaction_id
+        description: Original identifier of the customer interaction from the source system.
+        tests:
+          - not_null
+
+      - name: interaction_date
+        description: Date and timestamp when the interaction occurred.
+        tests:
+          - not_null
+
+      - name: interaction_year
+        description: Year of the interaction.
+
+      - name: interaction_month
+        description: Month of the interaction.
+
+      - name: interaction_type
+        description: Type of interaction (e.g., Call, Email, Chat).
+
+      - name: reason
+        description: Reason for the interaction.
+
+      - name: duration_category
+        description: Categorized duration of the interaction.
+
+      - name: sentiment_category
+        description: Categorization of sentiment (e.g., Positive, Negative, Neutral).
+
+      - name: issue_severity
+        description: Severity level of the issue discussed during interaction.
+
+      - name: agent_id
+        description: Identifier for the agent handling the interaction.
+
+      - name: duration_minutes
+        description: Duration of the interaction in minutes.
+
+      - name: sentiment_score
+        description: Sentiment score assigned to the interaction.
+
+      - name: satisfaction_rating
+        description: Customer satisfaction rating (if available).
+
+      - name: resolved_flag
+        description: Flag (1/0) indicating if the interaction was resolved.
+
+      - name: escalated_flag
+        description: Flag (1/0) indicating if the interaction was escalated.
+
+      - name: positive_sentiment_flag
+        description: Flag (1/0) indicating positive sentiment.
+
+      - name: negative_sentiment_flag
+        description: Flag (1/0) indicating negative sentiment.
+
+      - name: interaction_count
+        description: Count of interactions (always 1 per row).
+
+      - name: dbt_updated_at
+        description: Timestamp when the row was processed/updated in dbt.
+        tests:
+          - not_null
+
+  - name: fact_customer_monthly_summary
+    description: >
+      Monthly aggregated summary of customer transactions and account metrics, 
+      including transaction counts, fraud metrics, account balances, and calculated KPIs.
+    schema: gold
+    tags: ["gold", "fact", "serving", "customer_summary"]
+    columns:
+      - name: customer_key
+        description: Surrogate key for the customer.
+        tests:
+          - not_null
+          - unique
+
+      - name: year_month
+        description: Year and month of the summary in 'YYYY-MM' format.
+        tests:
+          - not_null
+          - unique
+
+      - name: transaction_count
+        description: Total number of transactions for the customer in the month.
+
+      - name: total_transaction_volume
+        description: Sum of absolute transaction amounts for the month.
+
+      - name: avg_transaction_amount
+        description: Average transaction amount for the month.
+
+      - name: fraud_transaction_count
+        description: Number of fraudulent transactions in the month.
+
+      - name: fraud_amount
+        description: Total amount involved in fraudulent transactions.
+
+      - name: unique_merchants
+        description: Count of distinct merchants the customer transacted with.
+
+      - name: unique_categories
+        description: Count of distinct merchant categories.
+
+      - name: international_transaction_count
+        description: Count of international transactions.
+
+      - name: active_account_count
+        description: Number of active accounts the customer holds in the month.
+
+      - name: total_balance
+        description: Sum of current balances across all active accounts.
+
+      - name: avg_balance
+        description: Average balance across all active accounts.
+
+      - name: past_due_account_count
+        description: Number of accounts that are past due.
+
+      - name: fraud_rate_pct
+        description: Percentage of fraudulent transactions relative to total transactions.
+
+      - name: customer_count
+        description: Count of customers in the row (always 1 per row).
+
+      - name: dbt_updated_at
+        description: Timestamp when the row was processed/updated in dbt.
+        tests:
+          - not_null
+
+  - name: fact_customer_segment_history
+    description: >
+      Fact table tracking historical changes in customer segments, loyalty tiers, 
+      risk segments, and associated customer metrics for analytics and reporting.
+    schema: gold
+    tags: ["gold", "fact", "serving", "customer_segments"]
+    columns:
+      - name: segment_history_key
+        description: Surrogate key for the segment history record.
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_key
+        description: Surrogate key for the customer.
+        tests:
+          - not_null
+
+      - name: effective_date_key
+        description: Surrogate key representing the start date of the segment period.
+
+      - name: end_date_key
+        description: Surrogate key representing the end date of the segment period.
+
+      - name: segment_history_id
+        description: Original identifier of the segment history record.
+
+      - name: effective_date
+        description: Date when the segment became effective.
+
+      - name: end_date
+        description: Date when the segment ended or became inactive.
+
+      - name: is_current
+        description: Flag indicating if this segment is the current segment for the customer.
+
+      - name: customer_segment
+        description: Current segment of the customer.
+
+      - name: previous_segment
+        description: Previous segment of the customer.
+
+      - name: loyalty_tier
+        description: Current loyalty tier of the customer.
+
+      - name: previous_tier
+        description: Previous loyalty tier of the customer.
+
+      - name: risk_segment
+        description: Current risk segment of the customer.
+
+      - name: previous_risk
+        description: Previous risk segment.
+
+      - name: change_type
+        description: Type of segment change (e.g., Manual, Automated).
+
+      - name: change_reason
+        description: Reason for the segment change.
+
+      - name: triggered_by
+        description: User or system that triggered the segment change.
+
+      - name: total_accounts
+        description: Total number of accounts the customer holds at the time of change.
+
+      - name: total_balance
+        description: Total balance across all accounts at the time of change.
+
+      - name: avg_monthly_transactions
+        description: Average monthly transactions at the time of change.
+
+      - name: products_held
+        description: Number of products held by the customer.
+
+      - name: customer_lifetime_value
+        description: Calculated lifetime value of the customer.
+
+      - name: tenure_days
+        description: Number of days since customer onboarding.
+
+      - name: credit_score
+        description: Customer's credit score at the time of segment change.
+
+      - name: annual_income
+        description: Customer's annual income.
+
+      - name: last_interaction_days
+        description: Days since the customer's last interaction.
+
+      - name: digital_engagement_score
+        description: Score representing digital engagement level.
+
+      - name: branch_visits_last_90d
+        description: Number of branch visits in the last 90 days.
+
+      - name: online_logins_last_90d
+        description: Number of online logins in the last 90 days.
+
+      - name: segment_changed_flag
+        description: Flag (1/0) indicating if the segment changed compared to previous.
+
+      - name: tier_changed_flag
+        description: Flag (1/0) indicating if the loyalty tier changed.
+
+      - name: risk_changed_flag
+        description: Flag (1/0) indicating if the risk segment changed.
+
+      - name: tier_movement
+        description: Indicates if the tier was upgraded, downgraded, or no change.
+
+      - name: premium_eligible_flag
+        description: Flag (1/0) indicating if the customer is eligible for premium services.
+
+      - name: churn_risk_flag
+        description: Flag (1/0) indicating if the customer is at risk of churn.
+
+      - name: cross_sell_opportunity_flag
+        description: Flag (1/0) indicating if there is a cross-sell opportunity.
+
+      - name: days_in_segment
+        description: Number of days the customer stayed in this segment.
+
+      - name: segment_change_count
+        description: Count of segment change records (always 1 per row).
+
+      - name: dbt_updated_at
+        description: Timestamp when the row was processed/updated in dbt.
+        tests:
+          - not_null
+
+  - name: fact_fraud_alerts
+    description: >
+      Fact table capturing fraud alert events, their details, resolution status, 
+      and associated metrics for analytics and risk monitoring.
+    schema: gold
+    tags: ["gold", "fact", "serving", "fraud_alerts"]
+    columns:
+      - name: alert_key
+        description: Surrogate key for the fraud alert.
+        tests:
+          - not_null
+          - unique
+
+      - name: transaction_key
+        description: Surrogate key for the associated transaction.
+
+      - name: customer_key
+        description: Surrogate key for the customer.
+        tests:
+          - not_null
+
+      - name: account_key
+        description: Surrogate key for the account.
+
+      - name: alert_date_key
+        description: Surrogate key representing the alert date.
+        tests:
+          - not_null
+
+      - name: resolution_date_key
+        description: Surrogate key representing the resolution date.
+
+      - name: alert_id
+        description: Original identifier of the fraud alert from the source system.
+        tests:
+          - not_null
+
+      - name: alert_date
+        description: Date and timestamp when the alert was raised.
+        tests:
+          - not_null
+
+      - name: alert_type
+        description: Type/category of the fraud alert.
+
+      - name: alert_severity
+        description: Severity level of the fraud alert.
+
+      - name: investigation_status
+        description: Status of the investigation (e.g., Open, Closed, Pending).
+
+      - name: resolution_date
+        description: Date when the alert was resolved.
+
+      - name: assigned_to
+        description: Agent or system assigned to investigate the alert.
+
+      - name: amount_recovered
+        description: Amount recovered as a result of the alert.
+
+      - name: resolution_days
+        description: Number of days taken to resolve the alert.
+
+      - name: resolved_flag
+        description: Flag (1/0) indicating if the alert has been resolved.
+
+      - name: confirmed_fraud_flag
+        description: Flag (1/0) indicating if the alert was confirmed as fraud.
+
+      - name: false_positive_flag
+        description: Flag (1/0) indicating if the alert was a false positive.
+
+      - name: alert_count
+        description: Count of alerts (always 1 per row).
+
+      - name: dbt_updated_at
+        description: Timestamp when the row was processed/updated in dbt.
+        tests:
+          - not_null
+
+  - name: fact_loan_payments
+    description: >
+      Fact table capturing loan payment details, including scheduled and actual payments, 
+      amounts, delinquency, and related flags for analytics and reporting.
+    schema: gold
+    tags: ["gold", "fact", "serving", "loan_payments"]
+    columns:
+      - name: payment_key
+        description: Surrogate key for the loan payment.
+        tests:
+          - not_null
+          - unique
+
+      - name: account_key
+        description: Surrogate key for the account associated with the payment.
+        tests:
+          - not_null
+
+      - name: customer_key
+        description: Surrogate key for the customer making the payment.
+        tests:
+          - not_null
+
+      - name: scheduled_date_key
+        description: Surrogate key for the scheduled payment date.
+        tests:
+          - not_null
+
+      - name: actual_date_key
+        description: Surrogate key for the actual payment date.
+
+      - name: payment_id
+        description: Original identifier of the payment from the source system.
+        tests:
+          - not_null
+
+      - name: scheduled_date
+        description: Scheduled date for the payment.
+        tests:
+          - not_null
+
+      - name: actual_date
+        description: Date when the payment was actually made.
+
+      - name: payment_status
+        description: Status of the payment (e.g., Completed, Missed, Pending).
+
+      - name: payment_method
+        description: Method used for payment (e.g., Online, Cash, Cheque).
+
+      - name: payment_completeness
+        description: Indicates whether the payment was Full, Partial, or Missed.
+
+      - name: delinquency_bucket
+        description: Categorization of payment delinquency (e.g., 0-30 days, 31-60 days).
+
+      - name: scheduled_amount
+        description: Scheduled amount for the payment.
+
+      - name: actual_amount
+        description: Amount actually paid.
+
+      - name: amount_difference
+        description: Difference between scheduled and actual amounts.
+
+      - name: late_fee
+        description: Late fee applied to the payment, if any.
+
+      - name: outstanding_balance
+        description: Remaining balance after the payment.
+
+      - name: days_late
+        description: Number of days the payment was late.
+
+      - name: late_payment_flag
+        description: Flag (1/0) indicating if the payment was late.
+
+      - name: missed_payment_flag
+        description: Flag (1/0) indicating if the payment was missed.
+
+      - name: full_payment_flag
+        description: Flag (1/0) indicating if the payment was made in full.
+
+      - name: payment_count
+        description: Count of payments (always 1 per row).
+
+      - name: dbt_updated_at
+        description: Timestamp when the row was processed/updated in dbt.
+        tests:
+          - not_null
+
+  - name: fact_marketing_campaigns
+    description: >
+      Fact table capturing marketing campaign details, financials, performance metrics, 
+      and efficiency KPIs for analytics and campaign effectiveness reporting.
+    schema: gold
+    tags: ["gold", "fact", "serving", "marketing_campaigns"]
+    columns:
+      - name: campaign_key
+        description: Surrogate key for the marketing campaign.
+        tests:
+          - not_null
+          - unique
+
+      - name: start_date_key
+        description: Surrogate key for the campaign start date.
+        tests:
+          - not_null
+
+      - name: end_date_key
+        description: Surrogate key for the campaign end date.
+
+      - name: campaign_id
+        description: Original identifier of the campaign from the source system.
+        tests:
+          - not_null
+
+      - name: campaign_name
+        description: Name of the marketing campaign.
+
+      - name: campaign_type
+        description: Type/category of the campaign (e.g., Email, Social Media, TV).
+
+      - name: start_date
+        description: Start date of the campaign.
+        tests:
+          - not_null
+
+      - name: end_date
+        description: End date of the campaign.
+
+      - name: target_segment
+        description: Customer segment targeted by the campaign.
+
+      - name: product_promoted
+        description: Product or service promoted in the campaign.
+
+      - name: campaign_status
+        description: Current status of the campaign (e.g., Active, Completed, Paused).
+
+      - name: roi_category
+        description: Categorized ROI level for the campaign.
+
+      - name: campaign_duration_days
+        description: Duration of the campaign in days.
+
+      - name: budget
+        description: Budget allocated for the campaign.
+
+      - name: cost_per_acquisition
+        description: Cost per acquired customer or lead.
+
+      - name: roi
+        description: Return on investment for the campaign.
+
+      - name: impressions
+        description: Number of times the campaign was displayed.
+
+      - name: clicks
+        description: Number of clicks generated by the campaign.
+
+      - name: conversions
+        description: Number of successful conversions resulting from the campaign.
+
+      - name: click_through_rate
+        description: Click-through rate percentage.
+
+      - name: conversion_rate
+        description: Conversion rate percentage.
+
+      - name: conversions_per_1k_budget
+        description: Number of conversions per 1,000 units of budget.
+
+      - name: cost_per_1k_impressions
+        description: Cost per 1,000 impressions.
+
+      - name: estimated_revenue
+        description: Estimated revenue from the campaign (conversions * cost_per_acquisition * ROI).
+
+      - name: profitable_flag
+        description: Flag (1/0) indicating if the campaign ROI > 1.
+
+      - name: highly_profitable_flag
+        description: Flag (1/0) indicating if the campaign ROI >= 2.
+
+      - name: high_engagement_flag
+        description: Flag (1/0) indicating if click-through rate >= 2%.
+
+      - name: high_conversion_flag
+        description: Flag (1/0) indicating if conversion rate >= 5%.
+
+      - name: active_campaign_flag
+        description: Flag (1/0) indicating if the campaign is currently active.
+
+      - name: completed_campaign_flag
+        description: Flag (1/0) indicating if the campaign is completed.
+
+      - name: campaign_count
+        description: Count of campaigns (always 1 per row).
+
+      - name: dbt_updated_at
+        description: Timestamp when the row was processed/updated in dbt.
+        tests:
+          - not_null
+
+  - name: fact_regulatory_reports
+    description: >
+      Fact table capturing regulatory report submissions, filing details, timeliness, risk levels, 
+      and associated measures for compliance and reporting analytics.
+    schema: gold
+    tags: ["gold", "fact", "serving", "regulatory"]
+    columns:
+      - name: report_key
+        description: Surrogate key for the regulatory report.
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_key
+        description: Surrogate key for the customer associated with the report.
+
+      - name: account_key
+        description: Surrogate key for the account associated with the report.
+
+      - name: transaction_key
+        description: Surrogate key for the transaction associated with the report.
+
+      - name: filing_date_key
+        description: Surrogate key representing the filing date.
+        tests:
+          - not_null
+
+      - name: due_date_key
+        description: Surrogate key representing the report due date.
+
+      - name: report_id
+        description: Original identifier of the regulatory report from the source system.
+        tests:
+          - not_null
+
+      - name: report_type_code
+        description: Code representing the type of regulatory report.
+
+      - name: report_type_name
+        description: Name of the regulatory report type.
+
+      - name: report_frequency
+        description: Frequency of the report (e.g., Daily, Monthly, Quarterly).
+
+      - name: regulator
+        description: Regulatory authority responsible for the report.
+
+      - name: report_period_start
+        description: Start date of the reporting period.
+
+      - name: report_period_end
+        description: End date of the reporting period.
+
+      - name: filing_date
+        description: Date the report was filed.
+
+      - name: due_date
+        description: Due date for the report submission.
+
+      - name: actual_filing_date
+        description: Actual filing date of the report.
+
+      - name: filing_status
+        description: Status of the report filing (e.g., Filed, Pending, Late).
+
+      - name: filing_method
+        description: Method used to file the report.
+
+      - name: confirmation_number
+        description: Confirmation number issued upon successful filing.
+
+      - name: risk_level
+        description: Risk level assigned to the report (High, Medium, Low).
+
+      - name: assigned_to
+        description: User or team assigned to manage the report.
+
+      - name: reviewed_by
+        description: User who reviewed the report.
+
+      - name: approval_date
+        description: Date when the report was approved.
+
+      - name: amount_reported
+        description: Monetary amount reported in the regulatory filing.
+
+      - name: penalty_amount
+        description: Penalty assessed for the report, if any.
+
+      - name: days_from_due_date
+        description: Days difference between actual filing date and due date.
+
+      - name: processing_days
+        description: Days taken to process the report from filing date to actual filing.
+
+      - name: filed_flag
+        description: Flag (1/0) indicating if the report was filed.
+
+      - name: pending_flag
+        description: Flag (1/0) indicating if the report is pending.
+
+      - name: late_flag
+        description: Flag (1/0) indicating if the report is late.
+
+      - name: requires_follow_up_flag
+        description: Flag (1/0) indicating if the report requires follow-up.
+
+      - name: amended_flag
+        description: Flag (1/0) indicating if the report was amended.
+
+      - name: penalty_assessed_flag
+        description: Flag (1/0) indicating if a penalty was assessed.
+
+      - name: filed_late_flag
+        description: Flag (1/0) indicating if the report was filed after the due date.
+
+      - name: risk_score
+        description: Numeric score representing risk level (High=3, Medium=2, Low=1, None=0).
+
+      - name: report_count
+        description: Count of reports (always 1 per row).
+
+      - name: dbt_updated_at
+        description: Timestamp when the row was processed/updated in dbt.
+        tests:
+          - not_null
+
+  - name: fact_risk_assessments
+    description: >
+      Fact table capturing customer risk assessments, including credit, fraud, AML risk scores, 
+      KYC status, risk flags, and related metrics for compliance and risk management analytics.
+    schema: gold
+    tags: ["gold", "fact", "serving", "risk_assessments"]
+    columns:
+      - name: assessment_key
+        description: Surrogate key for the risk assessment record.
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_key
+        description: Surrogate key for the customer being assessed.
+        tests:
+          - not_null
+
+      - name: assessment_date_key
+        description: Surrogate key representing the assessment date.
+        tests:
+          - not_null
+
+      - name: next_review_date_key
+        description: Surrogate key representing the next scheduled review date.
+
+      - name: assessment_id
+        description: Original identifier of the assessment record from the source system.
+        tests:
+          - not_null
+
+      - name: assessment_date
+        description: Date when the risk assessment was performed.
+        tests:
+          - not_null
+
+      - name: assessment_type
+        description: Type or category of risk assessment performed.
+
+      - name: next_review_date
+        description: Scheduled date for the next risk review.
+
+      - name: risk_rating
+        description: Overall risk rating (e.g., High, Medium, Low).
+
+      - name: credit_risk
+        description: Credit risk level (High, Medium, Low).
+
+      - name: fraud_risk
+        description: Fraud risk level (High, Medium, Low).
+
+      - name: aml_risk
+        description: Anti-money-laundering risk level (High, Medium, Low).
+
+      - name: kyc_status
+        description: KYC compliance status of the customer.
+
+      - name: kyc_last_updated
+        description: Date when KYC information was last updated.
+
+      - name: assessor_id
+        description: Identifier of the person or system performing the assessment.
+
+      - name: risk_score
+        description: Composite risk score for the customer.
+
+      - name: transaction_volume_last_90d
+        description: Total transaction volume for the customer in the last 90 days.
+
+      - name: num_accounts
+        description: Number of accounts held by the customer.
+
+      - name: years_as_customer
+        description: Tenure of the customer in years.
+
+      - name: credit_risk_score
+        description: Numeric score assigned for credit risk (High=3, Medium=2, Low=1, None=0).
+
+      - name: fraud_risk_score
+        description: Numeric score assigned for fraud risk (High=3, Medium=2, Low=1, None=0).
+
+      - name: aml_risk_score
+        description: Numeric score assigned for AML risk (High=3, Medium=2, Low=1, None=0).
+
+      - name: days_until_review
+        description: Number of days remaining until the next scheduled review.
+
+      - name: kyc_age_days
+        description: Days since KYC information was last updated.
+
+      - name: pep_flag
+        description: Flag (1/0) indicating if the customer is a politically exposed person.
+
+      - name: sanctions_flag
+        description: Flag (1/0) indicating if the customer is on sanctions lists.
+
+      - name: adverse_media_flag
+        description: Flag (1/0) indicating if adverse media exists for the customer.
+
+      - name: high_value_flag
+        description: Flag (1/0) indicating if the customer is considered high-value.
+
+      - name: edd_required_flag
+        description: Flag (1/0) indicating if enhanced due diligence is required.
+
+      - name: employment_verified_flag
+        description: Flag (1/0) indicating if employment was verified.
+
+      - name: income_verified_flag
+        description: Flag (1/0) indicating if income was verified.
+
+      - name: address_verified_flag
+        description: Flag (1/0) indicating if address was verified.
+
+      - name: kyc_compliant_flag
+        description: Flag (1/0) indicating if the customer is KYC compliant.
+
+      - name: high_risk_customer_flag
+        description: Flag (1/0) indicating if the customer is high-risk based on multiple indicators.
+
+      - name: assessment_count
+        description: Count of assessments (always 1 per row).
+
+      - name: dbt_updated_at
+        description: Timestamp when the row was processed/updated in dbt.
+        tests:
+          - not_null
+
+  - name: fact_transactions
+    description: >
+      Fact table capturing transaction-level details, including amounts, attributes, 
+      fraud indicators, processing metrics, and flags for analytics and risk monitoring.
+    schema: gold
+    tags: ["gold", "fact", "serving", "transactions"]
+    columns:
+      - name: transaction_key
+        description: Surrogate key for the transaction.
+        tests:
+          - not_null
+          - unique
+
+      - name: transaction_id
+        description: Original identifier of the transaction from the source system.
+        tests:
+          - not_null
+
+      - name: customer_key
+        description: Surrogate key for the customer performing the transaction.
+        tests:
+          - not_null
+
+      - name: account_key
+        description: Surrogate key for the account used in the transaction.
+        tests:
+          - not_null
+
+      - name: merchant_key
+        description: Surrogate key for the merchant involved in the transaction.
+
+      - name: date_key
+        description: Surrogate key for the transaction date.
+        tests:
+          - not_null
+
+      - name: transaction_date
+        description: Date and timestamp of the transaction.
+        tests:
+          - not_null
+
+      - name: transaction_year
+        description: Year of the transaction.
+
+      - name: transaction_month
+        description: Month of the transaction.
+
+      - name: transaction_day
+        description: Day of the month of the transaction.
+
+      - name: transaction_hour
+        description: Hour of the transaction.
+
+      - name: day_of_week
+        description: Day of the week of the transaction (0=Sunday, 6=Saturday).
+
+      - name: is_weekend
+        description: Flag indicating if the transaction occurred on a weekend.
+
+      - name: is_late_night
+        description: Flag indicating if the transaction occurred during late night hours.
+
+      - name: transaction_type
+        description: Type of transaction (e.g., Purchase, Refund, Transfer).
+
+      - name: transaction_direction
+        description: Direction of transaction (Debit or Credit).
+
+      - name: currency
+        description: Currency of the transaction.
+
+      - name: channel
+        description: Transaction channel (e.g., Online, POS, ATM).
+
+      - name: merchant_category
+        description: Category of the merchant involved.
+
+      - name: mcc_code
+        description: Merchant category code.
+
+      - name: description
+        description: Description of the transaction.
+
+      - name: location_city
+        description: City where the transaction occurred.
+
+      - name: location_state
+        description: State where the transaction occurred.
+
+      - name: location_country
+        description: Country where the transaction occurred.
+
+      - name: is_international
+        description: Flag indicating if the transaction was international.
+
+      - name: device_id
+        description: Identifier of the device used for the transaction.
+
+      - name: authorization_code
+        description: Authorization code for the transaction.
+
+      - name: card_last_four
+        description: Last four digits of the card used.
+
+      - name: is_recurring
+        description: Flag indicating if the transaction is recurring.
+
+      - name: transaction_status
+        description: Status of the transaction (e.g., Completed, Declined).
+
+      - name: transaction_amount
+        description: Transaction amount (can be positive or negative).
+
+      - name: transaction_amount_abs
+        description: Absolute value of the transaction amount.
+
+      - name: fraud_score
+        description: Fraud score associated with the transaction.
+
+      - name: distance_from_home_km
+        description: Distance of transaction location from customer's home in kilometers.
+
+      - name: merchant_risk_score
+        description: Risk score associated with the merchant.
+
+      - name: velocity_24h
+        description: Number of transactions for the customer in the last 24 hours.
+
+      - name: amount_deviation_score
+        description: Score indicating deviation from typical transaction amount.
+
+      - name: processing_time_ms
+        description: Processing time for the transaction in milliseconds.
+
+      - name: is_fraud_flag
+        description: Flag indicating if the transaction was fraudulent.
+
+      - name: is_high_value_flag
+        description: Flag indicating if the transaction amount exceeds a high-value threshold.
+
+      - name: is_high_risk_flag
+        description: Flag indicating if the transaction is classified as high-risk.
+
+      - name: is_declined_flag
+        description: Flag indicating if the transaction was declined.
+
+      - name: fraud_amount
+        description: Amount considered fraudulent (equals transaction amount if flagged as fraud).
+
+      - name: declined_count
+        description: Count for declined transaction (always 1 if declined, else 0).
+
+      - name: transaction_count
+        description: Count of transactions (always 1 per row).
+
+      - name: dbt_updated_at
+        description: Timestamp when the row was processed/updated in dbt.
+        tests:
+          - not_null

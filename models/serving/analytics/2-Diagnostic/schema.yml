@@ -1,0 +1,346 @@
+version: 2
+
+models:
+  # ---------------------------------------------------------
+  # Churn Analysis
+  # ---------------------------------------------------------
+  - name: analytics_churn_analysis
+    description: "Analysis of why customers are churning. Identifies at-risk segments and drivers."
+    tags: ["analytics", "diagnostic", "churn"]
+    columns:
+      - name: customer_segment
+        description: "Customer segment."
+      - name: at_risk_customers
+        description: "Number of customers considered at risk of churn."
+      - name: avg_churn_risk_pct
+        description: "Average churn risk score (percentage) for at-risk customers."
+      - name: avg_days_inactive
+        description: "Average number of days since last login."
+      - name: avg_accounts_per_customer
+        description: "Average number of accounts held by at-risk customers."
+      - name: avg_closed_accounts
+        description: "Average number of closed accounts per customer."
+      - name: avg_recent_transactions
+        description: "Average number of recent transactions per customer (last 90 days)."
+      - name: avg_transaction_size
+        description: "Average transaction amount per customer."
+      - name: avg_support_contacts
+        description: "Average number of support interactions per customer."
+      - name: avg_negative_interactions
+        description: "Average number of negative support interactions per customer."
+      - name: avg_unresolved_issues
+        description: "Average number of unresolved issues per customer."
+      - name: avg_clv
+        description: "Average customer lifetime value."
+      - name: total_clv_at_risk
+        description: "Total customer lifetime value at risk."
+      - name: last_updated
+        description: "Timestamp of last update."
+
+  # ---------------------------------------------------------
+  # Fraud Pattern Analysis
+  # ---------------------------------------------------------
+  - name: analytics_fraud_pattern_analysis
+    description: "Identifies patterns in fraudulent transactions to detect drivers of fraud."
+    tags: ["analytics", "diagnostic", "fraud"]
+    columns:
+      - name: merchant_category
+        description: "Merchant category of the transaction."
+      - name: channel
+        description: "Transaction channel (Online, Mobile, Branch, ATM)."
+      - name: is_international
+        description: "Flag indicating if transaction is international."
+      - name: day_name
+        description: "Day of the week for the transaction."
+      - name: is_weekend
+        description: "Flag indicating if transaction occurred on weekend."
+      - name: hour_of_day
+        description: "Hour of transaction occurrence."
+      - name: total_transactions
+        description: "Total number of transactions in this group."
+      - name: fraud_transactions
+        description: "Number of transactions flagged as fraud."
+      - name: fraud_rate_pct
+        description: "Percentage of transactions flagged as fraud."
+      - name: total_fraud_amount
+        description: "Total amount involved in fraudulent transactions."
+      - name: avg_fraud_score
+        description: "Average fraud score for fraudulent transactions."
+      - name: avg_transaction_amount
+        description: "Average transaction amount."
+      - name: avg_distance_from_home
+        description: "Average distance from home for transactions (km)."
+      - name: avg_velocity_24h
+        description: "Average transaction velocity in last 24 hours."
+      - name: unique_customers
+        description: "Number of unique customers in the group."
+      - name: fraud_customers
+        description: "Number of unique customers involved in fraud."
+      - name: last_updated
+        description: "Timestamp of last update."
+
+  # ---------------------------------------------------------
+  # Loan Default Drivers
+  # ---------------------------------------------------------
+  - name: analytics_loan_default_drivers
+    description: "Analyzes loan defaults and identifies drivers of risk and late payments."
+    tags: ["analytics", "diagnostic", "loans"]
+    columns:
+      - name: customer_segment
+        description: "Customer segment."
+      - name: credit_score_band
+        description: "Credit score band of the customer."
+      - name: income_bracket
+        description: "Income bracket of the customer."
+      - name: employment_status
+        description: "Employment status."
+      - name: risk_level
+        description: "Risk classification based on loan payment behavior."
+      - name: loan_count
+        description: "Number of loans in this group."
+      - name: avg_late_payment_rate
+        description: "Average rate of late payments."
+      - name: avg_days_late
+        description: "Average number of days late for payments."
+      - name: avg_late_fees
+        description: "Average late fees incurred."
+      - name: avg_outstanding
+        description: "Average outstanding balance."
+      - name: accounts_with_late_payments
+        description: "Number of accounts with late payments."
+      - name: accounts_with_missed_payments
+        description: "Number of accounts with missed payments."
+      - name: last_updated
+        description: "Timestamp of last update."
+
+  # ---------------------------------------------------------
+  # Transaction Decline Analysis
+  # ---------------------------------------------------------
+  - name: analytics_transaction_decline_analysis
+    description: "Analyzes reasons for declined transactions."
+    tags: ["analytics", "diagnostic", "transactions"]
+    columns:
+      - name: decline_reason
+        description: "Reason for transaction decline."
+      - name: channel
+        description: "Transaction channel."
+      - name: merchant_category
+        description: "Merchant category of transaction."
+      - name: is_international
+        description: "Flag for international transactions."
+      - name: declined_count
+        description: "Number of declined transactions."
+      - name: pct_of_declines
+        description: "Percentage of declined transactions among all declines."
+      - name: avg_declined_amount
+        description: "Average transaction amount for declined transactions."
+      - name: affected_customers
+        description: "Number of unique customers affected."
+      - name: affected_merchants
+        description: "Number of unique merchants affected."
+      - name: avg_hour_of_day
+        description: "Average hour of day when declines occurred."
+      - name: avg_fraud_score
+        description: "Average fraud score for declined transactions."
+      - name: avg_merchant_risk
+        description: "Average merchant risk score."
+      - name: last_updated
+        description: "Timestamp of last update."
+
+  # ---------------------------------------------------------
+  # Customer Satisfaction Drivers
+  # ---------------------------------------------------------
+  - name: analytics_customer_satisfaction_drivers
+    description: "Identifies key drivers of customer satisfaction and dissatisfaction."
+    tags: ["analytics", "diagnostic", "service"]
+    columns:
+      - name: interaction_type
+        description: "Type of customer interaction (call, chat, email, etc.)."
+      - name: reason
+        description: "Reason for customer interaction."
+      - name: duration_category
+        description: "Duration category of interaction."
+      - name: issue_severity
+        description: "Severity of issue."
+      - name: interaction_count
+        description: "Number of interactions in this group."
+      - name: avg_satisfaction
+        description: "Average satisfaction rating."
+      - name: avg_duration_minutes
+        description: "Average duration of interaction in minutes."
+      - name: avg_sentiment_score
+        description: "Average sentiment score from interaction."
+      - name: resolved_count
+        description: "Number of interactions resolved."
+      - name: resolution_rate_pct
+        description: "Percentage of interactions resolved."
+      - name: escalated_count
+        description: "Number of escalated interactions."
+      - name: escalation_rate_pct
+        description: "Percentage of interactions escalated."
+      - name: positive_count
+        description: "Number of interactions with positive sentiment."
+      - name: negative_count
+        description: "Number of interactions with negative sentiment."
+      - name: negative_sentiment_pct
+        description: "Percentage of negative sentiment interactions."
+      - name: unique_customers
+        description: "Number of unique customers impacted."
+      - name: last_updated
+        description: "Timestamp of last update."
+
+  # ---------------------------------------------------------
+  # Credit Application Rejection Analysis
+  # ---------------------------------------------------------
+  - name: analytics_credit_application_rejection_analysis
+    description: "Analyzes reasons for credit application rejections and approval rates."
+    tags: ["analytics", "diagnostic", "credit"]
+    columns:
+      - name: decision
+        description: "Decision for credit application (approved/rejected)."
+      - name: risk_grade
+        description: "Risk grade assigned to applicant."
+      - name: dti_category
+        description: "Debt-to-income category."
+      - name: credit_score_band
+        description: "Credit score band of applicant."
+      - name: income_bracket
+        description: "Income bracket of applicant."
+      - name: employment_status
+        description: "Employment status."
+      - name: product_name
+        description: "Product applied for."
+      - name: application_count
+        description: "Number of applications in this group."
+      - name: pct_of_applications
+        description: "Percentage of total applications."
+      - name: avg_requested_amount
+        description: "Average requested credit amount."
+      - name: avg_credit_score
+        description: "Average credit score at application."
+      - name: avg_dti_pct
+        description: "Average debt-to-income ratio (percentage)."
+      - name: avg_annual_income
+        description: "Average annual income."
+      - name: avg_approval_probability_pct
+        description: "Average approval probability score (percentage)."
+      - name: approved_count
+        description: "Number of approved applications."
+      - name: approval_rate_pct
+        description: "Approval rate percentage."
+      - name: avg_approved_amount
+        description: "Average approved amount."
+      - name: last_updated
+        description: "Timestamp of last update."
+
+  # ---------------------------------------------------------
+  # Account Closure Analysis
+  # ---------------------------------------------------------
+  - name: analytics_account_closure_analysis
+    description: "Analyzes reasons for account closures and related patterns."
+    tags: ["analytics", "diagnostic", "accounts"]
+    columns:
+      - name: product_category
+        description: "Product category of closed account."
+      - name: customer_segment
+        description: "Customer segment."
+      - name: churn_risk_category
+        description: "Churn risk category of customer."
+      - name: closed_accounts
+        description: "Number of accounts closed."
+      - name: avg_account_age_months
+        description: "Average age of accounts at closure."
+      - name: avg_customer_tenure_months
+        description: "Average customer tenure in months."
+      - name: avg_transactions_before_closure
+        description: "Average transaction activity before closure (90 days)."
+      - name: avg_service_contacts
+        description: "Average customer service interactions before closure."
+      - name: avg_negative_interactions
+        description: "Average number of negative interactions before closure."
+      - name: avg_monthly_fee
+        description: "Average monthly fee of closed accounts."
+      - name: zero_balance_closures
+        description: "Number of accounts closed with zero balance."
+      - name: negative_balance_closures
+        description: "Number of accounts closed with negative balance."
+      - name: last_updated
+        description: "Timestamp of last update."
+
+  # ---------------------------------------------------------
+  # Revenue Variance Analysis
+  # ---------------------------------------------------------
+  - name: analytics_revenue_variance_analysis
+    description: "Explains revenue deviations from targets by product and segment."
+    tags: ["analytics", "diagnostic", "revenue"]
+    columns:
+      - name: year_month
+        description: "Year and month in YYYY-MM format."
+      - name: product_category
+        description: "Product category."
+      - name: customer_segment
+        description: "Customer segment."
+      - name: transaction_revenue
+        description: "Estimated transaction revenue."
+      - name: fee_revenue
+        description: "Revenue from account fees."
+      - name: interest_revenue
+        description: "Revenue from interest income."
+      - name: total_revenue
+        description: "Sum of all revenue components."
+      - name: transaction_count
+        description: "Number of transactions."
+      - name: mom_revenue_change
+        description: "Month-over-month revenue change."
+      - name: mom_revenue_change_pct
+        description: "Month-over-month revenue change percentage."
+      - name: last_updated
+        description: "Timestamp of last update."
+
+  # ---------------------------------------------------------
+  # Marketing Campaign Performance Drivers
+  # ---------------------------------------------------------
+  - name: analytics_marketing_campaign_performance_drivers
+    description: "Analyzes what drives success or failure of marketing campaigns."
+    tags: ["analytics", "diagnostic", "marketing"]
+    columns:
+      - name: campaign_type
+        description: "Type of marketing campaign."
+      - name: target_segment
+        description: "Target segment for the campaign."
+      - name: channel_group
+        description: "Marketing channel group."
+      - name: roi_category
+        description: "ROI category of the campaign."
+      - name: campaign_status
+        description: "Status of the campaign."
+      - name: campaign_count
+        description: "Number of campaigns in the group."
+      - name: avg_roi
+        description: "Average return on investment."
+      - name: avg_ctr
+        description: "Average click-through rate."
+      - name: avg_conversion_rate
+        description: "Average conversion rate."
+      - name: avg_cpa
+        description: "Average cost per acquisition."
+      - name: avg_conversions_per_1k
+        description: "Average conversions per 1k budget spent."
+      - name: avg_cpm
+        description: "Average cost per 1k impressions."
+      - name: avg_impressions
+        description: "Average number of impressions."
+      - name: avg_clicks
+        description: "Average number of clicks."
+      - name: avg_conversions
+        description: "Average number of conversions."
+      - name: avg_budget
+        description: "Average campaign budget."
+      - name: avg_duration_days
+        description: "Average duration of campaign in days."
+      - name: profitable_campaigns
+        description: "Number of profitable campaigns."
+      - name: profitable_rate_pct
+        description: "Percentage of profitable campaigns."
+      - name: last_updated
+        description: "Timestamp of last update."

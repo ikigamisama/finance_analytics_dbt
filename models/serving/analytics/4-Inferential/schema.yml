@@ -1,0 +1,295 @@
+version: 2
+
+models:
+  - name: analytics_customer_segment_statistical_comparison
+    description: >
+      Statistical comparison of customer metrics across customer segments,
+      including confidence intervals and distribution statistics.
+    columns:
+      - name: customer_segment
+        description: Customer segmentation label.
+        tests:
+          - not_null
+
+      - name: sample_size
+        description: Number of customers in the segment.
+
+      - name: mean_clv
+        description: Mean customer lifetime value.
+      - name: stddev_clv
+        description: Standard deviation of customer lifetime value.
+      - name: median_clv
+        description: Median customer lifetime value.
+      - name: q1_clv
+        description: First quartile of customer lifetime value.
+      - name: q3_clv
+        description: Third quartile of customer lifetime value.
+      - name: clv_ci_lower
+        description: Lower bound of 95% confidence interval for CLV.
+      - name: clv_ci_upper
+        description: Upper bound of 95% confidence interval for CLV.
+
+      - name: mean_income
+        description: Mean annual income.
+      - name: stddev_income
+        description: Standard deviation of annual income.
+      - name: median_income
+        description: Median annual income.
+
+      - name: mean_credit_score
+        description: Mean credit score.
+      - name: stddev_credit_score
+        description: Standard deviation of credit score.
+
+      - name: mean_transactions
+        description: Mean number of transactions in the last 90 days.
+      - name: stddev_transactions
+        description: Standard deviation of transaction count.
+
+      - name: mean_balance
+        description: Mean total account balance.
+      - name: stddev_balance
+        description: Standard deviation of total balance.
+
+      - name: mean_churn_risk_pct
+        description: Mean churn risk score expressed as a percentage.
+      - name: stddev_churn_risk_pct
+        description: Standard deviation of churn risk percentage.
+
+      - name: last_updated
+        description: Timestamp when the record was last updated.
+
+  - name: analytics_ab_test_channel_performance
+    description: >
+      A/B-style performance comparison across transaction channels
+      with confidence intervals and engagement metrics.
+    columns:
+      - name: channel
+        description: Transaction channel (e.g. online, POS, mobile).
+        tests:
+          - not_null
+
+      - name: sample_size
+        description: Number of transactions for the channel.
+
+      - name: mean_transaction_amount
+        description: Mean transaction amount.
+      - name: stddev_transaction_amount
+        description: Standard deviation of transaction amount.
+      - name: amount_ci_lower
+        description: Lower bound of 95% confidence interval for mean transaction amount.
+      - name: amount_ci_upper
+        description: Upper bound of 95% confidence interval for mean transaction amount.
+
+      - name: fraud_rate_pct
+        description: Fraud rate as a percentage of total transactions.
+      - name: fraud_rate_se
+        description: Standard error of fraud rate estimate.
+
+      - name: decline_rate_pct
+        description: Percentage of declined transactions.
+
+      - name: mean_processing_ms
+        description: Mean transaction processing time in milliseconds.
+
+      - name: avg_transactions_per_customer
+        description: Average number of transactions per customer.
+      - name: unique_customers
+        description: Number of unique customers.
+
+      - name: total_volume
+        description: Total transaction volume.
+
+      - name: last_updated
+        description: Timestamp when the record was last updated.
+
+  - name: analytics_credit_approval_hypothesis_test
+    description: >
+      Hypothesis testing and confidence interval analysis for credit approval
+      rates across customer and application attributes.
+    columns:
+      - name: credit_score_band
+        description: Credit score bucket.
+      - name: income_bracket
+        description: Income bracket category.
+      - name: employment_status
+        description: Employment status of applicant.
+      - name: dti_category
+        description: Debt-to-income ratio category.
+
+      - name: sample_size
+        description: Total number of credit applications.
+      - name: approved_applications
+        description: Number of approved applications.
+      - name: approval_rate_pct
+        description: Credit approval rate percentage.
+      - name: approval_rate_se_pct
+        description: Standard error of approval rate percentage.
+
+      - name: approval_rate_ci_lower
+        description: Lower bound of 95% confidence interval for approval rate.
+      - name: approval_rate_ci_upper
+        description: Upper bound of 95% confidence interval for approval rate.
+
+      - name: mean_credit_score
+        description: Mean credit score at application.
+      - name: mean_income
+        description: Mean applicant income.
+      - name: mean_dti_pct
+        description: Mean debt-to-income ratio percentage.
+      - name: mean_requested_amount
+        description: Mean requested credit amount.
+
+      - name: approval_odds
+        description: Odds of approval derived from approval rate.
+
+      - name: last_updated
+        description: Timestamp when the record was last updated.
+
+  - name: analytics_fraud_detection_accuracy
+    description: >
+      Evaluation of fraud detection model performance using
+      confusion matrix metrics by predicted risk band.
+    columns:
+      - name: predicted_risk
+        description: Predicted fraud risk category.
+        tests:
+          - accepted_values:
+              values: ["High Risk", "Medium Risk", "Low Risk"]
+
+      - name: total_predictions
+        description: Total number of evaluated transactions.
+      - name: true_positive
+        description: Correctly predicted fraud transactions.
+      - name: false_positive
+        description: Non-fraud transactions incorrectly flagged.
+      - name: false_negative
+        description: Fraud transactions not detected.
+      - name: true_negative
+        description: Correctly predicted non-fraud transactions.
+
+      - name: precision_pct
+        description: Precision percentage.
+      - name: recall_pct
+        description: Recall (sensitivity) percentage.
+      - name: specificity_pct
+        description: Specificity percentage.
+      - name: f1_score_pct
+        description: F1 score percentage.
+      - name: accuracy_pct
+        description: Overall accuracy percentage.
+      - name: false_positive_rate_pct
+        description: False positive rate percentage.
+
+      - name: last_updated
+        description: Timestamp when the record was last updated.
+
+  - name: analytics_customer_lifetime_value_distribution
+    description: >
+      Distribution and percentile-based analysis of customer lifetime value
+      by segment and CLV bin.
+    columns:
+      - name: clv_bin
+        description: Bucketed customer lifetime value range.
+      - name: customer_segment
+        description: Customer segment.
+      - name: customer_count
+        description: Number of customers in the bin.
+      - name: pct_of_segment
+        description: Percentage of customers within the segment.
+
+      - name: mean_clv
+        description: Mean CLV in the bin.
+      - name: median_clv
+        description: Median CLV.
+      - name: q1_clv
+        description: First quartile CLV.
+      - name: q3_clv
+        description: Third quartile CLV.
+      - name: min_clv
+        description: Minimum CLV.
+      - name: max_clv
+        description: Maximum CLV.
+      - name: stddev_clv
+        description: Standard deviation of CLV.
+      - name: skewness_indicator
+        description: Simplified skewness indicator.
+
+      - name: last_updated
+        description: Timestamp when the record was last updated.
+
+  - name: analytics_transaction_amount_normality_test
+    description: >
+      Statistical normality and dispersion analysis of transaction amounts
+      by merchant category and channel.
+    columns:
+      - name: merchant_category
+        description: Merchant category code or grouping.
+      - name: channel
+        description: Transaction channel.
+      - name: sample_size
+        description: Number of transactions analyzed.
+
+      - name: mean_amount
+        description: Mean transaction amount.
+      - name: median_amount
+        description: Median transaction amount.
+      - name: stddev_amount
+        description: Standard deviation of transaction amount.
+
+      - name: q1_amount
+        description: First quartile transaction amount.
+      - name: q3_amount
+        description: Third quartile transaction amount.
+      - name: iqr
+        description: Interquartile range.
+      - name: min_amount
+        description: Minimum transaction amount.
+      - name: max_amount
+        description: Maximum transaction amount.
+
+      - name: cv_pct
+        description: Coefficient of variation percentage.
+      - name: skewness_indicator
+        description: Mean-vs-median skewness indicator.
+      - name: lower_outlier_bound
+        description: Lower outlier bound using 1.5×IQR.
+      - name: upper_outlier_bound
+        description: Upper outlier bound using 1.5×IQR.
+
+      - name: last_updated
+        description: Timestamp when the record was last updated.
+
+  - name: analytics_churn_rate_confidence_intervals
+    description: >
+      Churn rate estimation with confidence intervals by customer segment,
+      age group, and tenure bucket.
+    columns:
+      - name: customer_segment
+        description: Customer segment.
+      - name: age_group
+        description: Customer age group.
+      - name: tenure_group
+        description: Customer tenure bucket.
+
+      - name: total_customers
+        description: Total customers in the group.
+      - name: churned_customers
+        description: Number of churned customers.
+      - name: churn_rate_pct
+        description: Churn rate percentage.
+      - name: churn_rate_se_pct
+        description: Standard error of churn rate.
+
+      - name: churn_rate_ci_lower
+        description: Lower bound of 95% confidence interval for churn rate.
+      - name: churn_rate_ci_upper
+        description: Upper bound of 95% confidence interval for churn rate.
+
+      - name: high_risk_pct
+        description: Percentage of high churn-risk customers.
+      - name: mean_churn_score_pct
+        description: Mean churn risk score percentage.
+
+      - name: last_updated
+        description: Timestamp when the record was last updated.

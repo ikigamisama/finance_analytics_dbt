@@ -1,0 +1,882 @@
+version: 2
+models:
+  - name: dim_account
+    description: >
+      Dimension table representing customer financial accounts.
+      Contains account status, balances, credit attributes, and lifecycle
+      indicators. One row represents the current version of an account.
+
+    tags: ["gold", "dimension", "serving", "account"]
+
+    columns:
+      - name: account_key
+        description: Surrogate key uniquely identifying an account record.
+        tests:
+          - not_null
+          - unique
+
+      - name: account_natural_key
+        description: Natural account identifier from the source system.
+        tests:
+          - not_null
+
+      - name: customer_id
+        description: Identifier of the customer who owns the account.
+        tests:
+          - not_null
+
+      - name: product_id
+        description: Identifier of the financial product associated with the account.
+        tests:
+          - not_null
+
+      - name: account_number
+        description: Human-readable account number assigned to the account.
+        tests:
+          - not_null
+
+      - name: account_status
+        description: Current lifecycle status of the account (e.g. active, closed, dormant).
+        tests:
+          - not_null
+
+      - name: open_date
+        description: Date when the account was opened.
+        tests:
+          - not_null
+
+      - name: close_date
+        description: Date when the account was closed, if applicable.
+
+      - name: account_age_months
+        description: Age of the account expressed in months since opening.
+
+      - name: is_active
+        description: Flag indicating whether the account is currently active.
+
+      - name: is_closed
+        description: Flag indicating whether the account has been closed.
+
+      - name: is_dormant
+        description: Flag indicating whether the account is dormant due to inactivity.
+
+      - name: current_balance
+        description: Current posted balance of the account.
+
+      - name: available_balance
+        description: Balance available for use, after holds and pending transactions.
+
+      - name: credit_limit
+        description: Maximum credit limit assigned to the account, if applicable.
+
+      - name: credit_utilization_pct
+        description: Percentage of credit limit currently utilized.
+
+      - name: balance_category
+        description: Categorization of account balance for analytical segmentation.
+
+      - name: currency
+        description: Currency code used for the account balances.
+
+      - name: interest_rate
+        description: Interest rate applied to the account balance.
+
+      - name: minimum_payment
+        description: Minimum payment amount due for the current billing cycle.
+
+      - name: payment_due_date
+        description: Due date for the next required payment.
+
+      - name: last_statement_date
+        description: Date when the most recent statement was generated.
+
+      - name: autopay_enabled
+        description: Flag indicating whether automatic payments are enabled.
+
+      - name: overdraft_protection
+        description: Flag indicating whether overdraft protection is enabled.
+
+      - name: primary_account
+        description: Flag indicating whether this is the primary account for the customer.
+
+      - name: is_past_due
+        description: Flag indicating whether the account has a past-due balance.
+
+      - name: is_near_limit
+        description: Flag indicating whether the account balance is near its credit limit.
+
+      - name: effective_date
+        description: Timestamp indicating when this account record became effective.
+        tests:
+          - not_null
+
+      - name: expiration_date
+        description: Timestamp indicating when this account record expires.
+
+      - name: is_current
+        description: Flag indicating whether this is the current active version of the account record.
+        tests:
+          - not_null
+
+      - name: dbt_updated_at
+        description: Timestamp when the record was last updated by dbt.
+        tests:
+          - not_null
+
+  - name: dim_agent
+    description: >
+      Dimension table representing customer service agents.
+      Contains aggregated performance metrics derived from customer
+      interactions and a classification of agent performance.
+
+    tags: ["gold", "dimension", "serving", "agent"]
+
+    columns:
+      - name: agent_key
+        description: Surrogate key uniquely identifying an agent.
+        tests:
+          - not_null
+          - unique
+
+      - name: agent_natural_key
+        description: Natural agent identifier from the source system.
+        tests:
+          - not_null
+          - unique
+
+      - name: total_interactions
+        description: Total number of customer interactions handled by the agent.
+        tests:
+          - not_null
+
+      - name: avg_interaction_duration
+        description: Average duration of interactions handled by the agent in minutes.
+
+      - name: avg_satisfaction_rating
+        description: Average customer satisfaction rating received by the agent.
+
+      - name: avg_sentiment_score
+        description: Average sentiment score derived from customer interactions.
+
+      - name: resolution_rate
+        description: Proportion of interactions resolved successfully by the agent.
+        tests:
+          - not_null
+
+      - name: escalation_rate
+        description: Proportion of interactions escalated by the agent.
+        tests:
+          - not_null
+
+      - name: performance_tier
+        description: >
+          Categorization of agent performance based on average
+          satisfaction rating.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["Excellent", "Good", "Average", "Needs Improvement"]
+
+      - name: dbt_updated_at
+        description: Timestamp when the agent record was last updated by dbt.
+        tests:
+          - not_null
+
+  - name: dim_campaign
+    description: >
+      Dimension table representing marketing campaigns.
+      Contains campaign metadata, targeting information,
+      lifecycle dates, and analytical classifications used
+      for marketing performance analysis.
+
+    tags: ["gold", "dimension", "serving", "marketing"]
+
+    columns:
+      - name: campaign_key
+        description: Surrogate key uniquely identifying a marketing campaign.
+        tests:
+          - not_null
+          - unique
+
+      - name: campaign_natural_key
+        description: Natural campaign identifier from the source system.
+        tests:
+          - not_null
+          - unique
+
+      - name: campaign_name
+        description: Name of the marketing campaign.
+        tests:
+          - not_null
+
+      - name: campaign_type
+        description: Primary execution type or channel of the campaign.
+        tests:
+          - not_null
+
+      - name: start_date
+        description: Date when the marketing campaign started.
+        tests:
+          - not_null
+
+      - name: end_date
+        description: Date when the marketing campaign ended.
+
+      - name: target_segment
+        description: Customer segment targeted by the marketing campaign.
+
+      - name: product_promoted
+        description: Product or offering promoted by the campaign.
+
+      - name: campaign_duration_days
+        description: Duration of the campaign expressed in days.
+        tests:
+          - not_null
+
+      - name: campaign_status
+        description: Current lifecycle status of the campaign (e.g. planned, active, completed).
+        tests:
+          - not_null
+
+      - name: roi_category
+        description: Categorized return on investment classification for the campaign.
+
+      - name: campaign_duration_category
+        description: >
+          Classification of campaign length based on its duration
+          (short, medium, long, extended).
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - "Short (< 1 week)"
+                - "Medium (1-4 weeks)"
+                - "Long (1-3 months)"
+                - "Extended (3+ months)"
+
+      - name: channel_group
+        description: >
+          High-level grouping of campaign channels used for
+          aggregated marketing analysis.
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - "Digital Direct"
+                - "Digital Advertising"
+                - "Traditional Media"
+                - "Other"
+
+      - name: dbt_updated_at
+        description: Timestamp when the campaign record was last updated by dbt.
+        tests:
+          - not_null
+
+  - name: dim_customer
+    description: >
+      Dimension table representing customers.
+      Contains demographic, contact, financial, behavioral,
+      and lifecycle attributes for analytics and reporting.
+      One row represents the current version of a customer record.
+
+    tags: ["gold", "dimension", "serving", "customer"]
+
+    columns:
+      - name: customer_key
+        description: Surrogate key uniquely identifying a customer record.
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_natural_key
+        description: Natural customer identifier from the source system.
+        tests:
+          - not_null
+
+      - name: first_name
+        description: Customer's first name.
+        tests:
+          - not_null
+
+      - name: last_name
+        description: Customer's last name.
+        tests:
+          - not_null
+
+      - name: full_name
+        description: Concatenated full name of the customer.
+        tests:
+          - not_null
+
+      - name: email
+        description: Primary email address of the customer.
+
+      - name: phone_clean
+        description: Normalized phone number of the customer.
+
+      - name: date_of_birth
+        description: Customer's date of birth.
+
+      - name: age
+        description: Customer's age in years.
+
+      - name: age_group
+        description: Age band classification for customer segmentation.
+        tests:
+          - accepted_values:
+              values:
+                - "18-24"
+                - "25-34"
+                - "35-44"
+                - "45-54"
+                - "55-64"
+                - "65+"
+
+      - name: address
+        description: Street address of the customer.
+
+      - name: city
+        description: City of the customer’s residence.
+
+      - name: state
+        description: State or region of the customer’s residence.
+
+      - name: zip_code
+        description: Postal or ZIP code of the customer’s residence.
+
+      - name: country
+        description: Country of the customer’s residence.
+
+      - name: signup_date
+        description: Date when the customer signed up.
+        tests:
+          - not_null
+
+      - name: credit_score
+        description: Customer credit score.
+
+      - name: credit_score_band
+        description: Credit score category or band.
+
+      - name: annual_income
+        description: Estimated annual income of the customer.
+
+      - name: income_bracket
+        description: Income band used for segmentation.
+
+      - name: employment_status
+        description: Employment status of the customer.
+
+      - name: employer
+        description: Name of the customer’s employer.
+
+      - name: job_title
+        description: Job title of the customer.
+
+      - name: education_level
+        description: Highest education level attained by the customer.
+
+      - name: marital_status
+        description: Marital status of the customer.
+
+      - name: number_of_dependents
+        description: Number of dependents associated with the customer.
+
+      - name: home_ownership
+        description: Home ownership status of the customer.
+
+      - name: customer_segment
+        description: Business-defined customer segment classification.
+
+      - name: life_stage
+        description: Customer life stage classification.
+
+      - name: risk_segment
+        description: Risk categorization for the customer.
+
+      - name: loyalty_tier
+        description: Loyalty tier assigned to the customer.
+
+      - name: is_active
+        description: Flag indicating whether the customer is currently active.
+        tests:
+          - not_null
+
+      - name: preferred_channel
+        description: Preferred communication or engagement channel of the customer.
+
+      - name: marketing_opt_in
+        description: Flag indicating whether the customer opted in to marketing communications.
+
+      - name: customer_lifetime_value
+        description: Estimated lifetime value of the customer.
+
+      - name: churn_risk_score
+        description: Numerical score indicating likelihood of customer churn.
+
+      - name: churn_risk_category
+        description: Categorized churn risk level for the customer.
+
+      - name: last_login_date
+        description: Most recent login date for the customer.
+
+      - name: acquisition_channel
+        description: Channel through which the customer was acquired.
+
+      - name: tenure_months
+        description: Number of months since the customer signup date.
+
+      - name: effective_date
+        description: Timestamp indicating when this customer record became effective.
+        tests:
+          - not_null
+
+      - name: expiration_date
+        description: Timestamp indicating when this customer record expires.
+
+      - name: is_current
+        description: Flag indicating whether this is the current active version of the customer record.
+        tests:
+          - not_null
+
+      - name: dbt_updated_at
+        description: Timestamp when the customer record was last updated by dbt.
+        tests:
+          - not_null
+
+  - name: dim_date
+    description: >
+      Dimension table representing calendar dates.
+      Provides day-level attributes, flags, and hierarchies
+      to support time-based analysis across facts.
+
+    tags: ["gold", "dimension", "serving", "date"]
+
+    columns:
+      - name: date_key
+        description: Surrogate key uniquely identifying a calendar date.
+        tests:
+          - not_null
+          - unique
+
+      - name: date_actual
+        description: The actual calendar date.
+        tests:
+          - not_null
+          - unique
+
+      - name: year
+        description: Year component of the date.
+        tests:
+          - not_null
+
+      - name: quarter
+        description: Quarter of the year (1-4) for the date.
+        tests:
+          - not_null
+
+      - name: month
+        description: Month number (1-12) for the date.
+        tests:
+          - not_null
+
+      - name: week_of_year
+        description: ISO week number of the year for the date.
+
+      - name: day_of_year
+        description: Day of the year (1-365/366).
+
+      - name: day_of_week
+        description: Day of the week (0=Sunday, 6=Saturday).
+        tests:
+          - not_null
+
+      - name: day_name
+        description: Name of the day (e.g., Monday, Tuesday).
+
+      - name: month_name
+        description: Name of the month (e.g., January, February).
+
+      - name: year_month
+        description: Year-Month string for aggregation (YYYY-MM).
+
+      - name: year_quarter
+        description: Year-Quarter string for aggregation (YYYY-Q).
+
+      - name: is_weekend
+        description: Flag indicating whether the date falls on a weekend.
+
+      - name: is_sunday
+        description: Flag indicating whether the date is Sunday.
+
+      - name: is_saturday
+        description: Flag indicating whether the date is Saturday.
+
+      - name: first_day_of_month
+        description: First calendar day of the month.
+
+      - name: last_day_of_month
+        description: Last calendar day of the month.
+
+      - name: first_day_of_quarter
+        description: First calendar day of the quarter.
+
+      - name: last_day_of_quarter
+        description: Last calendar day of the quarter.
+
+      - name: first_day_of_year
+        description: First calendar day of the year.
+
+      - name: last_day_of_year
+        description: Last calendar day of the year.
+
+      - name: is_first_day_of_month
+        description: Flag indicating whether the date is the first day of the month.
+
+      - name: is_last_day_of_month
+        description: Flag indicating whether the date is the last day of the month.
+
+  - name: dim_economic_indicators
+    description: >
+      Dimension table representing macroeconomic indicators by date.
+      Includes economic metrics, classifications, and derived analytical flags
+      to support contextual analysis of transactions, accounts, and campaigns.
+
+    tags: ["gold", "dimension", "serving", "economic"]
+
+    columns:
+      - name: economic_indicator_key
+        description: Surrogate key uniquely identifying an economic indicator record.
+        tests:
+          - not_null
+          - unique
+
+      - name: indicator_date
+        description: The calendar date of the economic indicators.
+        tests:
+          - not_null
+          - unique
+
+      - name: year
+        description: Year of the indicator date.
+        tests:
+          - not_null
+
+      - name: quarter
+        description: Quarter of the year (1-4) for the indicator date.
+        tests:
+          - not_null
+
+      - name: month
+        description: Month number (1-12) for the indicator date.
+        tests:
+          - not_null
+
+      - name: gdp_growth_rate
+        description: Gross Domestic Product growth rate for the period.
+
+      - name: unemployment_rate
+        description: Unemployment rate for the period.
+
+      - name: inflation_rate
+        description: Inflation rate for the period.
+
+      - name: federal_funds_rate
+        description: Federal funds interest rate applicable for the period.
+
+      - name: sp500_index
+        description: S&P 500 index closing value.
+
+      - name: vix_index
+        description: Volatility Index (VIX) level.
+
+      - name: consumer_confidence_index
+        description: Consumer confidence index value.
+
+      - name: housing_price_index
+        description: Housing Price Index value.
+
+      - name: "10yr_treasury_yield"
+        description: 10-year US Treasury yield.
+
+      - name: mortgage_rate_30yr
+        description: 30-year fixed mortgage interest rate.
+
+      - name: economic_health
+        description: Overall classification of economic health.
+
+      - name: unemployment_level
+        description: Classification of unemployment level (e.g., low, medium, high).
+
+      - name: market_volatility
+        description: Classification of market volatility (e.g., low, medium, high).
+
+      - name: is_recession
+        description: Flag indicating whether GDP growth is negative (recession).
+        tests:
+          - not_null
+
+      - name: rate_environment
+        description: Categorization of interest rate environment (Low, Normal, High).
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["Low Rate", "Normal Rate", "High Rate"]
+
+      - name: inflation_category
+        description: Categorization of inflation levels.
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                [
+                  "Low Inflation",
+                  "Target Inflation",
+                  "Elevated Inflation",
+                  "High Inflation",
+                ]
+
+      - name: dbt_updated_at
+        description: Timestamp when the record was last updated by dbt.
+        tests:
+          - not_null
+
+  - name: dim_location
+    description: >
+      Dimension table representing physical locations including branches and ATMs.
+      Combines metadata, geographic coordinates, and operational flags for analytics.
+
+    tags: ["gold", "dimension", "serving", "location"]
+
+    columns:
+      - name: location_key
+        description: Surrogate key uniquely identifying a location.
+        tests:
+          - not_null
+          - unique
+
+      - name: location_natural_key
+        description: Natural identifier of the location from the source system.
+        tests:
+          - not_null
+          - unique
+
+      - name: location_type
+        description: Type of location (e.g., BRANCH, ATM).
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["BRANCH", "ATM"]
+
+      - name: location_name
+        description: Name of the location (branch name or ATM location name).
+
+      - name: location_code
+        description: Internal code used to identify the location.
+
+      - name: address
+        description: Street address of the location.
+
+      - name: city
+        description: City of the location.
+
+      - name: state
+        description: State or region of the location.
+
+      - name: zip_code
+        description: Postal or ZIP code of the location.
+
+      - name: country
+        description: Country of the location.
+
+      - name: latitude
+        description: Latitude coordinate of the location.
+
+      - name: longitude
+        description: Longitude coordinate of the location.
+
+      - name: region
+        description: Region of the location (applicable to branches).
+
+      - name: phone
+        description: Contact phone number of the location (applicable to branches).
+
+      - name: is_active
+        description: Flag indicating whether the branch is currently active.
+
+      - name: is_operational
+        description: Flag indicating whether the ATM is operational.
+
+      - name: is_24_hour
+        description: Flag indicating whether the ATM operates 24 hours.
+
+      - name: dbt_updated_at
+        description: Timestamp when the location record was last updated by dbt.
+        tests:
+          - not_null
+
+  - name: dim_merchant
+    description: >
+      Dimension table representing merchants.
+      Includes metadata, location, category, risk assessment, 
+      and transactional attributes for analytical purposes.
+
+    tags: ["gold", "dimension", "serving", "merchant"]
+
+    columns:
+      - name: merchant_key
+        description: Surrogate key uniquely identifying a merchant.
+        tests:
+          - not_null
+          - unique
+
+      - name: merchant_natural_key
+        description: Natural identifier of the merchant from the source system.
+        tests:
+          - not_null
+          - unique
+
+      - name: merchant_name
+        description: Name of the merchant.
+        tests:
+          - not_null
+
+      - name: category
+        description: Business category of the merchant.
+
+      - name: mcc_code
+        description: Merchant Category Code.
+
+      - name: category_group
+        description: Higher-level grouping of merchant categories.
+
+      - name: city
+        description: City where the merchant operates.
+
+      - name: state
+        description: State or region where the merchant operates.
+
+      - name: country
+        description: Country where the merchant operates.
+
+      - name: latitude
+        description: Latitude coordinate of the merchant location.
+
+      - name: longitude
+        description: Longitude coordinate of the merchant location.
+
+      - name: region
+        description: Region of the merchant for reporting purposes.
+
+      - name: risk_rating
+        description: Risk rating assigned to the merchant.
+
+      - name: risk_score
+        description: Numeric risk score of the merchant.
+
+      - name: avg_transaction_amount
+        description: Average transaction amount processed by the merchant.
+
+      - name: transaction_value_segment
+        description: Segmentation of merchants based on transaction value.
+
+      - name: is_online
+        description: Flag indicating whether the merchant operates online.
+
+      - name: merchant_type
+        description: Type of merchant (e.g., retail, service).
+
+      - name: established_date
+        description: Date the merchant was established.
+
+      - name: years_in_business
+        description: Number of years the merchant has been in operation.
+
+      - name: business_maturity
+        description: Classification of the merchant's business maturity.
+
+      - name: mcc_category
+        description: Alternative categorization derived from the MCC code.
+
+      - name: dbt_updated_at
+        description: Timestamp when the merchant record was last updated by dbt.
+        tests:
+          - not_null
+
+  - name: dim_product
+    description: >
+      Dimension table representing financial products.
+      Contains descriptive, financial, and analytical attributes for products.
+
+    tags: ["gold", "dimension", "serving", "product"]
+
+    columns:
+      - name: product_key
+        description: Surrogate key uniquely identifying a product.
+        tests:
+          - not_null
+          - unique
+
+      - name: product_natural_key
+        description: Natural identifier of the product from the source system.
+        tests:
+          - not_null
+          - unique
+
+      - name: product_name
+        description: Name of the product.
+        tests:
+          - not_null
+
+      - name: category
+        description: Product category (e.g., Savings, Credit Card, Loan).
+
+      - name: product_line
+        description: Sub-line of products under the same category.
+
+      - name: interest_rate
+        description: Product interest rate.
+
+      - name: interest_rate_pct
+        description: Interest rate expressed as a percentage.
+
+      - name: min_balance
+        description: Minimum required balance for the product.
+
+      - name: monthly_fee
+        description: Monthly fee associated with the product.
+
+      - name: overdraft_limit
+        description: Overdraft limit associated with the product.
+
+      - name: product_tier
+        description: Tier classification of the product.
+
+      - name: is_premium
+        description: Flag indicating whether the product is premium.
+
+      - name: product_type_desc
+        description: Descriptive classification of product type.
+
+      - name: fee_category
+        description: Categorization of fees for the product.
+
+      - name: rate_category
+        description: Categorization of interest rates for the product.
+
+      - name: complexity_score
+        description: Analytical score indicating product complexity.
+
+      - name: target_segment
+        description: Target customer segment for the product.
+
+      - name: risk_level
+        description: Risk level associated with the product.
+
+      - name: revenue_model
+        description: Revenue model applied to the product.
+
+      - name: dbt_updated_at
+        description: Timestamp when the product record was last updated by dbt.
+        tests:
+          - not_null

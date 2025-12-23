@@ -1,0 +1,384 @@
+version: 2
+
+models:
+  - name: analytics_customer_behavior_clusters
+    description: >
+      Aggregated customer behavior metrics used for clustering and segmentation analysis.
+      Includes transaction behavior, account holdings, service interactions, and engagement scores.
+    columns:
+      - name: customer_segment
+        description: Customer segmentation label.
+        tests: [not_null]
+
+      - name: age_group
+        description: Age group bucket of the customer.
+        tests: [not_null]
+
+      - name: income_bracket
+        description: Income bracket classification.
+        tests: [not_null]
+
+      - name: customer_count
+        description: Number of customers in this segment group.
+
+      - name: avg_transactions_90d
+        description: Average number of transactions per customer over the last 90 days.
+
+      - name: avg_transaction_size
+        description: Average transaction amount.
+
+      - name: avg_unique_categories
+        description: Average number of unique merchant categories per customer.
+
+      - name: avg_accounts
+        description: Average number of active accounts per customer.
+
+      - name: avg_total_balance
+        description: Average total account balance per customer.
+
+      - name: mobile_usage_pct
+        description: Percentage of transactions conducted via mobile channel.
+
+      - name: weekend_activity_pct
+        description: Percentage of transactions occurring on weekends.
+
+      - name: avg_service_contacts
+        description: Average number of customer service interactions.
+
+      - name: avg_satisfaction_score
+        description: Average customer satisfaction rating.
+
+      - name: engagement_score
+        description: Composite engagement score derived from transactions, accounts, and satisfaction.
+
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  - name: analytics_transaction_time_patterns
+    description: >
+      Time-based transaction behavior patterns by day, hour, channel, and merchant category.
+      Used for fraud detection, usage analysis, and seasonal demand insights.
+    columns:
+      - name: day_name
+        description: Name of the day (e.g., Monday).
+        tests: [not_null]
+
+      - name: day_of_week
+        description: Numeric day of week (1–7).
+        tests: [not_null]
+
+      - name: transaction_hour
+        description: Hour of day when the transaction occurred.
+        tests: [not_null]
+
+      - name: channel
+        description: Transaction channel (e.g., Mobile, Web, Branch).
+
+      - name: merchant_category
+        description: Merchant category of the transaction.
+
+      - name: transaction_count
+        description: Total number of transactions.
+
+      - name: avg_amount
+        description: Average transaction amount.
+
+      - name: unique_customers
+        description: Number of distinct customers transacting.
+
+      - name: fraud_count
+        description: Number of transactions flagged as fraud.
+
+      - name: fraud_rate_pct
+        description: Percentage of transactions flagged as fraud.
+
+      - name: high_value_count
+        description: Number of high-value transactions.
+
+      - name: high_value_pct
+        description: Percentage of high-value transactions.
+
+      - name: international_count
+        description: Number of international transactions.
+
+      - name: international_pct
+        description: Percentage of international transactions.
+
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  - name: analytics_product_cross_sell_patterns
+    description: >
+      Product ownership and cross-sell behavior identifying common product pairings
+      and their financial strength across customers.
+    columns:
+      - name: product_1
+        description: Primary product name.
+        tests: [not_null]
+
+      - name: category_1
+        description: Category of the primary product.
+
+      - name: product_2
+        description: Secondary product name.
+        tests: [not_null]
+
+      - name: category_2
+        description: Category of the secondary product.
+
+      - name: customer_count
+        description: Number of customers owning both products.
+
+      - name: avg_combined_balance
+        description: Average combined balance across the two products.
+
+      - name: avg_min_age_months
+        description: Average minimum account age (months) between the two products.
+
+      - name: cross_sell_score
+        description: Strength score indicating cross-sell potential.
+
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  - name: analytics_merchant_spending_patterns
+    description: >
+      Merchant-level and category-level spending behavior segmented by customer demographics.
+      Used for loyalty, category performance, and merchant concentration analysis.
+    columns:
+      - name: category_group
+        description: High-level merchant category grouping.
+        tests: [not_null]
+
+      - name: category
+        description: Merchant category.
+        tests: [not_null]
+
+      - name: region
+        description: Merchant region.
+
+      - name: customer_segment
+        description: Customer segmentation label.
+
+      - name: age_group
+        description: Age group bucket.
+
+      - name: transaction_count
+        description: Total number of transactions.
+
+      - name: unique_customers
+        description: Number of distinct customers.
+
+      - name: unique_merchants
+        description: Number of distinct merchants.
+
+      - name: total_spend
+        description: Total transaction spend.
+
+      - name: avg_transaction_amount
+        description: Average transaction amount.
+
+      - name: transactions_per_customer
+        description: Average number of transactions per customer.
+
+      - name: recurring_pct
+        description: Percentage of recurring transactions.
+
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  - name: analytics_credit_score_behavior_correlation
+    description: >
+      Correlation analysis between credit scores and financial behavior,
+      including transactions, account health, and payment history.
+    columns:
+      - name: credit_score_band
+        description: Credit score band classification.
+        tests: [not_null]
+
+      - name: income_bracket
+        description: Income bracket classification.
+
+      - name: customer_segment
+        description: Customer segmentation label.
+
+      - name: customer_count
+        description: Number of customers in this group.
+
+      - name: avg_credit_score
+        description: Average credit score.
+
+      - name: avg_annual_income
+        description: Average annual income.
+
+      - name: avg_transactions
+        description: Average transaction count over 90 days.
+
+      - name: avg_transaction_size
+        description: Average transaction amount.
+
+      - name: avg_volatility
+        description: Average transaction amount volatility.
+
+      - name: avg_credit_utilization_pct
+        description: Average credit utilization percentage.
+
+      - name: avg_total_balance
+        description: Average total account balance.
+
+      - name: avg_past_due_accounts
+        description: Average number of past-due accounts.
+
+      - name: avg_late_payments
+        description: Average number of late payments (12 months).
+
+      - name: avg_missed_payments
+        description: Average number of missed payments (12 months).
+
+      - name: avg_tenure_months
+        description: Average customer tenure in months.
+
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  - name: analytics_geographic_clustering
+    description: >
+      Geographic clustering of customer behavior and financial metrics
+      by state and city.
+    columns:
+      - name: state
+        description: Customer state.
+        tests: [not_null]
+
+      - name: city
+        description: Customer city.
+        tests: [not_null]
+
+      - name: customer_count
+        description: Number of customers in the location.
+
+      - name: avg_credit_score
+        description: Average credit score.
+
+      - name: avg_annual_income
+        description: Average annual income.
+
+      - name: avg_clv
+        description: Average customer lifetime value.
+
+      - name: premium_pct
+        description: Percentage of premium customers.
+
+      - name: affluent_pct
+        description: Percentage of affluent customers.
+
+      - name: total_transactions_90d
+        description: Total transactions over the last 90 days.
+
+      - name: total_volume_90d
+        description: Total transaction volume over the last 90 days.
+
+      - name: avg_transaction_amount
+        description: Average transaction amount.
+
+      - name: total_accounts
+        description: Total number of active accounts.
+
+      - name: total_balance
+        description: Total account balance.
+
+      - name: avg_balance_per_account
+        description: Average balance per account.
+
+      - name: avg_churn_risk_pct
+        description: Average churn risk percentage.
+
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  - name: analytics_seasonal_patterns
+    description: >
+      Seasonal and cyclical transaction patterns across months, quarters,
+      weekdays, and merchant categories.
+    columns:
+      - name: month
+        description: Month number.
+        tests: [not_null]
+
+      - name: month_name
+        description: Month name.
+
+      - name: quarter
+        description: Quarter number.
+
+      - name: day_of_week
+        description: Numeric day of week.
+
+      - name: day_name
+        description: Name of the day.
+
+      - name: merchant_category
+        description: Merchant category.
+
+      - name: transaction_count
+        description: Total number of transactions.
+
+      - name: total_volume
+        description: Total transaction volume.
+
+      - name: avg_amount
+        description: Average transaction amount.
+
+      - name: unique_customers
+        description: Number of distinct customers.
+
+      - name: year
+        description: Transaction year.
+
+      - name: season
+        description: Derived season label.
+
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  - name: analytics_account_lifecycle_patterns
+    description: >
+      Account lifecycle and cohort-based maturity analysis tracking retention,
+      balances, and transaction activity over time.
+    columns:
+      - name: cohort_month
+        description: Month when the account was opened.
+        tests: [not_null]
+
+      - name: product_category
+        description: Product category of the account.
+
+      - name: customer_segment
+        description: Customer segmentation label.
+
+      - name: age_bucket
+        description: Account age bucket.
+
+      - name: account_count
+        description: Total number of accounts.
+
+      - name: active_accounts
+        description: Number of active accounts.
+
+      - name: closed_accounts
+        description: Number of closed accounts.
+
+      - name: retention_rate_pct
+        description: Percentage of accounts still active.
+
+      - name: avg_balance
+        description: Average account balance.
+
+      - name: avg_lifetime_transactions
+        description: Average lifetime transaction count.
+
+      - name: avg_lifetime_volume
+        description: Average lifetime transaction volume.
+
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.

@@ -122,11 +122,11 @@ This platform provides a complete financial analytics solution implementing:
 │                                                             │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │  ANALYTICS (60 models across 8 categories)           │   │
+│  │                                                      │   │
+│  │  📊 01_descriptive_analytics/ (16 models)            │    │
+│  │     Customer overview, transactions, accounts, etc.   │   │
 │  │                                                       │   │
-│  │  📊 01_descriptive_analytics/ (16 models)            │   │
-│  │     Customer overview, transactions, accounts, etc.  │   │
-│  │                                                       │   │
-│  │  🔍 02_diagnostic_analytics/ (9 models)              │   │
+│  │  🔍 02_diagnostic_analytics/ (9 models)               │   │
 │  │     Churn, fraud patterns, loan defaults, etc.       │   │
 │  │                                                       │   │
 │  │  🔬 03_exploratory_analytics/ (8 models)             │   │
@@ -144,12 +144,12 @@ This platform provides a complete financial analytics solution implementing:
 │  │  🎯 07_causal_analytics/ (4 models)                  │   │
 │  │     Impact analysis, elasticity, attribution         │   │
 │  │                                                       │   │
-│  │  ⚡ 08_realtime_analytics/ (6 models)                │   │
-│  │     Live monitoring, fraud alerts, system health     │   │
-│  └──────────────────────────────────────────────────────┘   │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-                     ↓
+│  │  ⚡ 08_realtime_analytics/ (6 models)                │    │
+│  │     Live monitoring, fraud alerts, system health     │    │
+│  └──────────────────────────────────────────────────────┘    │
+└───────────────────────────┬──────────────────────────────────┘
+                            │
+                            ↓
 ┌─────────────────────────────────────────────────────────────┐
 │              CONSUMPTION LAYER (Visualizations)             │
 │  • Python Analytics Scripts (8 files, 92 charts total)      │
@@ -191,7 +191,7 @@ This platform provides a complete financial analytics solution implementing:
   4. **Inferential** (7 models): Statistical tests, confidence intervals
   5. **Predictive** (5 models): Forecasts, risk scores
   6. **Prescriptive** (5 models): Recommendations, optimization
-  7. **Causal** (4 models): Impact analysis, attribution
+  7. **Causal** (7 models): Impact analysis, attribution
   8. **Real-Time** (6 models): Live monitoring, alerts
 
 - **92 Interactive Visualizations**
@@ -338,16 +338,6 @@ financial-analytics-platform/
 │   ├── 06_prescriptive_analytics.py      (10 charts)
 │   ├── 07_causal_analytics.py            (8 charts)
 │   └── 08_realtime_analytics.py          (11 charts)
-│
-└── outputs/                           # Generated HTML reports
-    ├── descriptive/                   # 14 HTML files
-    ├── diagnostic/                    # 13 HTML files
-    ├── exploratory/                   # 13 HTML files
-    ├── inferential/                   # 10 HTML files
-    ├── predictive/                    # 10 HTML files
-    ├── prescriptive/                  # 10 HTML files
-    ├── causal/                        # 8 HTML files
-    └── realtime/                      # 11 HTML files
 ```
 
 **Total**:
@@ -430,12 +420,15 @@ financial-analytics-platform/
 4. analytics_marketing_budget_allocation
 5. analytics_branch_staffing_optimization
 
-#### 07 Causal Analytics (4 models)
+#### 07 Causal Analytics (7 models)
 
 1. analytics_credit_score_impact_analysis
 2. analytics_campaign_causal_impact
 3. analytics_interest_rate_behavior_impact
 4. analytics_branch_proximity_impact
+5. analytics_channel_migration_impact
+6. analytics_payment_timeliness_impact
+7. analytics_product_adoption_impact
 
 #### 08 Real-time Analytics (6 models)
 
@@ -521,6 +514,230 @@ financial-analytics-platform/
 ✅ Geographic Maps (Choropleth, Bubble)
 
 ---
+
+## 🧠 Analytics Layer Design & Methodology
+
+The **Analytics Layer** represents the highest-value semantic layer of the platform.  
+It transforms curated **Gold-layer fact and dimension tables** into **business-ready, chart-optimized analytical datasets**.
+
+This layer follows a **modern analytics maturity framework**, where each category answers a specific business question and is explicitly designed to support **interactive dashboards, executive reporting, and advanced analytics**.
+
+> **Design Principles**
+>
+> - Each analytics model answers **one clear business question**
+> - Outputs are **fully aggregated and visualization-ready**
+> - Every model is mapped to **explicit chart types**
+> - Models are reusable across **BI tools, Python dashboards, and ML pipelines**
+> - Analytics progress from **descriptive → causal → real-time**
+
+---
+
+### 📊 Analytics Maturity Framework
+
+| Analytics Layer  | Business Question      | Purpose                          |
+| ---------------- | ---------------------- | -------------------------------- |
+| **Descriptive**  | What happened?         | Historical summaries and KPIs    |
+| **Diagnostic**   | Why did it happen?     | Root-cause analysis              |
+| **Exploratory**  | What patterns exist?   | Trend and pattern discovery      |
+| **Inferential**  | Can we generalize?     | Statistical validation           |
+| **Predictive**   | What will happen?      | Forecasting and prediction       |
+| **Prescriptive** | What should we do?     | Optimization and recommendations |
+| **Causal**       | What causes what?      | Impact measurement               |
+| **Real-time**    | What is happening now? | Live monitoring and alerts       |
+
+---
+
+## 01️⃣ Descriptive Analytics — _“What happened?”_
+
+**Purpose**:  
+Provide **historical summaries, KPIs, and high-level performance metrics** across customers, accounts, transactions, products, and risk.
+
+**Output**:  
+Chart-ready aggregated tables for executive dashboards and operational reporting.
+
+#### Models & Visualizations
+
+| Model                                    | Description                       | Chart Types                       |
+| ---------------------------------------- | --------------------------------- | --------------------------------- |
+| `analytics_customer_overview`            | Overall customer base statistics  | KPI Cards, Bar Charts, Pie Charts |
+| `analytics_customer_by_segment`          | Customer distribution by segment  | Pie, Donut, Bar                   |
+| `analytics_customer_by_age_group`        | Customer demographics by age      | Bar Chart, Population Pyramid     |
+| `analytics_customer_by_geography`        | Customer distribution by location | Choropleth Map, Bar               |
+| `analytics_transaction_summary`          | Overall transaction metrics       | KPI Cards, Time Series            |
+| `analytics_transaction_by_channel`       | Transactions by channel           | Pie, Bar                          |
+| `analytics_transaction_by_category`      | Transactions by category          | Treemap, Bar                      |
+| `analytics_daily_transaction_trend`      | Daily transaction trends          | Line, Area                        |
+| `analytics_monthly_transaction_trend`    | Monthly transaction trends        | Line, Bar                         |
+| `analytics_account_summary`              | Account portfolio overview        | KPI Cards, Gauges                 |
+| `analytics_account_by_product`           | Accounts by product type          | Stacked Bar, Pie                  |
+| `analytics_account_balance_distribution` | Balance distribution              | Histogram, Box Plot               |
+| `analytics_product_summary`              | Product portfolio KPIs            | KPI Cards, Bar                    |
+| `analytics_fraud_summary`                | Fraud detection overview          | KPI Cards, Funnel                 |
+| `analytics_loan_payment_summary`         | Loan payment performance          | KPI Cards, Waterfall              |
+
+---
+
+### 02️⃣ Diagnostic Analytics — _“Why did it happen?”_
+
+**Purpose**:  
+Explain **drivers, anomalies, and root causes** behind trends observed in descriptive analytics.
+
+**Output**:  
+Drill-down datasets for investigative dashboards.
+
+#### Models & Visualizations
+
+| Model                                              | Description                  | Chart Types                  |
+| -------------------------------------------------- | ---------------------------- | ---------------------------- |
+| `analytics_churn_analysis`                         | Customer churn drivers       | Waterfall, Bar, Heatmap      |
+| `analytics_fraud_pattern_analysis`                 | Fraud pattern identification | Sankey, Heatmap, Bubble      |
+| `analytics_loan_default_drivers`                   | Loan default drivers         | Correlation Matrix, Bar, Box |
+| `analytics_transaction_decline_analysis`           | Transaction decline reasons  | Funnel, Bar                  |
+| `analytics_customer_satisfaction_drivers`          | Satisfaction drivers         | Scatter, Box, Bar            |
+| `analytics_credit_application_rejection_analysis`  | Credit rejection drivers     | Waterfall, Funnel            |
+| `analytics_account_closure_analysis`               | Account closure drivers      | Sankey, Bar                  |
+| `analytics_revenue_variance_analysis`              | Revenue variance analysis    | Waterfall, Variance          |
+| `analytics_marketing_campaign_performance_drivers` | Campaign success drivers     | Scatter, Bubble              |
+
+---
+
+### 03️⃣ Exploratory Analytics — _“What patterns exist?”_
+
+**Purpose**:  
+Discover **hidden patterns, correlations, and emerging behaviors** not visible through standard reporting.
+
+**Output**:  
+High-dimensional datasets for pattern discovery and hypothesis generation.
+
+#### Models & Visualizations
+
+| Model                                         | Description                  | Chart Types                   |
+| --------------------------------------------- | ---------------------------- | ----------------------------- |
+| `analytics_customer_behavior_clusters`        | Behavioral segmentation      | Scatter, Cluster Map, 3D Plot |
+| `analytics_transaction_time_patterns`         | Time-based patterns          | Heatmap, 3D Surface, Calendar |
+| `analytics_product_cross_sell_patterns`       | Cross-sell behavior          | Network, Sankey, Chord        |
+| `analytics_merchant_spending_patterns`        | Merchant behavior patterns   | Treemap, Sunburst, Sankey     |
+| `analytics_credit_score_behavior_correlation` | Credit score correlations    | Scatter, Box, Violin          |
+| `analytics_geographic_clustering`             | Geographic behavior clusters | Choropleth, Bubble, Hex Bin   |
+| `analytics_seasonal_patterns`                 | Seasonal trends              | Line, Area, Decomposition     |
+| `analytics_account_lifecycle_patterns`        | Account lifecycle analysis   | Cohort, Funnel, Survival      |
+
+---
+
+### 04️⃣ Inferential Analytics — _“Can we generalize?”_
+
+**Purpose**:  
+Apply **statistical inference** to validate hypotheses and quantify uncertainty.
+
+**Output**:  
+Statistically enriched datasets with confidence intervals and test results.
+
+#### Models & Visualizations
+
+| Model                                               | Description                | Chart Types             |
+| --------------------------------------------------- | -------------------------- | ----------------------- |
+| `analytics_customer_segment_statistical_comparison` | Segment comparisons        | Box, Error Bars, Forest |
+| `analytics_ab_test_channel_performance`             | A/B test results           | CI Plot, Comparison     |
+| `analytics_credit_approval_hypothesis_test`         | Credit approval factors    | Forest, Odds Ratio      |
+| `analytics_fraud_detection_accuracy`                | Fraud model validation     | ROC, Confusion Matrix   |
+| `analytics_customer_lifetime_value_distribution`    | CLV distribution           | Histogram, Q-Q Plot     |
+| `analytics_transaction_amount_normality_test`       | Distribution normality     | Histogram, Q-Q Plot     |
+| `analytics_churn_rate_confidence_intervals`         | Churn confidence intervals | Error Bars, Funnel      |
+
+---
+
+### 05️⃣ Predictive Analytics — _“What will happen?”_
+
+**Purpose**:  
+Forecast **future behavior, risk, and performance** using historical data.
+
+**Output**:  
+Prediction-ready datasets for ML models and forecast dashboards.
+
+#### Models & Visualizations
+
+| Model                                          | Description           | Chart Types               |
+| ---------------------------------------------- | --------------------- | ------------------------- |
+| `analytics_customer_churn_prediction`          | Churn risk prediction | Risk Distribution, Funnel |
+| `analytics_transaction_volume_forecast`        | Transaction forecasts | Time Series, CI Bands     |
+| `analytics_loan_default_prediction`            | Default probability   | Risk Matrix, Distribution |
+| `analytics_customer_lifetime_value_prediction` | CLV prediction        | Scatter, Distribution     |
+| `analytics_fraud_risk_forecast`                | Fraud risk forecast   | Heatmap, Risk Matrix      |
+
+---
+
+### 06️⃣ Prescriptive Analytics — _“What should we do?”_
+
+**Purpose**:  
+Recommend **optimal actions** based on predictive insights.
+
+**Output**:  
+Action-oriented datasets for decision support.
+
+#### Models & Visualizations
+
+| Model                                    | Description               | Chart Types                    |
+| ---------------------------------------- | ------------------------- | ------------------------------ |
+| `analytics_customer_retention_actions`   | Retention recommendations | Priority Matrix, Funnel        |
+| `analytics_product_recommendation`       | Next-best product         | Recommendation Matrix, Network |
+| `analytics_credit_limit_optimization`    | Credit optimization       | Scatter, Distribution          |
+| `analytics_marketing_budget_allocation`  | Budget optimization       | Sankey, Waterfall              |
+| `analytics_branch_staffing_optimization` | Staffing optimization     | Heatmap, Bar                   |
+
+---
+
+### 07️⃣ Causal Analytics — _“What causes what?”_
+
+**Purpose**:  
+Measure **cause-and-effect relationships** beyond correlation.
+
+**Output**:  
+Causal-effect datasets for policy and strategy decisions.
+
+#### Models & Visualizations
+
+| Model                                     | Description              | Chart Types                |
+| ----------------------------------------- | ------------------------ | -------------------------- |
+| `analytics_credit_score_impact_analysis`  | Credit score impact      | Regression, Causal Diagram |
+| `analytics_campaign_causal_impact`        | Campaign causal impact   | DiD, Impact Timeline       |
+| `analytics_interest_rate_behavior_impact` | Interest rate effects    | RDD, Time Series Impact    |
+| `analytics_branch_proximity_impact`       | Branch proximity impact  | Spatial Analysis           |
+| `analytics_product_adoption_impact`       | Product adoption impact  | Causal Flow                |
+| `analytics_channel_migration_impact`      | Channel migration impact | DiD, Trend Shift           |
+| `analytics_payment_timeliness_impact`     | Payment behavior impact  | Survival, Hazard           |
+
+---
+
+### 08️⃣ Real-Time Analytics — _“What’s happening now?”_
+
+**Purpose**:  
+Enable **live monitoring, alerts, and operational intelligence**.
+
+**Output**:  
+Low-latency, dashboard-ready datasets.
+
+#### Models & Visualizations
+
+| Model                                       | Description               | Chart Types                 |
+| ------------------------------------------- | ------------------------- | --------------------------- |
+| `analytics_realtime_transaction_monitoring` | Live transaction activity | Live Counters, Gauges       |
+| `analytics_realtime_fraud_alerts`           | Fraud alerts              | Alert Feed, Risk Gauge      |
+| `analytics_realtime_customer_activity`      | Customer activity stream  | Activity Stream, Heatmap    |
+| `analytics_realtime_system_health`          | System health monitoring  | Status Dashboard, KPIs      |
+| `analytics_realtime_trending_merchants`     | Trending merchants        | Velocity Charts             |
+| `analytics_realtime_account_alerts`         | Account alerts            | Alert Feed, Priority Matrix |
+
+---
+
+### 🧩 Analytics Layer Summary
+
+- **8 analytics layers**
+- **60+ analytics models**
+- **Explicit visualization contracts**
+- **Production-grade SQL**
+- **BI, dashboard, and ML ready**
+
+This design ensures the platform supports **strategic, tactical, and operational decision-making** at scale.
 
 ## ⚙️ Configuration
 

@@ -1,0 +1,370 @@
+version: 2
+
+models:
+  - name: analytics_credit_score_impact_analysis
+    description: >
+      Analyzes the causal impact of credit score bands on customer behavior,
+      financial outcomes, and risk metrics such as transactions, balances,
+      approvals, defaults, and customer lifetime value.
+    columns:
+      - name: credit_score_band
+        description: Credit score segmentation band used for cohort analysis
+        tests:
+          - not_null
+
+      - name: customer_count
+        description: Number of customers in the credit score band
+
+      - name: avg_credit_score
+        description: Average credit score within the band
+
+      - name: stddev_credit_score
+        description: Standard deviation of credit scores within the band
+
+      - name: avg_transactions
+        description: Average number of transactions per customer (last 12 months)
+
+      - name: avg_transaction_volume
+        description: Average transaction volume per customer
+
+      - name: avg_accounts
+        description: Average number of active accounts per customer
+
+      - name: avg_balance
+        description: Average total balance per customer
+
+      - name: avg_approval_rate_pct
+        description: Average credit approval rate expressed as a percentage
+
+      - name: default_rate_pct
+        description: Percentage of customers with at least one default
+
+      - name: avg_clv
+        description: Average customer lifetime value
+
+      - name: marginal_effect_transactions
+        description: Change in average transactions relative to the next lower credit band
+
+      - name: marginal_effect_balance
+        description: Change in average balance relative to the next lower credit band
+
+      - name: marginal_effect_approval_pct
+        description: Change in approval rate percentage relative to the next lower credit band
+
+      - name: clv_change_per_100_credit_points
+        description: Estimated CLV change per 100-point increase in credit score
+
+      - name: analyzed_at
+        description: Timestamp when the analysis was generated
+
+  - name: analytics_campaign_causal_impact
+    description: >
+      Measures the causal impact of completed marketing campaigns using
+      pre-post analysis and difference-in-differences methodology.
+    columns:
+      - name: campaign_id
+        description: Unique identifier of the marketing campaign
+        tests:
+          - not_null
+
+      - name: campaign_name
+        description: Human-readable name of the campaign
+
+      - name: target_segment
+        description: Customer segment targeted by the campaign
+
+      - name: start_date
+        description: Campaign start date
+
+      - name: end_date
+        description: Campaign end date
+
+      - name: conversions
+        description: Number of conversions attributed to the campaign
+
+      - name: avg_transactions_before
+        description: Average customer transactions before the campaign
+
+      - name: avg_transactions_after
+        description: Average customer transactions after the campaign
+
+      - name: transaction_change
+        description: Absolute change in transactions post-campaign
+
+      - name: transaction_change_pct
+        description: Percentage change in transactions post-campaign
+
+      - name: did_estimate_transactions
+        description: Difference-in-differences estimate for transaction impact
+
+      - name: balance_change
+        description: Absolute change in average customer balance
+
+      - name: balance_change_pct
+        description: Percentage change in customer balance
+
+      - name: clv_change
+        description: Change in average customer lifetime value
+
+      - name: causal_interpretation
+        description: Human-readable interpretation of campaign causality
+
+      - name: significance
+        description: Simplified statistical significance indicator
+
+      - name: analyzed_at
+        description: Timestamp when the analysis was generated
+
+  - name: analytics_interest_rate_behavior_impact
+    description: >
+      Evaluates the causal effects of interest rate levels on account behavior,
+      balances, late payments, churn risk, and elasticity metrics.
+    columns:
+      - name: rate_category
+        description: Interest rate category or bucket
+        tests:
+          - not_null
+
+      - name: account_count
+        description: Number of accounts in the rate category
+
+      - name: avg_interest_rate
+        description: Average interest rate percentage
+
+      - name: stddev_rate
+        description: Standard deviation of interest rates
+
+      - name: avg_balance
+        description: Average account balance
+
+      - name: avg_transactions
+        description: Average transaction count per account
+
+      - name: avg_transaction_size
+        description: Average transaction amount
+
+      - name: avg_late_payment_rate_pct
+        description: Average late payment rate percentage
+
+      - name: past_due_rate_pct
+        description: Percentage of accounts past due
+
+      - name: avg_churn_risk_pct
+        description: Average churn risk percentage
+
+      - name: balance_elasticity
+        description: Balance sensitivity per 1% interest rate increase
+
+      - name: late_payment_elasticity_pct
+        description: Late payment rate sensitivity per 1% interest rate increase
+
+      - name: churn_elasticity_pct
+        description: Churn risk sensitivity per 1% interest rate increase
+
+      - name: balance_impact_interpretation
+        description: Categorical interpretation of interest rate impact
+
+      - name: analyzed_at
+        description: Timestamp when the analysis was generated
+
+  - name: analytics_branch_proximity_impact
+    description: >
+      Analyzes how customer proximity to physical branches causally affects
+      engagement, channel usage, balances, and churn risk.
+    columns:
+      - name: proximity_category
+        description: Relative proximity of customer to branch location
+        tests:
+          - not_null
+
+      - name: customer_segment
+        description: Customer segmentation category
+
+      - name: customer_count
+        description: Number of customers in the cohort
+
+      - name: avg_branch_transactions
+        description: Average number of branch transactions
+
+      - name: avg_mobile_transactions
+        description: Average number of mobile transactions
+
+      - name: branch_usage_pct
+        description: Percentage of transactions conducted via branch
+
+      - name: avg_balance
+        description: Average total customer balance
+
+      - name: avg_total_transactions
+        description: Average total transactions across all channels
+
+      - name: avg_tenure_months
+        description: Average customer tenure in months
+
+      - name: avg_churn_risk_pct
+        description: Average churn risk percentage
+
+      - name: branch_usage_effect
+        description: Incremental branch usage compared to baseline proximity
+
+      - name: churn_risk_effect
+        description: Incremental churn risk compared to baseline proximity
+
+      - name: causal_interpretation
+        description: Interpretation of proximity-driven causal effects
+
+      - name: analyzed_at
+        description: Timestamp when the analysis was generated
+
+  - name: analytics_product_adoption_impact
+    description: >
+      Measures the causal impact of multi-product adoption on customer value,
+      engagement, transaction behavior, and churn risk.
+    columns:
+      - name: product_count
+        description: Number of active products held by the customer
+        tests:
+          - not_null
+
+      - name: customer_segment
+        description: Customer segmentation category
+
+      - name: customer_count
+        description: Number of customers in the cohort
+
+      - name: avg_clv
+        description: Average customer lifetime value
+
+      - name: avg_transactions
+        description: Average number of transactions in the last 90 days
+
+      - name: avg_volume
+        description: Average transaction volume in the last 90 days
+
+      - name: avg_churn_risk_pct
+        description: Average churn risk percentage
+
+      - name: clv_effect_vs_baseline
+        description: CLV change relative to single-product baseline
+
+      - name: transaction_effect_vs_baseline
+        description: Transaction change relative to baseline
+
+      - name: churn_risk_effect_vs_baseline
+        description: Churn risk change relative to baseline
+
+      - name: marginal_clv_effect
+        description: Incremental CLV change per additional product
+
+      - name: adoption_level
+        description: Product adoption classification label
+
+      - name: analyzed_at
+        description: Timestamp when the analysis was generated
+
+  - name: analytics_channel_migration_impact
+    description: >
+      Evaluates the causal impact of dominant channel usage and multi-channel
+      behavior on customer satisfaction, value, and churn.
+    columns:
+      - name: dominant_channel
+        description: Most frequently used transaction channel
+        tests:
+          - not_null
+
+      - name: customer_segment
+        description: Customer segmentation category
+
+      - name: channel_strategy
+        description: Single, dual, or multi-channel usage strategy
+
+      - name: customer_count
+        description: Number of customers in the cohort
+
+      - name: digital_adoption_pct
+        description: Percentage of transactions via digital channels
+
+      - name: avg_satisfaction_rating
+        description: Average customer satisfaction score
+
+      - name: avg_clv
+        description: Average customer lifetime value
+
+      - name: avg_churn_risk_pct
+        description: Average churn risk percentage
+
+      - name: avg_service_interactions
+        description: Average number of service interactions
+
+      - name: satisfaction_effect_vs_branch
+        description: Satisfaction change relative to branch-dominant baseline
+
+      - name: churn_effect_vs_branch
+        description: Churn risk change relative to branch-dominant baseline
+
+      - name: multichannel_clv_premium
+        description: CLV premium from multi-channel usage
+
+      - name: channel_type
+        description: High-level channel classification
+
+      - name: analyzed_at
+        description: Timestamp when the analysis was generated
+
+  - name: analytics_payment_timeliness_impact
+    description: >
+      Analyzes the causal relationship between payment timeliness and credit
+      health, utilization, fees, and delinquency outcomes.
+    columns:
+      - name: payment_behavior_category
+        description: Classification of customer payment behavior
+        tests:
+          - not_null
+
+      - name: credit_score_band
+        description: Credit score band of the customer
+
+      - name: customer_segment
+        description: Customer segmentation category
+
+      - name: account_count
+        description: Number of accounts in the cohort
+
+      - name: avg_payment_history_length
+        description: Average number of historical payments
+
+      - name: avg_late_payments
+        description: Average number of late payments
+
+      - name: avg_days_late
+        description: Average number of days payments were late
+
+      - name: avg_outstanding_balance
+        description: Average outstanding account balance
+
+      - name: avg_late_fees_paid
+        description: Average late fees paid
+
+      - name: avg_credit_utilization_pct
+        description: Average credit utilization percentage
+
+      - name: avg_credit_score
+        description: Average credit score
+
+      - name: past_due_rate_pct
+        description: Percentage of accounts currently past due
+
+      - name: credit_score_effect_vs_ontime
+        description: Credit score impact relative to always-on-time payers
+
+      - name: utilization_effect_vs_ontime
+        description: Utilization impact relative to always-on-time payers
+
+      - name: additional_fees_vs_ontime
+        description: Additional fees incurred compared to baseline
+
+      - name: impact_classification
+        description: Severity classification of payment behavior impact
+
+      - name: analyzed_at
+        description: Timestamp when the analysis was generated

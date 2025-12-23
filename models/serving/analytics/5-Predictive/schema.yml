@@ -1,0 +1,276 @@
+version: 2
+
+models:
+  - name: analytics_customer_churn_prediction
+    description: >
+      Feature-based churn prediction model producing churn risk scores,
+      classifications, and key contributing risk factors.
+    columns:
+      - name: customer_key
+        description: Surrogate key for the customer.
+        tests:
+          - not_null
+
+      - name: customer_natural_key
+        description: Natural business identifier for the customer.
+
+      - name: customer_segment
+        description: Customer segmentation label.
+
+      - name: tenure_months
+        description: Customer tenure in months.
+
+      - name: historical_churn_risk_pct
+        description: Historical churn risk score expressed as a percentage.
+
+      - name: predicted_churn_risk_pct
+        description: Feature-based predicted churn risk score (0–100).
+
+      - name: predicted_churn_category
+        description: Churn risk category derived from predicted score.
+        tests:
+          - accepted_values:
+              values: ["Low", "Medium", "High", "Critical"]
+
+      - name: days_since_login
+        description: Number of days since the customer's last login.
+
+      - name: transaction_count_90d
+        description: Number of transactions in the last 90 days.
+
+      - name: active_account_count
+        description: Number of currently active accounts.
+
+      - name: past_due_account_count
+        description: Number of past-due accounts.
+
+      - name: unresolved_issues
+        description: Number of unresolved service issues.
+
+      - name: negative_interactions
+        description: Number of negative customer service interactions.
+
+      - name: clv_at_risk
+        description: Customer lifetime value potentially at risk due to churn.
+
+      - name: prediction_date
+        description: Timestamp when churn prediction was generated.
+
+      - name: prediction_window_end
+        description: End date of the churn prediction window.
+
+  - name: analytics_transaction_volume_forecast
+    description: >
+      Time-series forecast of transaction volumes with moving averages,
+      trend-adjusted projections, and confidence intervals.
+    columns:
+      - name: date_actual
+        description: Calendar date.
+        tests:
+          - not_null
+
+      - name: day_of_week
+        description: Numeric day of week (0–6).
+
+      - name: day_name
+        description: Name of the day.
+
+      - name: is_weekend
+        description: Indicates whether the date falls on a weekend.
+
+      - name: month
+        description: Calendar month number.
+
+      - name: actual_count
+        description: Actual number of transactions observed.
+
+      - name: actual_volume
+        description: Actual total transaction volume.
+
+      - name: forecasted_count
+        description: Forecasted transaction count.
+
+      - name: forecasted_volume
+        description: Forecasted transaction volume.
+
+      - name: forecast_lower_bound
+        description: Lower bound of 95% prediction interval.
+
+      - name: forecast_upper_bound
+        description: Upper bound of 95% prediction interval.
+
+      - name: forecast_error_pct
+        description: Forecast error percentage for historical observations.
+
+      - name: generated_at
+        description: Timestamp when the forecast was generated.
+
+  - name: analytics_loan_default_prediction
+    description: >
+      Loan default probability prediction using credit, payment history,
+      and account behavior features.
+    columns:
+      - name: account_key
+        description: Surrogate key for the loan account.
+        tests:
+          - not_null
+
+      - name: account_natural_key
+        description: Natural business identifier for the loan account.
+
+      - name: customer_key
+        description: Surrogate key for the customer.
+
+      - name: credit_score_band
+        description: Credit score band classification.
+
+      - name: income_bracket
+        description: Income bracket classification.
+
+      - name: rate_category
+        description: Interest rate category of the loan product.
+
+      - name: default_probability_pct
+        description: Predicted probability of loan default (0–100).
+
+      - name: default_risk_category
+        description: Default risk classification.
+        tests:
+          - accepted_values:
+              values: ["Low", "Medium", "High", "Critical"]
+
+      - name: total_payments
+        description: Total number of payments made.
+
+      - name: late_payment_count
+        description: Number of late payments.
+
+      - name: missed_payment_count
+        description: Number of missed payments.
+
+      - name: avg_days_late
+        description: Average number of days payments were late.
+
+      - name: max_days_late
+        description: Maximum number of days a payment was late.
+
+      - name: total_late_fees
+        description: Total late fees incurred.
+
+      - name: avg_outstanding_balance
+        description: Average outstanding loan balance.
+
+      - name: expected_loss_amount
+        description: Estimated expected loss based on default probability.
+
+      - name: prediction_date
+        description: Timestamp when default prediction was generated.
+
+  - name: analytics_customer_lifetime_value_prediction
+    description: >
+      Predictive modeling of customer lifetime value over 12-month and
+      36-month horizons.
+    columns:
+      - name: customer_key
+        description: Surrogate key for the customer.
+        tests:
+          - not_null
+
+      - name: customer_natural_key
+        description: Natural business identifier for the customer.
+
+      - name: customer_segment
+        description: Customer segmentation label.
+
+      - name: tenure_months
+        description: Customer tenure in months.
+
+      - name: current_clv
+        description: Current observed customer lifetime value.
+
+      - name: predicted_clv_12m
+        description: Predicted customer lifetime value after 12 months.
+
+      - name: predicted_clv_36m
+        description: Predicted customer lifetime value after 36 months.
+
+      - name: expected_value_increase_12m
+        description: Expected CLV increase over 12 months.
+
+      - name: expected_value_increase_36m
+        description: Expected CLV increase over 36 months.
+
+      - name: growth_rate_12m_pct
+        description: Percentage growth rate of CLV over 12 months.
+
+      - name: predicted_value_tier
+        description: Predicted customer value tier based on 36-month CLV.
+        tests:
+          - accepted_values:
+              values:
+                - "Standard Value"
+                - "Medium Value"
+                - "Medium-High Value"
+                - "High Value"
+
+      - name: monthly_avg_transactions
+        description: Average monthly transaction count.
+
+      - name: monthly_avg_volume
+        description: Average monthly transaction volume.
+
+      - name: account_count
+        description: Number of customer accounts.
+
+      - name: total_balance
+        description: Total balance across all customer accounts.
+
+      - name: prediction_date
+        description: Timestamp when CLV prediction was generated.
+
+  - name: analytics_fraud_risk_forecast
+    description: >
+      Forecast of fraud risk patterns by merchant, channel, time,
+      and transaction context.
+    columns:
+      - name: merchant_category
+        description: Merchant category grouping.
+
+      - name: channel
+        description: Transaction channel.
+
+      - name: hour_of_day
+        description: Hour of day when the transaction occurs.
+
+      - name: is_international
+        description: Indicates whether the transaction is international.
+
+      - name: is_weekend
+        description: Indicates whether the transaction occurs on a weekend.
+
+      - name: total_transactions
+        description: Total number of historical transactions.
+
+      - name: fraud_count
+        description: Number of fraudulent transactions.
+
+      - name: historical_fraud_rate_pct
+        description: Historical fraud rate percentage.
+
+      - name: predicted_fraud_risk_pct
+        description: Predicted fraud risk percentage.
+
+      - name: predicted_risk_level
+        description: Fraud risk classification.
+        tests:
+          - accepted_values:
+              values: ["Low", "Medium", "High", "Critical"]
+
+      - name: expected_fraud_count_30d
+        description: Expected number of fraud cases in the next 30 days.
+
+      - name: avg_historical_fraud_score
+        description: Average historical fraud score.
+
+      - name: prediction_date
+        description: Timestamp when fraud risk forecast was generated.

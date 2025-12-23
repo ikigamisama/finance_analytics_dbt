@@ -1,0 +1,317 @@
+version: 2
+
+models:
+  # ============================================================================
+  # CUSTOMER RETENTION ACTIONS
+  # ============================================================================
+  - name: analytics_customer_retention_actions
+    description: >
+      Prescriptive analytics table identifying at-risk customers and
+      recommending prioritized retention actions, channels, timelines,
+      and expected ROI.
+    tags: ["analytics", "prescriptive", "retention"]
+    columns:
+      - name: customer_key
+        description: Surrogate key of the customer
+        tests: [not_null]
+
+      - name: customer_natural_key
+        description: Business identifier of the customer
+        tests: [not_null]
+
+      - name: customer_segment
+        description: Customer segmentation label (e.g., Mass Market, Affluent, Premium)
+
+      - name: churn_risk_pct
+        description: Churn risk score expressed as a percentage
+
+      - name: clv_at_risk
+        description: Customer lifetime value at risk due to churn
+
+      - name: recommended_action
+        description: Primary recommended retention action
+        tests:
+          - accepted_values:
+              values:
+                - "URGENT: Resolve Service Issues"
+                - "URGENT: Payment Assistance Program"
+                - "Re-engagement Campaign"
+                - "Win-Back Offer"
+                - "Cross-Sell Campaign"
+                - "Customer Success Outreach"
+                - "Loyalty Program Enrollment"
+
+      - name: action_priority
+        description: Priority of action (1 = highest, 3 = lowest)
+        tests:
+          - accepted_values:
+              values: [1, 2, 3]
+
+      - name: recommended_channel
+        description: Preferred communication channel for the action
+
+      - name: estimated_success_rate_pct
+        description: Estimated probability of success for the recommended action
+
+      - name: expected_roi
+        description: Expected return on investment from the action
+
+      - name: recommended_timeline
+        description: Suggested execution timeline based on urgency
+
+      - name: days_since_login
+        description: Number of days since the customer last logged in
+
+      - name: transaction_count_90d
+        description: Number of transactions in the last 90 days
+
+      - name: active_accounts
+        description: Number of active customer accounts
+
+      - name: past_due_accounts
+        description: Number of past-due customer accounts
+
+      - name: unresolved_issues
+        description: Count of unresolved service issues
+
+      - name: negative_interactions
+        description: Number of negative customer interactions
+
+      - name: generated_at
+        description: Timestamp when the record was generated
+
+  # ============================================================================
+  # PRODUCT RECOMMENDATIONS
+  # ============================================================================
+  - name: analytics_product_recommendation
+    description: >
+      Next-best product recommendation model using customer profile,
+      product ownership, balances, and behavioral indicators.
+    tags: ["analytics", "prescriptive", "products"]
+    columns:
+      - name: customer_key
+        description: Surrogate key of the customer
+        tests: [not_null]
+
+      - name: customer_natural_key
+        description: Business identifier of the customer
+        tests: [not_null]
+
+      - name: customer_segment
+        description: Customer segmentation classification
+
+      - name: current_products
+        description: Comma-separated list of current product categories
+
+      - name: product_count
+        description: Number of active products owned by the customer
+
+      - name: recommended_product
+        description: Recommended next-best product
+
+      - name: recommendation_score
+        description: Strength score of the recommendation (0–100)
+
+      - name: expected_value
+        description: Expected annual revenue weighted by acceptance probability
+
+      - name: propensity_to_accept_pct
+        description: Estimated likelihood the customer will accept the recommendation
+
+      - name: expected_annual_revenue
+        description: Estimated annual revenue of the recommended product
+
+      - name: recommended_campaign_channel
+        description: Suggested marketing channel for outreach
+
+      - name: campaign_priority
+        description: Priority level for the campaign (High, Medium, Low)
+
+      - name: total_balance
+        description: Total balance across customer accounts
+
+      - name: generated_at
+        description: Timestamp when the record was generated
+
+  # ============================================================================
+  # CREDIT LIMIT OPTIMIZATION
+  # ============================================================================
+  - name: analytics_credit_limit_optimization
+    description: >
+      Prescriptive model recommending optimal credit limit adjustments
+      based on income, spending behavior, utilization, and payment history.
+    tags: ["analytics", "prescriptive", "credit"]
+    columns:
+      - name: account_key
+        description: Surrogate key of the credit account
+        tests: [not_null]
+
+      - name: account_natural_key
+        description: Business identifier of the credit account
+
+      - name: customer_key
+        description: Surrogate key of the customer
+        tests: [not_null]
+
+      - name: customer_segment
+        description: Customer segmentation label
+
+      - name: credit_score
+        description: Customer credit score
+
+      - name: current_limit
+        description: Current credit limit amount
+
+      - name: recommended_limit
+        description: Recommended optimal credit limit
+
+      - name: limit_change
+        description: Absolute change between current and recommended limit
+
+      - name: limit_change_pct
+        description: Percentage change in credit limit
+
+      - name: recommended_action
+        description: Recommended action for the credit limit
+        tests:
+          - accepted_values:
+              values:
+                - "Increase Limit"
+                - "Decrease Limit"
+                - "No Change"
+                - "Review Required"
+
+      - name: adjustment_rationale
+        description: Explanation for the recommended adjustment
+
+      - name: risk_level
+        description: Risk assessment classification
+        tests:
+          - accepted_values:
+              values: ["Low Risk", "Medium Risk", "High Risk"]
+
+      - name: current_utilization_pct
+        description: Current credit utilization percentage
+
+      - name: projected_utilization_pct
+        description: Projected utilization after adjustment
+
+      - name: account_age_months
+        description: Age of the account in months
+
+      - name: late_payments_12m
+        description: Count of late payments in the last 12 months
+
+      - name: avg_monthly_spend
+        description: Average monthly spend over the last year
+
+      - name: generated_at
+        description: Timestamp when the record was generated
+
+  # ============================================================================
+  # MARKETING BUDGET ALLOCATION
+  # ============================================================================
+  - name: analytics_marketing_budget_allocation
+    description: >
+      Prescriptive model optimizing marketing budget allocation across
+      campaign types, channels, and segments based on efficiency metrics.
+    tags: ["analytics", "prescriptive", "marketing"]
+    columns:
+      - name: campaign_type
+        description: Type of marketing campaign
+
+      - name: channel_group
+        description: Marketing channel group
+
+      - name: target_segment
+        description: Target customer segment
+
+      - name: campaign_count
+        description: Number of historical campaigns
+
+      - name: historical_budget
+        description: Average historical campaign budget
+
+      - name: avg_roi
+        description: Average return on investment
+
+      - name: avg_cpa
+        description: Average cost per acquisition
+
+      - name: avg_conversion_rate_pct
+        description: Average conversion rate percentage
+
+      - name: efficiency_score
+        description: Composite efficiency score for allocation decisions
+
+      - name: recommended_budget
+        description: Recommended budget allocation
+
+      - name: budget_change
+        description: Difference between recommended and historical budget
+
+      - name: expected_revenue
+        description: Expected revenue from recommended budget
+
+      - name: expected_conversions
+        description: Expected number of conversions
+
+      - name: priority_rank
+        description: Rank based on efficiency score
+
+      - name: budget_recommendation
+        description: Budget adjustment recommendation
+
+      - name: generated_at
+        description: Timestamp when the record was generated
+
+  # ============================================================================
+  # BRANCH STAFFING OPTIMIZATION
+  # ============================================================================
+  - name: analytics_branch_staffing_optimization
+    description: >
+      Prescriptive operations model recommending optimal branch staffing
+      levels based on transaction volume and service interactions.
+    tags: ["analytics", "prescriptive", "operations"]
+    columns:
+      - name: branch_id
+        description: Natural identifier of the branch
+
+      - name: branch_name
+        description: Branch name
+
+      - name: region
+        description: Geographic region of the branch
+
+      - name: total_transactions
+        description: Total transactions over the analysis period
+
+      - name: branch_transactions
+        description: Transactions conducted at the branch
+
+      - name: service_interactions
+        description: Number of in-branch service interactions
+
+      - name: current_staff_estimate
+        description: Estimated current staffing level
+
+      - name: recommended_staff
+        description: Recommended optimal staffing level
+
+      - name: staff_change
+        description: Net change in staffing requirement
+
+      - name: annual_cost_impact
+        description: Estimated annual staffing cost impact
+
+      - name: current_transactions_per_staff
+        description: Transactions handled per staff member currently
+
+      - name: optimal_transactions_per_staff
+        description: Transactions per staff member after optimization
+
+      - name: staffing_recommendation
+        description: Recommended staffing action
+
+      - name: generated_at
+        description: Timestamp when the record was generated

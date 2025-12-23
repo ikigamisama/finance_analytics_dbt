@@ -1,0 +1,400 @@
+version: 2
+
+models:
+  # ---------------- Customer Models ----------------
+  - name: analytics_customer_overview
+    description: Overall customer base statistics including segmentation, financial metrics, risk, and tenure.
+    tags: ["analytics", "descriptive", "serving", "customer"]
+    columns:
+      - name: total_customers
+        description: Total number of distinct customers.
+        tests: [not_null]
+      - name: active_customers
+        description: Number of currently active customers.
+      - name: inactive_customers
+        description: Number of inactive customers.
+      - name: premium_customers
+        description: Number of customers in the Premium segment.
+      - name: affluent_customers
+        description: Number of customers in the Affluent segment.
+      - name: mass_market_customers
+        description: Number of customers in the Mass Market segment.
+      - name: avg_customer_lifetime_value
+        description: Average customer lifetime value (CLV).
+      - name: total_customer_lifetime_value
+        description: Total customer lifetime value (CLV).
+      - name: avg_annual_income
+        description: Average annual income of customers.
+      - name: avg_credit_score
+        description: Average customer credit score.
+      - name: high_churn_risk_customers
+        description: Number of customers with high churn risk.
+      - name: avg_churn_risk_pct
+        description: Average churn risk score expressed as a percentage.
+      - name: avg_tenure_months
+        description: Average tenure of customers in months.
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  - name: analytics_customer_by_segment
+    description: Customer distribution and performance metrics by segment.
+    tags: ["analytics", "descriptive", "serving", "customer"]
+    columns:
+      - name: customer_segment
+        description: Customer segment name.
+        tests: [not_null]
+      - name: customer_count
+        description: Number of customers in the segment.
+      - name: pct_of_total
+        description: Percentage of total customers in this segment.
+      - name: avg_clv
+        description: Average customer lifetime value (CLV) in this segment.
+      - name: avg_income
+        description: Average annual income in this segment.
+      - name: avg_credit_score
+        description: Average credit score in this segment.
+      - name: avg_tenure_months
+        description: Average tenure in months for customers in this segment.
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  - name: analytics_customer_by_age_group
+    description: Customer demographics and financial metrics by age group.
+    tags: ["analytics", "descriptive", "serving", "customer"]
+    columns:
+      - name: age_group
+        description: Age group bucket.
+        tests: [not_null]
+      - name: customer_count
+        description: Number of customers in the age group.
+      - name: pct_of_total
+        description: Percentage of total customers in the age group.
+      - name: avg_clv
+        description: Average customer lifetime value (CLV).
+      - name: avg_income
+        description: Average annual income.
+      - name: active_count
+        description: Number of active customers in this age group.
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  - name: analytics_customer_by_geography
+    description: Customer distribution by state and city with financial metrics.
+    tags: ["analytics", "descriptive", "serving", "customer"]
+    columns:
+      - name: state
+        description: State or region of the customer.
+      - name: city
+        description: City of the customer.
+      - name: customer_count
+        description: Number of customers in the location.
+      - name: pct_of_total
+        description: Percentage of total customers in this location.
+      - name: avg_clv
+        description: Average customer lifetime value (CLV) in the location.
+      - name: avg_income
+        description: Average annual income of customers in the location.
+      - name: active_count
+        description: Number of active customers in the location.
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  # ---------------- Transaction Models ----------------
+  - name: analytics_transaction_summary
+    description: Overall transaction KPIs including volume, channels, fraud, and international activity.
+    tags: ["analytics", "descriptive", "serving", "transactions"]
+    columns:
+      - name: total_transactions
+        description: Total number of transactions.
+        tests: [not_null]
+      - name: total_transaction_volume
+        description: Total monetary value of all transactions.
+      - name: avg_transaction_amount
+        description: Average transaction amount.
+      - name: debit_count
+        description: Number of debit transactions.
+      - name: credit_count
+        description: Number of credit transactions.
+      - name: total_debits
+        description: Sum of debit transactions.
+      - name: total_credits
+        description: Sum of credit transactions.
+      - name: online_transactions
+        description: Number of online transactions.
+      - name: mobile_transactions
+        description: Number of mobile transactions.
+      - name: branch_transactions
+        description: Number of branch transactions.
+      - name: atm_transactions
+        description: Number of ATM transactions.
+      - name: fraud_transactions
+        description: Number of transactions flagged as fraud.
+      - name: total_fraud_amount
+        description: Total amount involved in fraudulent transactions.
+      - name: fraud_rate_pct
+        description: Fraud rate percentage.
+      - name: high_value_transactions
+        description: Number of high-value transactions.
+      - name: international_transactions
+        description: Number of international transactions.
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  - name: analytics_transaction_by_channel
+    description: Distribution of transactions by channel with financial metrics.
+    tags: ["analytics", "descriptive", "serving", "transactions"]
+    columns:
+      - name: channel
+        description: Transaction channel (Online, Mobile, Branch, ATM).
+        tests: [not_null]
+      - name: transaction_count
+        description: Number of transactions for the channel.
+      - name: pct_of_total
+        description: Percentage of total transactions in this channel.
+      - name: total_volume
+        description: Total transaction amount for the channel.
+      - name: avg_amount
+        description: Average transaction amount in this channel.
+      - name: unique_customers
+        description: Number of unique customers in this channel.
+      - name: fraud_count
+        description: Number of fraudulent transactions in this channel.
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  - name: analytics_transaction_by_category
+    description: Distribution of transactions by merchant category.
+    tags: ["analytics", "descriptive", "serving", "transactions"]
+    columns:
+      - name: merchant_category
+        description: Merchant category of the transaction.
+        tests: [not_null]
+      - name: transaction_count
+        description: Number of transactions in the category.
+      - name: pct_of_total
+        description: Percentage of total transactions in the category.
+      - name: total_volume
+        description: Total transaction amount in the category.
+      - name: avg_amount
+        description: Average transaction amount.
+      - name: unique_customers
+        description: Number of distinct customers in the category.
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  - name: analytics_daily_transaction_trend
+    description: Daily transaction trends including volume, active customers, and fraud count.
+    tags: ["analytics", "descriptive", "serving", "transactions"]
+    columns:
+      - name: transaction_date
+        description: Date of the transaction.
+        tests: [not_null]
+      - name: day_name
+        description: Day of the week.
+      - name: is_weekend
+        description: Indicator if the day is weekend.
+      - name: transaction_count
+        description: Number of transactions on this day.
+      - name: total_volume
+        description: Total transaction amount for the day.
+      - name: avg_amount
+        description: Average transaction amount for the day.
+      - name: active_customers
+        description: Number of distinct active customers on this day.
+      - name: fraud_count
+        description: Number of fraudulent transactions on this day.
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  - name: analytics_monthly_transaction_trend
+    description: Monthly transaction trends including volume, active customers, and fraud rate.
+    tags: ["analytics", "descriptive", "serving", "transactions"]
+    columns:
+      - name: year
+        description: Year of the transaction month.
+        tests: [not_null]
+      - name: month
+        description: Month number.
+      - name: month_name
+        description: Month name.
+      - name: year_month
+        description: Year and month combined for ordering.
+      - name: transaction_count
+        description: Number of transactions in the month.
+      - name: total_volume
+        description: Total transaction volume.
+      - name: avg_amount
+        description: Average transaction amount.
+      - name: active_customers
+        description: Number of active customers.
+      - name: fraud_count
+        description: Number of fraudulent transactions.
+      - name: fraud_rate_pct
+        description: Fraud rate percentage.
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  # ---------------- Account Models ----------------
+  - name: analytics_account_summary
+    description: Overview of account portfolio including active, closed, dormant accounts, balances, credit, and risk metrics.
+    tags: ["analytics", "descriptive", "serving", "accounts"]
+    columns:
+      - name: total_accounts
+        description: Total number of accounts.
+        tests: [not_null]
+      - name: active_accounts
+        description: Number of active accounts.
+      - name: closed_accounts
+        description: Number of closed accounts.
+      - name: dormant_accounts
+        description: Number of dormant accounts.
+      - name: total_active_balance
+        description: Total balance of active accounts.
+      - name: avg_account_balance
+        description: Average balance of active accounts.
+      - name: total_available_balance
+        description: Total available balance of active accounts.
+      - name: total_credit_limit
+        description: Total credit limit for accounts with credit.
+      - name: avg_credit_utilization_pct
+        description: Average credit utilization percentage.
+      - name: past_due_accounts
+        description: Number of accounts past due.
+      - name: near_limit_accounts
+        description: Number of accounts near credit limit.
+      - name: past_due_rate_pct
+        description: Percentage of active accounts that are past due.
+      - name: avg_account_age_months
+        description: Average age of active accounts in months.
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  - name: analytics_account_by_product
+    description: Account distribution and balances by product type.
+    tags: ["analytics", "descriptive", "serving", "accounts"]
+    columns:
+      - name: product_name
+        description: Product name.
+        tests: [not_null]
+      - name: category
+        description: Product category.
+      - name: product_line
+        description: Product line.
+      - name: account_count
+        description: Number of accounts for this product.
+      - name: pct_of_total
+        description: Percentage of total accounts.
+      - name: active_accounts
+        description: Number of active accounts.
+      - name: total_balance
+        description: Total current balance.
+      - name: avg_balance
+        description: Average current balance.
+      - name: unique_customers
+        description: Number of unique customers holding the product.
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  - name: analytics_account_balance_distribution
+    description: Account balance distribution by predefined balance categories.
+    tags: ["analytics", "descriptive", "serving", "accounts"]
+    columns:
+      - name: balance_category
+        description: Bucketed account balance category (Negative, Zero, Low, Medium, High, Very High).
+        tests: [not_null]
+      - name: account_count
+        description: Number of accounts in this category.
+      - name: pct_of_total
+        description: Percentage of total accounts.
+      - name: total_balance
+        description: Total balance of accounts in this category.
+      - name: avg_balance
+        description: Average balance of accounts in this category.
+      - name: min_balance
+        description: Minimum balance in this category.
+      - name: max_balance
+        description: Maximum balance in this category.
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  # ---------------- Product Models ----------------
+  - name: analytics_product_summary
+    description: Product portfolio overview including category counts, premium products, and pricing metrics.
+    tags: ["analytics", "descriptive", "serving", "products"]
+    columns:
+      - name: total_products
+        description: Total number of products.
+      - name: premium_products
+        description: Number of premium products.
+      - name: deposit_products
+        description: Number of deposit products.
+      - name: credit_products
+        description: Number of credit products.
+      - name: loan_products
+        description: Number of loan products.
+      - name: investment_products
+        description: Number of investment products.
+      - name: avg_interest_rate_pct
+        description: Average interest rate percentage across products.
+      - name: avg_monthly_fee
+        description: Average monthly fee across products.
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  # ---------------- Fraud Models ----------------
+  - name: analytics_fraud_summary
+    description: Fraud detection overview including alerts, resolved cases, confirmed frauds, and financial impact.
+    tags: ["analytics", "descriptive", "serving", "fraud"]
+    columns:
+      - name: total_alerts
+        description: Total number of fraud alerts.
+        tests: [not_null]
+      - name: resolved_alerts
+        description: Number of alerts resolved.
+      - name: confirmed_fraud
+        description: Number of alerts confirmed as fraud.
+      - name: false_positives
+        description: Number of false positive alerts.
+      - name: total_recovered
+        description: Total amount recovered from fraud.
+      - name: avg_recovered
+        description: Average amount recovered per fraud alert.
+      - name: avg_resolution_days
+        description: Average resolution time in days.
+      - name: fraud_confirmation_rate_pct
+        description: Percentage of resolved alerts confirmed as fraud.
+      - name: false_positive_rate_pct
+        description: Percentage of alerts flagged as false positives.
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
+
+  # ---------------- Loan Models ----------------
+  - name: analytics_loan_payment_summary
+    description: Loan payment performance metrics including counts, late/missed payments, financial metrics, and rates.
+    tags: ["analytics", "descriptive", "serving", "loans"]
+    columns:
+      - name: total_payments
+        description: Total number of loan payments.
+        tests: [not_null]
+      - name: full_payments
+        description: Number of full payments.
+      - name: late_payments
+        description: Number of late payments.
+      - name: missed_payments
+        description: Number of missed payments.
+      - name: total_scheduled
+        description: Total scheduled payment amount.
+      - name: total_actual
+        description: Total actual collected amount.
+      - name: total_late_fees
+        description: Total late fees collected.
+      - name: total_outstanding
+        description: Total outstanding loan balance.
+      - name: late_payment_rate_pct
+        description: Percentage of payments that were late.
+      - name: missed_payment_rate_pct
+        description: Percentage of payments that were missed.
+      - name: avg_days_late
+        description: Average days late for late payments.
+      - name: last_updated
+        description: Timestamp when the model was last refreshed.
