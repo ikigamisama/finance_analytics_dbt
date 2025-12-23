@@ -36,15 +36,18 @@ models:
     +schema: gold
     +tags: ["gold", "serving"]
 
+    # Dimensions folder
     dimensions:
       +materialized: table
       +tags: ["dimension"]
 
+    # Facts folder
     facts:
       +materialized: incremental
       +tags: ["fact"]
       +on_schema_change: append_new_columns
 
+    # Analytics folder
     analytics:
       +materialized: view
       +tags: ["analytics"]
