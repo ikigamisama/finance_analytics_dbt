@@ -13,11 +13,11 @@ SELECT
     COUNT(DISTINCT CASE WHEN false_positive_flag = 1 THEN alert_key END) AS false_positives,
     
     -- Financial Impact
-    ROUND(SUM(amount_recovered), 2) AS total_recovered,
-    ROUND(AVG(amount_recovered), 2) AS avg_recovered,
+    ROUND(SUM(amount_recovered)::numeric, 2) AS total_recovered,
+    ROUND(AVG(amount_recovered)::numeric, 2) AS avg_recovered,
     
     -- Performance
-    ROUND(AVG(CASE WHEN resolved_flag = 1 THEN resolution_days END), 1) AS avg_resolution_days,
+    ROUND(AVG(CASE WHEN resolved_flag = 1 THEN resolution_days END)::numeric, 1) AS avg_resolution_days,
     ROUND(COUNT(DISTINCT CASE WHEN confirmed_fraud_flag = 1 THEN alert_key END) * 100.0 / NULLIF(COUNT(DISTINCT CASE WHEN resolved_flag = 1 THEN alert_key END), 0), 2) AS fraud_confirmation_rate_pct,
     ROUND(COUNT(DISTINCT CASE WHEN false_positive_flag = 1 THEN alert_key END) * 100.0 / NULLIF(COUNT(DISTINCT alert_key), 0), 2) AS false_positive_rate_pct,
     

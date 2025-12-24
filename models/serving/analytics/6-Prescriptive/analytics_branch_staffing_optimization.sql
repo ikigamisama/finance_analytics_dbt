@@ -1,8 +1,15 @@
 {{
     config(
+        materialized = 'table',
+        schema = 'gold',
+        tags = ['analytics', 'prescriptive', 'serving', 'operations']
+    )
+}}
+
+{{
+    config(
         materialized='table',
-        schema="gold",
-        tags=['analytics', 'prescriptive', 'serving', 'operations']
+        tags=['analytics', 'prescriptive', 'operations']
     )
 }}
 

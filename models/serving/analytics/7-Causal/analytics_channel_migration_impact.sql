@@ -72,26 +72,26 @@ SELECT
     , 2) AS digital_adoption_pct,
     
     -- Outcome metrics
-    ROUND(AVG(avg_satisfaction), 2) AS avg_satisfaction_rating,
-    ROUND(AVG(customer_lifetime_value), 2) AS avg_clv,
-    ROUND(AVG(churn_risk_score) * 100, 2) AS avg_churn_risk_pct,
-    ROUND(AVG(service_interactions), 1) AS avg_service_interactions,
+    ROUND(AVG(avg_satisfaction)::numeric, 2) AS avg_satisfaction_rating,
+    ROUND(AVG(customer_lifetime_value)::numeric, 2) AS avg_clv,
+    ROUND(AVG(churn_risk_score)::numeric * 100, 2) AS avg_churn_risk_pct,
+    ROUND(AVG(service_interactions)::numeric, 1) AS avg_service_interactions,
     
     -- Causal effects (compared to Branch baseline)
     ROUND(
-        AVG(avg_satisfaction) - 
+        AVG(avg_satisfaction)::numeric - 
         MAX(CASE WHEN dominant_channel = 'Branch' THEN AVG(avg_satisfaction) OVER (PARTITION BY customer_segment) END)
     , 2) AS satisfaction_effect_vs_branch,
     
     ROUND(
-        AVG(churn_risk_score) - 
+        AVG(churn_risk_score)::numeric - 
         MAX(CASE WHEN dominant_channel = 'Branch' THEN AVG(churn_risk_score) OVER (PARTITION BY customer_segment) END)
     , 4) AS churn_effect_vs_branch,
     
     -- Multi-channel premium effect
     ROUND(
-        AVG(CASE WHEN channels_used >= 2 THEN customer_lifetime_value END) -
-        AVG(CASE WHEN channels_used = 1 THEN customer_lifetime_value END)
+        AVG(CASE WHEN channels_used >= 2 THEN customer_lifetime_value END)::numeric -
+        AVG(CASE WHEN channels_used = 1 THEN customer_lifetime_value END)::numeric
     , 2) AS multichannel_clv_premium,
     
     -- Causal interpretation

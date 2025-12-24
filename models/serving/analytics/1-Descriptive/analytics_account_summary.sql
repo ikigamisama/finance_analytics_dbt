@@ -13,13 +13,12 @@ SELECT
     COUNT(DISTINCT CASE WHEN is_dormant THEN account_key END) AS dormant_accounts,
     
     -- Balance Metrics
-    ROUND(SUM(CASE WHEN is_active THEN current_balance ELSE 0 END), 2) AS total_active_balance,
-    ROUND(AVG(CASE WHEN is_active THEN current_balance END), 2) AS avg_account_balance,
-    ROUND(SUM(CASE WHEN is_active THEN available_balance ELSE 0 END), 2) AS total_available_balance,
-    
-    -- Credit Metrics
-    ROUND(SUM(CASE WHEN is_active AND credit_limit IS NOT NULL THEN credit_limit ELSE 0 END), 2) AS total_credit_limit,
-    ROUND(AVG(CASE WHEN is_active THEN credit_utilization_pct END), 2) AS avg_credit_utilization_pct,
+    ROUND(SUM(CASE WHEN is_active THEN current_balance ELSE 0 END)::numeric, 2) AS total_active_balance,
+    ROUND(AVG(CASE WHEN is_active THEN current_balance END)::numeric, 2) AS avg_account_balance,
+    ROUND(SUM(CASE WHEN is_active THEN available_balance ELSE 0 END)::numeric, 2) AS total_available_balance,
+
+    ROUND(SUM(CASE WHEN is_active AND credit_limit IS NOT NULL THEN credit_limit ELSE 0 END)::numeric, 2) AS total_credit_limit,
+    ROUND(AVG(CASE WHEN is_active THEN credit_utilization_pct END)::numeric, 2) AS avg_credit_utilization_pct,
     
     -- Risk Metrics
     COUNT(DISTINCT CASE WHEN is_past_due THEN account_key END) AS past_due_accounts,

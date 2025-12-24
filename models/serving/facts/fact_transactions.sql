@@ -43,6 +43,7 @@ WITH transaction_facts AS (
         t.card_last_four,
         t.is_recurring,
         t.transaction_status,
+        t.decline_reason,
         
         -- Measures (Facts)
         t.amount AS transaction_amount,
@@ -73,4 +74,4 @@ WITH transaction_facts AS (
     {% endif %}
 )
 
-SELECT * FROM transaction_facts;
+SELECT * FROM transaction_facts

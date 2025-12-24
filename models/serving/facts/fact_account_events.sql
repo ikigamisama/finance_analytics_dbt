@@ -28,8 +28,8 @@ WITH account_event_facts AS (
         ae.new_value,
         
         -- Attempt to parse numeric changes
-        CASE 
-            WHEN ae.old_value ~ '^[0-9.]+ AND ae.new_value ~ '^[0-9.]+
+        CASE
+            WHEN ae.old_value IS NOT NULL AND ae.new_value IS NOT NULL
             THEN ae.new_value::NUMERIC - ae.old_value::NUMERIC
             ELSE NULL
         END AS value_change,

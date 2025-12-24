@@ -1,6 +1,7 @@
 {{
     config(
         materialized='table',
+        schema="gold",
         tags=['analytics', 'descriptive', 'serving', 'customer']
     )
 }}

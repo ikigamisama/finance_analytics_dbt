@@ -93,10 +93,10 @@ SELECT
     month,
     
     actual_count,
-    ROUND(actual_volume, 2) AS actual_volume,
+    ROUND(actual_volume::numeric, 2) AS actual_volume,
     
     forecasted_count,
-    ROUND(forecasted_count * (actual_volume / NULLIF(actual_count, 0)), 2) AS forecasted_volume,
+    ROUND(forecasted_count * (actual_volume::numeric / NULLIF(actual_count, 0)), 2) AS forecasted_volume,
     
     -- 95% Prediction interval
     ROUND(GREATEST(0, forecasted_count - 1.96 * stddev_30d), 0) AS forecast_lower_bound,

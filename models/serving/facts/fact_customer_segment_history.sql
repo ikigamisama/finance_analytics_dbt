@@ -68,7 +68,10 @@ WITH segment_history_facts AS (
         
         -- Flags
         CASE WHEN csh.eligible_for_premium THEN 1 ELSE 0 END AS premium_eligible_flag,
-        CASE WHEN csh.churn_risk THEN 1 ELSE 0 END AS churn_risk_flag,
+        CASE 
+            WHEN csh.churn_risk IN ('High', 'Medium') THEN 1
+            ELSE 0
+        END AS churn_risk_flag,
         CASE WHEN csh.cross_sell_opportunity THEN 1 ELSE 0 END AS cross_sell_opportunity_flag,
         
         -- Days in Segment

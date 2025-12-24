@@ -13,10 +13,10 @@ SELECT
     COUNT(DISTINCT CASE WHEN missed_payment_flag = 1 THEN payment_key END) AS missed_payments,
     
     -- Financial
-    ROUND(SUM(scheduled_amount), 2) AS total_scheduled,
-    ROUND(SUM(actual_amount), 2) AS total_actual,
-    ROUND(SUM(late_fee), 2) AS total_late_fees,
-    ROUND(SUM(outstanding_balance), 2) AS total_outstanding,
+    ROUND(SUM(scheduled_amount)::numeric, 2) AS total_scheduled,
+    ROUND(SUM(actual_amount)::numeric, 2) AS total_actual,
+    ROUND(SUM(late_fee)::numeric, 2) AS total_late_fees,
+    ROUND(SUM(outstanding_balance)::numeric, 2) AS total_outstanding,
     
     -- Rates
     ROUND(COUNT(DISTINCT CASE WHEN late_payment_flag = 1 THEN payment_key END) * 100.0 / COUNT(DISTINCT payment_key), 2) AS late_payment_rate_pct,

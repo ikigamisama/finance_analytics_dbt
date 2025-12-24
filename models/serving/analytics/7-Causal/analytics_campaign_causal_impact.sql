@@ -109,23 +109,23 @@ SELECT
     conversions,
     
     -- Pre-post comparison (Treatment Effect)
-    ROUND(avg_transactions_before, 2) AS avg_transactions_before,
-    ROUND(avg_transactions_after, 2) AS avg_transactions_after,
-    ROUND(avg_transactions_after - avg_transactions_before, 2) AS transaction_change,
-    ROUND((avg_transactions_after - avg_transactions_before) * 100.0 / NULLIF(avg_transactions_before, 0), 2) AS transaction_change_pct,
+    ROUND(avg_transactions_before::numeric, 2) AS avg_transactions_before,
+    ROUND(avg_transactions_after::numeric, 2) AS avg_transactions_after,
+    ROUND(avg_transactions_after::numeric - avg_transactions_before::numeric, 2) AS transaction_change,
+    ROUND((avg_transactions_after::numeric - avg_transactions_before::numeric) * 100.0 / NULLIF(avg_transactions_before::numeric, 0), 2) AS transaction_change_pct,
     
     -- Difference-in-Differences estimate
     ROUND(
-        (avg_transactions_after - avg_transactions_before) - 
-        (avg_transactions_control - avg_transactions_before)
+        (avg_transactions_after::numeric - avg_transactions_before::numeric) - 
+        (avg_transactions_control::numeric - avg_transactions_before::numeric)
     , 2) AS did_estimate_transactions,
     
     -- Balance impact
-    ROUND(avg_balance_after - avg_balance_before, 2) AS balance_change,
-    ROUND((avg_balance_after - avg_balance_before) * 100.0 / NULLIF(avg_balance_before, 0), 2) AS balance_change_pct,
+    ROUND(avg_balance_after::numeric - avg_balance_before::numeric, 2) AS balance_change,
+    ROUND((avg_balance_after::numeric - avg_balance_before::numeric) * 100.0 / NULLIF(avg_balance_before::numeric, 0), 2) AS balance_change_pct,
     
     -- CLV impact
-    ROUND(avg_clv_after - avg_clv_before, 2) AS clv_change,
+    ROUND(avg_clv_after::numeric - avg_clv_before::numeric, 2) AS clv_change,
     
     -- Causal interpretation
     CASE

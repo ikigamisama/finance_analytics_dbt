@@ -73,12 +73,12 @@ SELECT
     
     -- Engagement score (composite metric: 0-100)
     ROUND(
-        (AVG(transaction_count) * 0.3 +
-         AVG(active_months) * 10 +
-         AVG(unique_categories) * 5 +
-         AVG(channels_used) * 15 +
-         AVG(avg_satisfaction_rating) * 10 +
-         AVG(active_products) * 10) / 1.5
+        (AVG(transaction_count)::numeric * 0.3 +
+         AVG(active_months)::numeric * 10 +
+         AVG(unique_categories)::numeric * 5 +
+         AVG(channels_used)::numeric * 15 +
+         AVG(avg_satisfaction_rating)::numeric * 10 +
+         AVG(active_products)::numeric * 10) / 1.5
     , 2) AS engagement_score,
     
     -- Engagement level classification
@@ -90,14 +90,14 @@ SELECT
     END AS engagement_level,
     
     -- Service metrics
-    ROUND(AVG(service_interactions), 1) AS avg_service_interactions,
-    ROUND(AVG(avg_satisfaction_rating), 2) AS avg_satisfaction_score,
+    ROUND(AVG(service_interactions)::numeric, 1) AS avg_service_interactions,
+    ROUND(AVG(avg_satisfaction_rating)::numeric, 2) AS avg_satisfaction_score,
     
     -- Product holdings
-    ROUND(AVG(active_products), 1) AS avg_active_products,
+    ROUND(AVG(active_products)::numeric, 1) AS avg_active_products,
     
     -- Multi-channel usage
-    ROUND(SUM(CASE WHEN channels_used >= 2 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS multi_channel_users_pct,
+    ROUND(SUM(CASE WHEN channels_used >= 2 THEN 1 ELSE 0 END)::numeric * 100.0 / COUNT(*), 2) AS multi_channel_users_pct,
     
     CURRENT_TIMESTAMP AS last_updated
     

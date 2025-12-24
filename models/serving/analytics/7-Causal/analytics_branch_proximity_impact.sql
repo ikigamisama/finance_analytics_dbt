@@ -27,7 +27,10 @@ WITH customer_branch_distance AS (
         c.churn_risk_score
         
     FROM {{ ref('dim_customer') }} c
-    CROSS JOIN {{ ref('dim_location') }} l
+    JOIN {{ ref('dim_location') }} l
+        ON l.location_type = 'BRANCH'
+       AND l.is_active = TRUE
+       AND c.state = l.state
     LEFT JOIN {{ ref('fact_transactions') }} t 
         ON c.customer_key = t.customer_key
         AND t.transaction_date >= CURRENT_DATE - INTERVAL '180 days'
@@ -56,37 +59,43 @@ SELECT
     ROUND(AVG(branch_transactions) * 100.0 / NULLIF(AVG(total_transactions), 0), 2) AS branch_usage_pct,
     
     -- Financial outcomes
-    ROUND(AVG(total_balance), 2) AS avg_balance,
+    ROUND(AVG(total_balance)::numeric, 2) AS avg_balance,
     ROUND(AVG(total_transactions), 2) AS avg_total_transactions,
     
     -- Retention outcomes
     ROUND(AVG(tenure_months), 1) AS avg_tenure_months,
-    ROUND(AVG(churn_risk_score) * 100, 2) AS avg_churn_risk_pct,
+    ROUND(AVG(churn_risk_score)::numeric * 100, 2) AS avg_churn_risk_pct,
     
     -- Causal effect (compared to "Different State" baseline)
     ROUND(
-        AVG(branch_transactions) - 
-        FIRST_VALUE(AVG(branch_transactions)) OVER (
-            PARTITION BY customer_segment 
-            ORDER BY CASE proximity_category 
-                WHEN 'Same City' THEN 1 
-                WHEN 'Same State' THEN 2 
-                ELSE 3 
-            END DESC
-        )
-    , 2) AS branch_usage_effect,
+        (
+            AVG(branch_transactions)::numeric -
+            FIRST_VALUE(AVG(branch_transactions)::numeric) OVER (
+                PARTITION BY customer_segment
+                ORDER BY CASE proximity_category 
+                    WHEN 'Same City' THEN 1
+                    WHEN 'Same State' THEN 2
+                    ELSE 3
+                END DESC
+            )
+        ),
+        2
+    ) AS branch_usage_effect,
     
     ROUND(
-        AVG(churn_risk_score) - 
-        FIRST_VALUE(AVG(churn_risk_score)) OVER (
-            PARTITION BY customer_segment 
-            ORDER BY CASE proximity_category 
-                WHEN 'Same City' THEN 1 
-                WHEN 'Same State' THEN 2 
-                ELSE 3 
-            END DESC
-        )
-    , 4) AS churn_risk_effect,
+        (
+            AVG(churn_risk_score)::numeric -
+            FIRST_VALUE(AVG(churn_risk_score)::numeric) OVER (
+                PARTITION BY customer_segment
+                ORDER BY CASE proximity_category 
+                    WHEN 'Same City' THEN 1
+                    WHEN 'Same State' THEN 2
+                    ELSE 3
+                END DESC
+            )
+        ),
+        4
+    ) AS churn_risk_effect,
     
     -- Causal interpretation
     CASE

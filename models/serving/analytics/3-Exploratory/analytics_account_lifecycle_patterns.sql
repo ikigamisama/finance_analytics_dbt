@@ -57,9 +57,9 @@ SELECT
     SUM(CASE WHEN is_closed THEN 1 ELSE 0 END) AS closed_accounts,
     ROUND(SUM(CASE WHEN is_active THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS retention_rate_pct,
     
-    ROUND(AVG(current_balance), 2) AS avg_balance,
-    ROUND(AVG(lifetime_transactions), 1) AS avg_lifetime_transactions,
-    ROUND(AVG(lifetime_volume), 2) AS avg_lifetime_volume,
+    ROUND(AVG(current_balance)::numeric, 2) AS avg_balance,
+    ROUND(AVG(lifetime_transactions)::numeric, 1) AS avg_lifetime_transactions,
+    ROUND(AVG(lifetime_volume)::numeric, 2) AS avg_lifetime_volume,
     
     CURRENT_TIMESTAMP AS last_updated
     

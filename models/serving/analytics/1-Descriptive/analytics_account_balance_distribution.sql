@@ -10,10 +10,10 @@ SELECT
     balance_category,
     COUNT(DISTINCT account_key) AS account_count,
     ROUND(COUNT(DISTINCT account_key) * 100.0 / SUM(COUNT(DISTINCT account_key)) OVER (), 2) AS pct_of_total,
-    ROUND(SUM(current_balance), 2) AS total_balance,
-    ROUND(AVG(current_balance), 2) AS avg_balance,
-    ROUND(MIN(current_balance), 2) AS min_balance,
-    ROUND(MAX(current_balance), 2) AS max_balance,
+    ROUND(SUM(current_balance)::numeric, 2) AS total_balance,
+    ROUND(AVG(current_balance)::numeric, 2) AS avg_balance,
+    ROUND(MIN(current_balance)::numeric, 2) AS min_balance,
+    ROUND(MAX(current_balance)::numeric, 2) AS max_balance,
     CURRENT_TIMESTAMP AS last_updated
 FROM {{ ref('dim_account') }}
 WHERE is_current = TRUE AND is_active = TRUE

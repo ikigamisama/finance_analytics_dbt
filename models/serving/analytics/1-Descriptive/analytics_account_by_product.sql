@@ -13,8 +13,8 @@ SELECT
     COUNT(DISTINCT a.account_key) AS account_count,
     ROUND(COUNT(DISTINCT a.account_key) * 100.0 / SUM(COUNT(DISTINCT a.account_key)) OVER (), 2) AS pct_of_total,
     COUNT(DISTINCT CASE WHEN a.is_active THEN a.account_key END) AS active_accounts,
-    ROUND(SUM(CASE WHEN a.is_active THEN a.current_balance ELSE 0 END), 2) AS total_balance,
-    ROUND(AVG(CASE WHEN a.is_active THEN a.current_balance END), 2) AS avg_balance,
+    ROUND(SUM(CASE WHEN a.is_active THEN a.current_balance ELSE 0 END)::numeric, 2) AS total_balance,
+    ROUND(AVG(CASE WHEN a.is_active THEN a.current_balance END)::numeric, 2) AS avg_balance,
     COUNT(DISTINCT a.customer_id) AS unique_customers,
     CURRENT_TIMESTAMP AS last_updated
 FROM {{ ref('dim_account') }} a

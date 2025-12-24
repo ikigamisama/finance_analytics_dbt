@@ -223,36 +223,31 @@ This platform provides a complete financial analytics solution implementing:
 ### Installation
 
 ```bash
-# 1. Clone repository
-git clone <your-repo-url>
-cd financial-analytics-platform
+# 1. Clone the repository
+git clone https://github.com/ikigamisama/finance_analytics_dbt.git
+cd finance_analytics_dbt
 
-# 2. Create virtual environment
+# 2. Create and activate a virtual environment
 python3 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate       # On Windows: venv\Scripts\activate
 
-# 3. Install dependencies
+# 3. Start Docker services for PostgreSQL and pgAdmin
+docker-compose up -d --build
+
+# 4. Install Python dependencies
 pip install -r requirements.txt
 
-# 4. Configure database connection
+# 5. Configure the database connection
 # Edit profiles.yml with your PostgreSQL credentials
 
-# 5. Install dbt packages
+# 6. Install dbt packages
 dbt deps
 
-# 6. Run transformations
-dbt run                          # Run all models
-dbt run --select tag:silver      # Run silver layer only
-dbt run --select tag:gold        # Run gold layer only
+# 7. Run dbt transformations
+dbt run --select tag:transform       # Run silver layer only
+dbt run --select tag:dimension      # Run dimension layer only
+dbt run --select tag:facts          # Run facts layer only
 
-# 7. Generate visualizations
-cd visualizations
-python 01_descriptive_analytics.py
-python 02_diagnostic_analytics.py
-# ... run other scripts
-
-# 8. View reports
-open outputs/descriptive/*.html
 ```
 
 ---

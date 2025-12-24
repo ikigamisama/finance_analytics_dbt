@@ -6,7 +6,7 @@
     )
 }}
 
-WWITH date_spine AS (
+WITH date_spine AS (
     {{ dbt_utils.date_spine(
         datepart="day",
         start_date="cast('2010-01-01' as date)",

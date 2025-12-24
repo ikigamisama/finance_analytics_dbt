@@ -38,7 +38,7 @@ WITH campaign_facts AS (
         -- Calculated Efficiency Metrics
         CASE 
             WHEN mc.budget > 0 
-            THEN ROUND((mc.conversions::NUMERIC / mc.budget * 1000), 2)
+            THEN ROUND((mc.conversions::NUMERIC / mc.budget::NUMERIC * 1000), 2)
             ELSE 0
         END AS conversions_per_1k_budget,
         

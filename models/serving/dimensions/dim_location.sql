@@ -5,7 +5,6 @@
         tags=['gold', 'dimension', 'serving', 'location']
     )
 }}
-
 WITH branches AS (
     SELECT
         {{ dbt_utils.generate_surrogate_key(['branch_id']) }} AS location_key,
@@ -22,9 +21,9 @@ WITH branches AS (
         longitude,
         region,
         phone,
-        is_active,
-        NULL AS is_operational,
-        NULL AS is_24_hour
+        is_active::BOOLEAN AS is_active,
+        CAST(NULL AS BOOLEAN) AS is_operational,
+        CAST(NULL AS BOOLEAN) AS is_24_hour
     FROM {{ ref('stg_branch_locations') }}
 ),
 
@@ -42,11 +41,11 @@ atms AS (
         country,
         latitude,
         longitude,
-        NULL AS region,
-        NULL AS phone,
-        NULL AS is_active,
-        is_operational,
-        is_24_hour
+        CAST(NULL AS TEXT) AS region,
+        CAST(NULL AS TEXT) AS phone,
+        CAST(NULL AS BOOLEAN) AS is_active,
+        is_operational::BOOLEAN AS is_operational,
+        is_24_hour::BOOLEAN AS is_24_hour
     FROM {{ ref('stg_atm_locations') }}
 ),
 

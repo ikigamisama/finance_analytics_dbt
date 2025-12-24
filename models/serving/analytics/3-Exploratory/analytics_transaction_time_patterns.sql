@@ -14,16 +14,16 @@ SELECT
     t.merchant_category,
     
     COUNT(*) AS transaction_count,
-    ROUND(AVG(t.transaction_amount_abs), 2) AS avg_amount,
+    ROUND(AVG(t.transaction_amount_abs)::numeric, 2) AS avg_amount,
     COUNT(DISTINCT t.customer_key) AS unique_customers,
     
     -- Fraud patterns
-    SUM(t.is_fraud_flag) AS fraud_count,
-    ROUND(SUM(t.is_fraud_flag) * 100.0 / COUNT(*), 2) AS fraud_rate_pct,
+    SUM(t.is_fraud_flag::int) AS fraud_count,
+    ROUND(SUM(t.is_fraud_flag::int) * 100.0 / COUNT(*), 2) AS fraud_rate_pct,
     
     -- High value patterns
-    SUM(t.is_high_value_flag) AS high_value_count,
-    ROUND(SUM(t.is_high_value_flag) * 100.0 / COUNT(*), 2) AS high_value_pct,
+    SUM(t.is_high_value_flag::int) AS high_value_count,
+    ROUND(SUM(t.is_high_value_flag::int) * 100.0 / COUNT(*), 2) AS high_value_pct,
     
     -- International patterns
     SUM(CASE WHEN t.is_international THEN 1 ELSE 0 END) AS international_count,
