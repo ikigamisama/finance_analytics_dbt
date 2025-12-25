@@ -14,7 +14,7 @@ SELECT
     
     COUNT(*) AS declined_count,
     ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS pct_of_declines,
-    ROUND(AVG(t.transaction_amount_abs), 2) AS avg_declined_amount,
+    ROUND(AVG(t.transaction_amount_abs)::numeric, 2) AS avg_declined_amount,
     COUNT(DISTINCT t.customer_key) AS affected_customers,
     COUNT(DISTINCT t.merchant_key) AS affected_merchants,
     
@@ -22,8 +22,8 @@ SELECT
     ROUND(AVG(EXTRACT(HOUR FROM t.transaction_date)), 1) AS avg_hour_of_day,
     
     -- Risk indicators
-    ROUND(AVG(t.fraud_score), 3) AS avg_fraud_score,
-    ROUND(AVG(t.merchant_risk_score), 2) AS avg_merchant_risk,
+    ROUND(AVG(t.fraud_score)::numeric, 3) AS avg_fraud_score,
+    ROUND(AVG(t.merchant_risk_score)::numeric, 2) AS avg_merchant_risk,
     
     CURRENT_TIMESTAMP AS last_updated
     

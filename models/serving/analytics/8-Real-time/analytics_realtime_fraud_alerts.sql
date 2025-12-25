@@ -23,15 +23,15 @@ SELECT
     t.location_country,
     
     -- Fraud indicators
-    ROUND(t.fraud_score * 100, 2) AS fraud_score_pct,
+    ROUND((t.fraud_score * 100)::numeric, 2) AS fraud_score_pct,
     t.fraud_risk_category,
     t.is_fraud_flag AS confirmed_fraud,
     
     -- Risk factors
-    ROUND(t.distance_from_home_km, 1) AS distance_from_home_km,
-    ROUND(t.merchant_risk_score, 2) AS merchant_risk_score,
+    ROUND(t.distance_from_home_km::numeric, 1) AS distance_from_home_km,
+    ROUND(t.merchant_risk_score::numeric, 2) AS merchant_risk_score,
     t.velocity_24h,
-    ROUND(t.amount_deviation_score, 2) AS amount_deviation_score,
+    ROUND(t.amount_deviation_score::numeric, 2) AS amount_deviation_score,
     
     -- Alert priority
     CASE
@@ -60,7 +60,7 @@ INNER JOIN {{ ref('dim_customer') }} c ON t.customer_key = c.customer_key
 LEFT JOIN {{ ref('fact_fraud_alerts') }} fa ON t.transaction_key = fa.transaction_key
     
 WHERE t.transaction_date >= CURRENT_TIMESTAMP - INTERVAL '1 hour'
-  AND (t.fraud_score >= 0.5 OR t.is_fraud_flag = 1)
+  AND (t.fraud_score >= 0.5 OR t.is_fraud_flag = TRUE)
   AND c.is_current = TRUE
   
 ORDER BY t.fraud_score DESC, t.transaction_date DESC

@@ -123,26 +123,26 @@ This platform provides a complete financial analytics solution implementing:
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │  ANALYTICS (60 models across 8 categories)           │   │
 │  │                                                      │   │
-│  │  📊 01_descriptive_analytics/ (16 models)            │    │
-│  │     Customer overview, transactions, accounts, etc.   │   │
-│  │                                                       │   │
-│  │  🔍 02_diagnostic_analytics/ (9 models)               │   │
+│  │  📊 01_descriptive_analytics/ (16 models)            │   │
+│  │     Customer overview, transactions, accounts, etc.   │  │
+│  │                                                       │  │
+│  │  🔍 02_diagnostic_analytics/ (9 models)               │  │
 │  │     Churn, fraud patterns, loan defaults, etc.       │   │
-│  │                                                       │   │
+│  │                                                       │  │
 │  │  🔬 03_exploratory_analytics/ (8 models)             │   │
-│  │     Behavior clusters, time patterns, cross-sell     │   │
+│  │     Behavior clusters, time patterns, cross-sell     │    │
 │  │                                                       │   │
 │  │  📈 04_inferential_analytics/ (7 models)             │   │
-│  │     Statistical tests, A/B tests, confidence         │   │
+│  │     Statistical tests, A/B tests, confidence         │    │
 │  │                                                       │   │
 │  │  🔮 05_predictive_analytics/ (5 models)              │   │
-│  │     Churn prediction, forecasts, risk scores         │   │
+│  │     Churn prediction, forecasts, risk scores         │    │
 │  │                                                       │   │
-│  │  💡 06_prescriptive_analytics/ (5 models)            │   │
-│  │     Retention actions, recommendations, optimization │   │
+│  │  💡 06_prescriptive_analytics/ (5 models)            │    │
+│  │     Retention actions, recommendations, optimization │    │
 │  │                                                       │   │
 │  │  🎯 07_causal_analytics/ (4 models)                  │   │
-│  │     Impact analysis, elasticity, attribution         │   │
+│  │     Impact analysis, elasticity, attribution         │    │
 │  │                                                       │   │
 │  │  ⚡ 08_realtime_analytics/ (6 models)                │    │
 │  │     Live monitoring, fraud alerts, system health     │    │
@@ -243,10 +243,13 @@ pip install -r requirements.txt
 # 6. Install dbt packages
 dbt deps
 
-# 7. Run dbt transformations
+# 7. Run dbt transform silver layer
 dbt run --select tag:transform       # Run silver layer only
+
+# 8. Run dbt serving gold layer
 dbt run --select tag:dimension      # Run dimension layer only
 dbt run --select tag:facts          # Run facts layer only
+dbt run --select tag:analytics          # Run facts layer only
 
 ```
 

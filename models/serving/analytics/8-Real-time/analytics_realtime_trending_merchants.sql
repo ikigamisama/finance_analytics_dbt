@@ -37,7 +37,7 @@ SELECT
     merchant_type,
     
     transactions_current_hour,
-    ROUND(volume_current_hour, 2) AS volume_current_hour,
+    ROUND(volume_current_hour::numeric, 2) AS volume_current_hour,
     transactions_15min,
     unique_customers_current_hour,
     

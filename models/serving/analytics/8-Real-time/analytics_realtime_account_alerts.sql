@@ -13,10 +13,10 @@ SELECT
     p.product_name,
     
     a.account_status,
-    ROUND(a.current_balance, 2) AS current_balance,
-    ROUND(a.available_balance, 2) AS available_balance,
-    ROUND(a.credit_limit, 2) AS credit_limit,
-    ROUND(a.credit_utilization_pct, 2) AS credit_utilization_pct,
+    ROUND(a.current_balance::numeric, 2) AS current_balance,
+    ROUND(a.available_balance::numeric, 2) AS available_balance,
+    ROUND(a.credit_limit::numeric, 2) AS credit_limit,
+    ROUND(a.credit_utilization_pct::numeric, 2) AS credit_utilization_pct,
     
     -- Alert conditions
     a.is_past_due,

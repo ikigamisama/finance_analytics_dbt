@@ -14,7 +14,6 @@ WITH loan_features AS (
         c.credit_score,
         c.credit_score_band,
         c.income_bracket,
-        c.debt_to_income_ratio,
         
         -- Payment history features
         COUNT(*) AS total_payments,
@@ -41,82 +40,51 @@ WITH loan_features AS (
     INNER JOIN {{ ref('dim_product') }} p ON a.product_id = p.product_natural_key
     WHERE a.is_current = TRUE AND c.is_current = TRUE
     GROUP BY lp.account_key, a.account_natural_key, c.customer_key, c.credit_score,
-             c.credit_score_band, c.income_bracket, c.debt_to_income_ratio,
+             c.credit_score_band, c.income_bracket,
              p.interest_rate_pct, p.rate_category
+),
+default_calc AS (
+    SELECT
+        *,
+        ROUND(
+            LEAST(100, GREATEST(0,
+                CASE
+                    WHEN credit_score < 580 THEN 40
+                    WHEN credit_score < 670 THEN 25
+                    WHEN credit_score < 740 THEN 12
+                    ELSE 5
+                END +
+                CASE
+                    WHEN late_payment_count = 0 THEN 0
+                    WHEN late_payment_count <= 2 THEN 15
+                    WHEN late_payment_count <= 5 THEN 30
+                    ELSE 45
+                END +
+                recent_late_payments * 8 +
+                missed_payment_count * 12 +
+                CASE
+                    WHEN max_days_late > 90 THEN 25
+                    WHEN max_days_late > 60 THEN 18
+                    WHEN max_days_late > 30 THEN 10
+                    ELSE 0
+                END +
+                CASE
+                    WHEN interest_rate_pct > 15 THEN 10
+                    WHEN interest_rate_pct > 10 THEN 5
+                    ELSE 0
+                END
+            )), 2
+        ) AS default_probability_pct
+    FROM loan_features
 )
-
 SELECT
-    account_key,
-    account_natural_key,
-    customer_key,
-    credit_score_band,
-    income_bracket,
-    rate_category,
-    
-    -- Default prediction score (0-100)
-    ROUND(
-        LEAST(100, GREATEST(0,
-            -- Credit score factor (inverse)
-            CASE
-                WHEN credit_score < 580 THEN 40
-                WHEN credit_score < 670 THEN 25
-                WHEN credit_score < 740 THEN 12
-                ELSE 5
-            END +
-            
-            -- Payment history factor
-            CASE
-                WHEN late_payment_count = 0 THEN 0
-                WHEN late_payment_count <= 2 THEN 15
-                WHEN late_payment_count <= 5 THEN 30
-                ELSE 45
-            END +
-            
-            -- Recent behavior factor (weighted more)
-            recent_late_payments * 8 +
-            
-            -- Missed payment penalty
-            missed_payment_count * 12 +
-            
-            -- Days late severity
-            CASE
-                WHEN max_days_late > 90 THEN 25
-                WHEN max_days_late > 60 THEN 18
-                WHEN max_days_late > 30 THEN 10
-                ELSE 0
-            END +
-            
-            -- Interest rate stress
-            CASE
-                WHEN interest_rate_pct > 15 THEN 10
-                WHEN interest_rate_pct > 10 THEN 5
-                ELSE 0
-            END
-        ))
-    , 2) AS default_probability_pct,
-    
-    -- Risk classification
+    *,
     CASE
         WHEN default_probability_pct >= 70 THEN 'Critical'
         WHEN default_probability_pct >= 50 THEN 'High'
         WHEN default_probability_pct >= 30 THEN 'Medium'
         ELSE 'Low'
-    END AS default_risk_category,
-    
-    -- Supporting metrics
-    total_payments,
-    late_payment_count,
-    missed_payment_count,
-    ROUND(avg_days_late, 1) AS avg_days_late,
-    max_days_late,
-    ROUND(total_late_fees, 2) AS total_late_fees,
-    ROUND(avg_outstanding_balance, 2) AS avg_outstanding_balance,
-    
-    -- Expected loss calculation (simplified)
-    ROUND(avg_outstanding_balance * (default_probability_pct / 100) * 0.6, 2) AS expected_loss_amount,
-    
-    CURRENT_TIMESTAMP AS prediction_date
-    
-FROM loan_features
-WHERE total_payments >= 3  -- Minimum payment history
+    END AS default_risk_category
+FROM default_calc
+WHERE total_payments >= 3
 ORDER BY default_probability_pct DESC

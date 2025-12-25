@@ -27,46 +27,35 @@ WITH campaign_performance AS (
     WHERE mc.campaign_status = 'Completed'
       AND mc.end_date >= CURRENT_DATE - INTERVAL '365 days'
     GROUP BY mc.campaign_type, dc.channel_group, mc.target_segment
+),
+budget_calculated AS (
+    SELECT
+        *,
+        ROUND(
+            (1000000 * efficiency_score / SUM(efficiency_score) OVER ())::numeric,
+        2) AS recommended_budget
+    FROM campaign_performance
+),
+percentiles AS (
+    SELECT
+        PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY efficiency_score) AS p75,
+        PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY efficiency_score) AS p25
+    FROM budget_calculated
 )
-
 SELECT
-    campaign_type,
-    channel_group,
-    target_segment,
-    campaign_count,
-    ROUND(total_budget, 2) AS historical_budget,
-    ROUND(avg_roi, 2) AS avg_roi,
-    ROUND(avg_cpa, 2) AS avg_cpa,
-    ROUND(avg_conversion_rate, 2) AS avg_conversion_rate_pct,
-    ROUND(efficiency_score, 4) AS efficiency_score,
-    
-    -- Recommended budget allocation (proportional to efficiency)
-    ROUND(
-        1000000 *  -- Total budget to allocate
-        efficiency_score / SUM(efficiency_score) OVER ()
-    , 2) AS recommended_budget,
-    
-    ROUND(
-        recommended_budget - (total_budget / campaign_count)
-    , 2) AS budget_change,
-    
-    -- Expected outcomes
-    ROUND(recommended_budget * avg_roi, 2) AS expected_revenue,
-    ROUND(recommended_budget / NULLIF(avg_cpa, 0), 0) AS expected_conversions,
-    
-    -- Priority ranking
+    bc.*,
+    ROUND((recommended_budget - (total_budget / campaign_count))::numeric, 2) AS budget_change,
+    ROUND((recommended_budget * avg_roi)::numeric, 2) AS expected_revenue,
+    ROUND((recommended_budget / NULLIF(avg_cpa, 0))::numeric, 0) AS expected_conversions,
     ROW_NUMBER() OVER (ORDER BY efficiency_score DESC) AS priority_rank,
     
-    -- Recommendation
     CASE
-        WHEN efficiency_score >= PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY efficiency_score) OVER ()
-            THEN 'Increase Budget'
-        WHEN efficiency_score <= PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY efficiency_score) OVER ()
-            THEN 'Decrease Budget'
+        WHEN bc.efficiency_score >= p.p75 THEN 'Increase Budget'
+        WHEN bc.efficiency_score <= p.p25 THEN 'Decrease Budget'
         ELSE 'Maintain Budget'
     END AS budget_recommendation,
     
     CURRENT_TIMESTAMP AS generated_at
-    
-FROM campaign_performance
-ORDER BY efficiency_score DESC
+FROM budget_calculated bc
+CROSS JOIN percentiles p
+ORDER BY bc.efficiency_score DESC

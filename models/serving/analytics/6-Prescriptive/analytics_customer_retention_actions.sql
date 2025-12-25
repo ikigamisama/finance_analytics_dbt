@@ -1,11 +1,3 @@
-{{
-    config(
-        materialized='table',
-        schema="gold",
-        tags=['analytics', 'prescriptive', 'serving', 'retention']
-    )
-}}
-
 WITH at_risk_customers AS (
     SELECT
         c.customer_key,

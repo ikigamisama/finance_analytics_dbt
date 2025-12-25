@@ -33,16 +33,16 @@ SELECT
     ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY customer_segment), 2) AS pct_of_segment,
     
     -- Distribution statistics
-    ROUND(AVG(customer_lifetime_value), 2) AS mean_clv,
-    ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY customer_lifetime_value), 2) AS median_clv,
-    ROUND(PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY customer_lifetime_value), 2) AS q1_clv,
-    ROUND(PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY customer_lifetime_value), 2) AS q3_clv,
-    ROUND(MIN(customer_lifetime_value), 2) AS min_clv,
-    ROUND(MAX(customer_lifetime_value), 2) AS max_clv,
-    ROUND(STDDEV(customer_lifetime_value), 2) AS stddev_clv,
+    ROUND(AVG(customer_lifetime_value)::numeric, 2) AS mean_clv,
+    ROUND((PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY customer_lifetime_value))::numeric, 2) AS median_clv,
+    ROUND((PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY customer_lifetime_value))::numeric, 2) AS q1_clv,
+    ROUND((PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY customer_lifetime_value))::numeric, 2) AS q3_clv,
+    ROUND(MIN(customer_lifetime_value)::numeric, 2) AS min_clv,
+    ROUND(MAX(customer_lifetime_value)::numeric, 2) AS max_clv,
+    ROUND(STDDEV(customer_lifetime_value)::numeric, 2) AS stddev_clv,
     
     -- Skewness indicator (simplified)
-    ROUND((AVG(customer_lifetime_value) - PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY customer_lifetime_value)) / NULLIF(STDDEV(customer_lifetime_value), 0), 2) AS skewness_indicator,
+    ROUND(((AVG(customer_lifetime_value) - PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY customer_lifetime_value)) / NULLIF(STDDEV(customer_lifetime_value), 0))::numeric, 2) AS skewness_indicator,
     
     CURRENT_TIMESTAMP AS last_updated
     

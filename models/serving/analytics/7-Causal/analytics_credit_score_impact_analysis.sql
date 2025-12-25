@@ -58,51 +58,76 @@ WITH credit_score_cohorts AS (
     ) lp ON c.customer_key = lp.customer_key
     
     WHERE c.is_current = TRUE
+), 
+credit_score_band_agg AS (
+    SELECT
+        credit_score_band,
+
+        COUNT(*) AS customer_count,
+
+        AVG(credit_score) AS avg_credit_score,
+        STDDEV(credit_score) AS stddev_credit_score,
+
+        AVG(transaction_count) AS avg_transactions,
+        AVG(total_transaction_volume) AS avg_transaction_volume,
+        AVG(account_count) AS avg_accounts,
+        AVG(total_balance) AS avg_balance,
+        AVG(credit_approval_rate) * 100 AS avg_approval_rate_pct,
+        AVG(has_defaulted) * 100 AS default_rate_pct,
+        AVG(customer_lifetime_value) AS avg_clv
+
+    FROM credit_score_cohorts
+    GROUP BY credit_score_band
 )
+
 
 SELECT
     credit_score_band,
-    
-    -- Sample size
-    COUNT(*) AS customer_count,
-    
-    -- Credit score statistics
-    ROUND(AVG(credit_score), 0) AS avg_credit_score,
-    ROUND(STDDEV(credit_score), 2) AS stddev_credit_score,
-    
-    -- Causal outcomes (controlled for income)
-    ROUND(AVG(transaction_count), 1) AS avg_transactions,
-    ROUND(AVG(total_transaction_volume), 2) AS avg_transaction_volume,
-    ROUND(AVG(account_count), 2) AS avg_accounts,
-    ROUND(AVG(total_balance), 2) AS avg_balance,
-    ROUND(AVG(credit_approval_rate) * 100, 2) AS avg_approval_rate_pct,
-    ROUND(AVG(has_defaulted) * 100, 2) AS default_rate_pct,
-    ROUND(AVG(customer_lifetime_value), 2) AS avg_clv,
-    
-    -- Marginal effects (difference from next lower band)
+    customer_count,
+
+    ROUND(avg_credit_score::numeric, 0) AS avg_credit_score,
+    ROUND(stddev_credit_score::numeric, 2) AS stddev_credit_score,
+
+    ROUND(avg_transactions::numeric, 1) AS avg_transactions,
+    ROUND(avg_transaction_volume::numeric, 2) AS avg_transaction_volume,
+    ROUND(avg_accounts::numeric, 2) AS avg_accounts,
+    ROUND(avg_balance::numeric, 2) AS avg_balance,
+    ROUND(avg_approval_rate_pct::numeric, 2) AS avg_approval_rate_pct,
+    ROUND(default_rate_pct::numeric, 2) AS default_rate_pct,
+    ROUND(avg_clv::numeric, 2) AS avg_clv,
+
+    -- Marginal effects
     ROUND(
-        AVG(transaction_count) - 
-        LAG(AVG(transaction_count)) OVER (ORDER BY avg_credit_score)
+        (avg_transactions
+         - LAG(avg_transactions) OVER (ORDER BY avg_credit_score))::numeric
     , 1) AS marginal_effect_transactions,
-    
+
     ROUND(
-        AVG(total_balance) - 
-        LAG(AVG(total_balance)) OVER (ORDER BY avg_credit_score)
+        (avg_balance
+         - LAG(avg_balance) OVER (ORDER BY avg_credit_score))::numeric
     , 2) AS marginal_effect_balance,
-    
+
     ROUND(
-        AVG(credit_approval_rate) * 100 - 
-        LAG(AVG(credit_approval_rate) * 100) OVER (ORDER BY avg_credit_score)
+        (avg_approval_rate_pct
+         - LAG(avg_approval_rate_pct) OVER (ORDER BY avg_credit_score))::numeric
     , 2) AS marginal_effect_approval_pct,
-    
-    -- Causal interpretation: Change per 100 point credit score increase
+
+    -- CLV change per 100 credit points
     ROUND(
-        (AVG(customer_lifetime_value) - LAG(AVG(customer_lifetime_value)) OVER (ORDER BY avg_credit_score)) /
-        NULLIF((AVG(credit_score) - LAG(AVG(credit_score)) OVER (ORDER BY avg_credit_score)), 0) * 100
+        (
+            avg_clv
+            - LAG(avg_clv) OVER (ORDER BY avg_credit_score)
+        )
+        /
+        NULLIF(
+            avg_credit_score
+            - LAG(avg_credit_score) OVER (ORDER BY avg_credit_score),
+            0
+        )
+        * 100
     , 2) AS clv_change_per_100_credit_points,
-    
+
     CURRENT_TIMESTAMP AS analyzed_at
-    
-FROM credit_score_cohorts
-GROUP BY credit_score_band
+
+FROM credit_score_band_agg
 ORDER BY avg_credit_score

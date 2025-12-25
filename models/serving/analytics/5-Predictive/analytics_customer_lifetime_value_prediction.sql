@@ -58,67 +58,48 @@ WITH customer_metrics AS (
     ) s ON c.customer_key = s.customer_key
     
     WHERE c.is_current = TRUE AND c.is_active = TRUE
+), 
+predictions AS (
+    SELECT
+        *,
+        ROUND(
+            (current_clv + 
+            (monthly_avg_volume * 0.02 * 12) +
+            (total_balance * 0.01) +
+            (account_count * 120) +
+            (segment_upgrades * 500) +
+            CASE
+                WHEN tenure_months < 12 THEN monthly_avg_volume * 0.03 * 12
+                WHEN tenure_months < 24 THEN monthly_avg_volume * 0.02 * 12
+                ELSE monthly_avg_volume * 0.01 * 12
+            END)::numeric
+        , 2) AS predicted_clv_12m,
+
+        ROUND(
+            (current_clv + 
+            (monthly_avg_volume * 0.02 * 36) +
+            (total_balance * 0.025) +
+            (account_count * 360) +
+            (segment_upgrades * 1500) +
+            CASE
+                WHEN tenure_months < 12 THEN monthly_avg_volume * 0.05 * 36
+                WHEN tenure_months < 24 THEN monthly_avg_volume * 0.03 * 36
+                ELSE monthly_avg_volume * 0.02 * 36
+            END)::numeric
+        , 2) AS predicted_clv_36m
+    FROM customer_metrics
 )
 
 SELECT
-    customer_key,
-    customer_natural_key,
-    customer_segment,
-    tenure_months,
-    ROUND(current_clv, 2) AS current_clv,
-    
-    -- Predicted future CLV (12-month horizon)
-    ROUND(
-        current_clv + 
-        (monthly_avg_volume * 0.02 * 12) +  -- Estimated revenue from transactions
-        (total_balance * 0.01) +  -- Asset-based revenue
-        (account_count * 120) +  -- Account fee revenue
-        (segment_upgrades * 500) +  -- Upgrade bonus
-        
-        -- Growth factor based on tenure
-        CASE
-            WHEN tenure_months < 12 THEN monthly_avg_volume * 0.03 * 12
-            WHEN tenure_months < 24 THEN monthly_avg_volume * 0.02 * 12
-            ELSE monthly_avg_volume * 0.01 * 12
-        END
-    , 2) AS predicted_clv_12m,
-    
-    -- 36-month projection
-    ROUND(
-        current_clv + 
-        (monthly_avg_volume * 0.02 * 36) +
-        (total_balance * 0.025) +
-        (account_count * 360) +
-        (segment_upgrades * 1500) +
-        CASE
-            WHEN tenure_months < 12 THEN monthly_avg_volume * 0.05 * 36
-            WHEN tenure_months < 24 THEN monthly_avg_volume * 0.03 * 36
-            ELSE monthly_avg_volume * 0.02 * 36
-        END
-    , 2) AS predicted_clv_36m,
-    
-    -- Value increase
-    ROUND(predicted_clv_12m - current_clv, 2) AS expected_value_increase_12m,
-    ROUND(predicted_clv_36m - current_clv, 2) AS expected_value_increase_36m,
-    
-    -- Growth rate
-    ROUND((predicted_clv_12m - current_clv) * 100.0 / NULLIF(current_clv, 0), 2) AS growth_rate_12m_pct,
-    
-    -- Value tier prediction
+    *,
+    ROUND((predicted_clv_12m - current_clv)::numeric, 2) AS expected_value_increase_12m,
+    ROUND((predicted_clv_36m - current_clv)::numeric, 2) AS expected_value_increase_36m,
+    ROUND(((predicted_clv_12m - current_clv) * 100.0 / NULLIF(current_clv, 0))::numeric, 2) AS growth_rate_12m_pct,
     CASE
         WHEN predicted_clv_36m >= 50000 THEN 'High Value'
         WHEN predicted_clv_36m >= 25000 THEN 'Medium-High Value'
         WHEN predicted_clv_36m >= 10000 THEN 'Medium Value'
         ELSE 'Standard Value'
-    END AS predicted_value_tier,
-    
-    -- Supporting metrics
-    monthly_avg_transactions,
-    ROUND(monthly_avg_volume, 2) AS monthly_avg_volume,
-    account_count,
-    ROUND(total_balance, 2) AS total_balance,
-    
-    CURRENT_TIMESTAMP AS prediction_date
-    
-FROM customer_metrics
+    END AS predicted_value_tier
+FROM predictions
 ORDER BY predicted_clv_36m DESC

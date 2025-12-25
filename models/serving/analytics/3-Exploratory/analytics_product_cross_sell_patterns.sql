@@ -26,8 +26,8 @@ product_combinations AS (
         p2.product_name AS product_2,
         p2.category AS category_2,
         COUNT(DISTINCT p1.customer_id) AS customer_count,
-        ROUND(AVG(p1.current_balance + p2.current_balance), 2) AS avg_combined_balance,
-        ROUND(AVG(LEAST(p1.account_age_months, p2.account_age_months)), 1) AS avg_min_age_months
+        ROUND(AVG(p1.current_balance + p2.current_balance)::numeric, 2) AS avg_combined_balance,
+        ROUND(AVG(LEAST(p1.account_age_months, p2.account_age_months))::numeric, 1) AS avg_min_age_months
     FROM customer_products p1
     INNER JOIN customer_products p2 
         ON p1.customer_id = p2.customer_id 
@@ -45,7 +45,7 @@ SELECT
     avg_min_age_months,
     
     -- Cross-sell strength score
-    ROUND(customer_count * LOG(avg_combined_balance + 1), 2) AS cross_sell_score,
+    ROUND(customer_count * LOG(GREATEST(avg_combined_balance, 0) + 1), 2) AS cross_sell_score,
     
     CURRENT_TIMESTAMP AS last_updated
     

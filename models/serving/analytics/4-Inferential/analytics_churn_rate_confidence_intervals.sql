@@ -39,14 +39,16 @@ SELECT
     SUM(churned_customers) AS churned_customers,
     
     -- Churn rate
-    ROUND(SUM(churned_customers) * 100.0 / SUM(total_customers), 2) AS churn_rate_pct,
+    ROUND((SUM(churned_customers) * 100.0 / SUM(total_customers))::numeric, 2) AS churn_rate_pct,
     
     -- Standard error for proportion
-    ROUND(SQRT(
-        (SUM(churned_customers) * 1.0 / SUM(total_customers)) * 
-        (1 - SUM(churned_customers) * 1.0 / SUM(total_customers)) / 
-        SUM(total_customers)
-    ) * 100, 2) AS churn_rate_se_pct,
+    ROUND((
+        SQRT(
+            (SUM(churned_customers) * 1.0 / SUM(total_customers)) * 
+            (1 - SUM(churned_customers) * 1.0 / SUM(total_customers)) / 
+            SUM(total_customers)
+        ) * 100
+    )::numeric, 2) AS churn_rate_se_pct,
     
     -- 95% Confidence Interval
     ROUND(GREATEST(0, 
@@ -56,7 +58,7 @@ SELECT
             (1 - SUM(churned_customers) * 1.0 / SUM(total_customers)) / 
             SUM(total_customers)
         ) * 100
-    ), 2) AS churn_rate_ci_lower,
+    )::numeric, 2) AS churn_rate_ci_lower,
     
     ROUND(LEAST(100,
         (SUM(churned_customers) * 100.0 / SUM(total_customers)) + 
@@ -65,13 +67,13 @@ SELECT
             (1 - SUM(churned_customers) * 1.0 / SUM(total_customers)) / 
             SUM(total_customers)
         ) * 100
-    ), 2) AS churn_rate_ci_upper,
+    )::numeric, 2) AS churn_rate_ci_upper,
     
     -- High risk proportion
-    ROUND(SUM(high_risk_customers) * 100.0 / SUM(total_customers), 2) AS high_risk_pct,
+    ROUND((SUM(high_risk_customers) * 100.0 / SUM(total_customers))::numeric, 2) AS high_risk_pct,
     
     -- Mean churn score
-    ROUND(AVG(mean_churn_score) * 100, 2) AS mean_churn_score_pct,
+    ROUND((AVG(mean_churn_score) * 100)::numeric, 2) AS mean_churn_score_pct,
     
     CURRENT_TIMESTAMP AS last_updated
     

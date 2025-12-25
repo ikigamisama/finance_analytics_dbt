@@ -67,25 +67,25 @@ SELECT
     
     -- Churn Indicators
     COUNT(*) AS at_risk_customers,
-    ROUND(AVG(churn_risk_score) * 100, 2) AS avg_churn_risk_pct,
-    ROUND(AVG(days_since_last_login), 1) AS avg_days_inactive,
+    ROUND((AVG(churn_risk_score) * 100)::numeric, 2) AS avg_churn_risk_pct,
+    ROUND(AVG(days_since_last_login)::numeric, 1) AS avg_days_inactive,
     
     -- Account Health
-    ROUND(AVG(num_accounts), 1) AS avg_accounts_per_customer,
-    ROUND(AVG(closed_accounts), 1) AS avg_closed_accounts,
+    ROUND(AVG(num_accounts)::numeric, 1) AS avg_accounts_per_customer,
+    ROUND(AVG(closed_accounts)::numeric, 1) AS avg_closed_accounts,
     
     -- Engagement
-    ROUND(AVG(recent_transaction_count), 1) AS avg_recent_transactions,
-    ROUND(AVG(avg_transaction_amount), 2) AS avg_transaction_size,
+    ROUND(AVG(recent_transaction_count)::numeric, 1) AS avg_recent_transactions,
+    ROUND(AVG(avg_transaction_amount)::numeric, 2) AS avg_transaction_size,
     
     -- Service Issues
-    ROUND(AVG(support_interactions), 1) AS avg_support_contacts,
-    ROUND(AVG(negative_interactions), 1) AS avg_negative_interactions,
-    ROUND(AVG(unresolved_issues), 1) AS avg_unresolved_issues,
+    ROUND(AVG(support_interactions)::numeric, 1) AS avg_support_contacts,
+    ROUND(AVG(negative_interactions)::numeric, 1) AS avg_negative_interactions,
+    ROUND(AVG(unresolved_issues)::numeric, 1) AS avg_unresolved_issues,
     
     -- Financial
-    ROUND(AVG(customer_lifetime_value), 2) AS avg_clv,
-    ROUND(SUM(customer_lifetime_value), 2) AS total_clv_at_risk,
+    ROUND(AVG(customer_lifetime_value)::numeric, 2) AS avg_clv,
+    ROUND(SUM(customer_lifetime_value)::numeric, 2) AS total_clv_at_risk,
     
     CURRENT_TIMESTAMP AS last_updated
 FROM churned_customers

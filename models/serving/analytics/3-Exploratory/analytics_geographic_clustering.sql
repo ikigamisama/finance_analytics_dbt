@@ -22,16 +22,16 @@ SELECT
     
     -- Transaction activity
     COALESCE(t.total_transactions, 0) AS total_transactions_90d,
-    COALESCE(ROUND(t.total_volume, 2), 0) AS total_volume_90d,
-    COALESCE(ROUND(t.avg_transaction, 2), 0) AS avg_transaction_amount,
+    COALESCE(ROUND(t.total_volume::numeric, 2), 0) AS total_volume_90d,
+    COALESCE(ROUND(t.avg_transaction::numeric, 2), 0) AS avg_transaction_amount,
     
     -- Account metrics
     COALESCE(a.total_accounts, 0) AS total_accounts,
-    COALESCE(ROUND(a.total_balance, 2), 0) AS total_balance,
-    COALESCE(ROUND(a.avg_balance, 2), 0) AS avg_balance_per_account,
+    COALESCE(ROUND(a.total_balance::numeric, 2), 0) AS total_balance,
+    COALESCE(ROUND(a.avg_balance::numeric, 2), 0) AS avg_balance_per_account,
     
     -- Risk indicators
-    ROUND(AVG(c.churn_risk_score) * 100, 2) AS avg_churn_risk_pct,
+    ROUND((AVG(c.churn_risk_score))::numeric * 100, 2) AS avg_churn_risk_pct,
     
     CURRENT_TIMESTAMP AS last_updated
     

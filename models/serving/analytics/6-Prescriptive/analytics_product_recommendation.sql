@@ -28,75 +28,75 @@ WITH customer_products AS (
              c.annual_income, c.credit_score_band, c.tenure_months
 ),
 
-product_recommendations AS (
+product_recommendations_base AS (
     SELECT
         cp.customer_key,
         cp.customer_natural_key,
         cp.customer_segment,
         cp.current_products,
         cp.product_count,
-        
-        -- Recommendation logic
+        cp.tenure_months,
+        cp.total_balance,
+        cp.credit_score_band,
+        cp.annual_income,
+
         CASE
-            -- Doesn't have credit product
             WHEN cp.current_products NOT LIKE '%Credit%' 
                 AND cp.credit_score_band IN ('Good', 'Very Good', 'Excellent')
                 AND cp.tenure_months >= 6
             THEN 'Credit Card'
-            
-            -- Doesn't have investment
+
             WHEN cp.current_products NOT LIKE '%Investment%'
                 AND cp.annual_income >= 75000
                 AND cp.total_balance >= 10000
             THEN 'Investment Account'
-            
-            -- Only has deposit
+
             WHEN cp.product_count = 1 
                 AND cp.current_products LIKE '%Deposit%'
                 AND cp.tenure_months >= 3
             THEN 'Savings Account'
-            
-            -- Has checking, suggest credit
+
             WHEN cp.current_products LIKE '%Deposit%'
                 AND cp.current_products NOT LIKE '%Credit%'
                 AND cp.credit_score_band NOT IN ('Poor', 'Fair')
             THEN 'Credit Card'
-            
-            -- High balance, suggest premium
+
             WHEN cp.total_balance >= 50000
                 AND cp.customer_segment != 'Premium'
             THEN 'Premium Checking'
-            
+
             ELSE 'Personal Loan'
-        END AS recommended_product,
-        
-        -- Recommendation score (0-100)
+        END AS recommended_product
+
+    FROM customer_products cp
+),
+product_recommendations AS (
+    SELECT
+        b.*,
+
         ROUND(
-            CASE recommended_product
+            CASE b.recommended_product
                 WHEN 'Credit Card' THEN 75
                 WHEN 'Investment Account' THEN 85
                 WHEN 'Savings Account' THEN 70
                 WHEN 'Premium Checking' THEN 80
                 ELSE 60
             END *
-            -- Adjust by tenure
             CASE
-                WHEN cp.tenure_months >= 24 THEN 1.2
-                WHEN cp.tenure_months >= 12 THEN 1.1
-                WHEN cp.tenure_months >= 6 THEN 1.0
+                WHEN b.tenure_months >= 24 THEN 1.2
+                WHEN b.tenure_months >= 12 THEN 1.1
+                WHEN b.tenure_months >= 6 THEN 1.0
                 ELSE 0.8
             END *
-            -- Adjust by segment
-            CASE cp.customer_segment
+            CASE b.customer_segment
                 WHEN 'Premium' THEN 1.3
                 WHEN 'Affluent' THEN 1.2
                 WHEN 'Mass Market' THEN 1.0
                 ELSE 0.9
             END
         , 0) AS recommendation_score,
-        
-        -- Expected revenue
-        CASE recommended_product
+
+        CASE b.recommended_product
             WHEN 'Credit Card' THEN 240
             WHEN 'Investment Account' THEN 500
             WHEN 'Savings Account' THEN 120
@@ -104,19 +104,16 @@ product_recommendations AS (
             WHEN 'Personal Loan' THEN 800
             ELSE 150
         END AS expected_annual_revenue,
-        
-        -- Propensity to accept (%)
+
         CASE
-            WHEN cp.product_count = 1 AND cp.tenure_months >= 12 THEN 45
-            WHEN cp.customer_segment = 'Premium' THEN 55
-            WHEN cp.customer_segment = 'Affluent' THEN 50
-            WHEN cp.product_count >= 3 THEN 25
+            WHEN b.product_count = 1 AND b.tenure_months >= 12 THEN 45
+            WHEN b.customer_segment = 'Premium' THEN 55
+            WHEN b.customer_segment = 'Affluent' THEN 50
+            WHEN b.product_count >= 3 THEN 25
             ELSE 35
-        END AS propensity_to_accept_pct,
-        
-        ROUND(cp.total_balance, 2) AS total_balance
-        
-    FROM customer_products cp
+        END AS propensity_to_accept_pct
+
+    FROM product_recommendations_base b
 )
 
 SELECT

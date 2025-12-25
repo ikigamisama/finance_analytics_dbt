@@ -23,10 +23,10 @@ WITH fraud_predictions AS (
 confusion_matrix AS (
     SELECT
         predicted_risk,
-        SUM(CASE WHEN actual_fraud = 1 THEN 1 ELSE 0 END) AS true_positive,
-        SUM(CASE WHEN actual_fraud = 0 THEN 1 ELSE 0 END) AS false_positive,
-        SUM(CASE WHEN actual_fraud = 1 THEN 0 ELSE 1 END) AS false_negative,
-        SUM(CASE WHEN actual_fraud = 0 THEN 0 ELSE 1 END) AS true_negative,
+        SUM(CASE WHEN actual_fraud = TRUE THEN 1 ELSE 0 END) AS true_positive,
+        SUM(CASE WHEN actual_fraud = FALSE THEN 1 ELSE 0 END) AS false_positive,
+        SUM(CASE WHEN actual_fraud = TRUE THEN 0 ELSE 1 END) AS false_negative,
+        SUM(CASE WHEN actual_fraud = FALSE THEN 0 ELSE 1 END) AS true_negative,
         COUNT(*) AS total_predictions
     FROM fraud_predictions
     GROUP BY predicted_risk

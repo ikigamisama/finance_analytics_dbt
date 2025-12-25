@@ -19,16 +19,16 @@ SELECT
     ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS pct_of_applications,
     
     -- Application metrics
-    ROUND(AVG(ca.requested_amount), 2) AS avg_requested_amount,
-    ROUND(AVG(ca.credit_score_at_application), 0) AS avg_credit_score,
-    ROUND(AVG(ca.debt_to_income_ratio) * 100, 2) AS avg_dti_pct,
-    ROUND(AVG(ca.annual_income), 2) AS avg_annual_income,
-    ROUND(AVG(ca.approval_probability_score) * 100, 2) AS avg_approval_probability_pct,
+    ROUND(AVG(ca.requested_amount)::numeric, 2) AS avg_requested_amount,
+    ROUND(AVG(ca.credit_score_at_application)::numeric, 0) AS avg_credit_score,
+    ROUND((AVG(ca.debt_to_income_ratio) * 100)::numeric, 2) AS avg_dti_pct,
+    ROUND(AVG(ca.annual_income)::numeric, 2) AS avg_annual_income,
+    ROUND((AVG(ca.approval_probability_score) * 100)::numeric, 2) AS avg_approval_probability_pct,
     
     -- Approval metrics
     SUM(ca.approved_flag) AS approved_count,
     ROUND(SUM(ca.approved_flag) * 100.0 / COUNT(*), 2) AS approval_rate_pct,
-    ROUND(AVG(CASE WHEN ca.approved_flag = 1 THEN ca.approved_amount END), 2) AS avg_approved_amount,
+    ROUND(AVG(CASE WHEN ca.approved_flag = 1 THEN ca.approved_amount END)::numeric, 2) AS avg_approved_amount,
     
     CURRENT_TIMESTAMP AS last_updated
     

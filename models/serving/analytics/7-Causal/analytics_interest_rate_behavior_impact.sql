@@ -45,50 +45,47 @@ WITH rate_cohorts AS (
     WHERE a.is_current = TRUE 
       AND c.is_current = TRUE
       AND p.interest_rate_pct > 0
+), 
+rate_stats AS (
+    SELECT
+        rate_category,
+        COUNT(*) AS account_count,
+        ROUND(AVG(interest_rate_pct)::numeric, 2) AS avg_interest_rate,
+        ROUND(STDDEV(interest_rate_pct)::numeric, 2) AS stddev_rate,
+        ROUND(AVG(current_balance)::numeric, 2) AS avg_balance,
+        ROUND(AVG(transaction_count)::numeric, 1) AS avg_transactions,
+        ROUND(AVG(avg_transaction_amount)::numeric, 2) AS avg_transaction_size,
+        ROUND((AVG(late_payment_rate) * 100)::numeric, 2) AS avg_late_payment_rate_pct,
+        ROUND((AVG(CASE WHEN is_past_due THEN 1 ELSE 0 END) * 100)::numeric, 2) AS past_due_rate_pct,
+        ROUND((AVG(churn_risk_score) * 100)::numeric, 2) AS avg_churn_risk_pct,
+
+        -- Elasticities
+        ROUND(
+            ((AVG(current_balance) - LAG(AVG(current_balance)) OVER (ORDER BY AVG(interest_rate_pct))) /
+            NULLIF((AVG(interest_rate_pct) - LAG(AVG(interest_rate_pct)) OVER (ORDER BY AVG(interest_rate_pct))), 0))::numeric
+        , 2) AS balance_elasticity,
+
+        ROUND(
+            ((AVG(late_payment_rate) - LAG(AVG(late_payment_rate)) OVER (ORDER BY AVG(interest_rate_pct))) * 100 /
+            NULLIF((AVG(interest_rate_pct) - LAG(AVG(interest_rate_pct)) OVER (ORDER BY AVG(interest_rate_pct))), 0))::numeric
+        , 2) AS late_payment_elasticity_pct,
+
+        ROUND(
+            ((AVG(churn_risk_score) - LAG(AVG(churn_risk_score)) OVER (ORDER BY AVG(interest_rate_pct))) * 100 /
+            NULLIF((AVG(interest_rate_pct) - LAG(AVG(interest_rate_pct)) OVER (ORDER BY AVG(interest_rate_pct))), 0))::numeric
+        , 2) AS churn_elasticity_pct
+    FROM rate_cohorts
+    GROUP BY rate_category
 )
 
 SELECT
-    rate_category,
-    
-    -- Sample statistics
-    COUNT(*) AS account_count,
-    ROUND(AVG(interest_rate_pct), 2) AS avg_interest_rate,
-    ROUND(STDDEV(interest_rate_pct), 2) AS stddev_rate,
-    
-    -- Outcome variables
-    ROUND(AVG(current_balance), 2) AS avg_balance,
-    ROUND(AVG(transaction_count), 1) AS avg_transactions,
-    ROUND(AVG(avg_transaction_amount), 2) AS avg_transaction_size,
-    ROUND(AVG(late_payment_rate) * 100, 2) AS avg_late_payment_rate_pct,
-    ROUND(AVG(CASE WHEN is_past_due THEN 1 ELSE 0 END) * 100, 2) AS past_due_rate_pct,
-    ROUND(AVG(churn_risk_score) * 100, 2) AS avg_churn_risk_pct,
-    
-    -- Marginal effects (1% rate increase impact)
-    ROUND(
-        (AVG(current_balance) - LAG(AVG(current_balance)) OVER (ORDER BY avg_interest_rate)) /
-        NULLIF((AVG(interest_rate_pct) - LAG(AVG(interest_rate_pct)) OVER (ORDER BY avg_interest_rate)), 0)
-    , 2) AS balance_elasticity,
-    
-    ROUND(
-        (AVG(late_payment_rate) - LAG(AVG(late_payment_rate)) OVER (ORDER BY avg_interest_rate)) * 100 /
-        NULLIF((AVG(interest_rate_pct) - LAG(AVG(interest_rate_pct)) OVER (ORDER BY avg_interest_rate)), 0)
-    , 2) AS late_payment_elasticity_pct,
-    
-    ROUND(
-        (AVG(churn_risk_score) - LAG(AVG(churn_risk_score)) OVER (ORDER BY avg_interest_rate)) * 100 /
-        NULLIF((AVG(interest_rate_pct) - LAG(AVG(interest_rate_pct)) OVER (ORDER BY avg_interest_rate)), 0)
-    , 2) AS churn_elasticity_pct,
-    
-    -- Causal interpretation
+    *,
     CASE
         WHEN balance_elasticity < -100 THEN 'High Negative Impact on Balances'
         WHEN balance_elasticity < 0 THEN 'Moderate Negative Impact on Balances'
         WHEN balance_elasticity > 0 THEN 'Positive or No Impact'
         ELSE 'Inconclusive'
     END AS balance_impact_interpretation,
-    
     CURRENT_TIMESTAMP AS analyzed_at
-    
-FROM rate_cohorts
-GROUP BY rate_category
+FROM rate_stats
 ORDER BY avg_interest_rate

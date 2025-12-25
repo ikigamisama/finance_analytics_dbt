@@ -16,19 +16,19 @@ SELECT
     
     -- Fraud Metrics
     COUNT(*) AS total_transactions,
-    SUM(CASE WHEN t.is_fraud_flag = 1 THEN 1 ELSE 0 END) AS fraud_transactions,
-    ROUND(SUM(CASE WHEN t.is_fraud_flag = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS fraud_rate_pct,
-    ROUND(SUM(t.fraud_amount), 2) AS total_fraud_amount,
-    ROUND(AVG(CASE WHEN t.is_fraud_flag = 1 THEN t.fraud_score END), 3) AS avg_fraud_score,
+    SUM(CASE WHEN t.is_fraud_flag = TRUE THEN 1 ELSE 0 END) AS fraud_transactions,
+    ROUND(SUM(CASE WHEN t.is_fraud_flag = TRUE THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS fraud_rate_pct,
+    ROUND(SUM(t.fraud_amount)::numeric, 2) AS total_fraud_amount,
+    ROUND(AVG(CASE WHEN t.is_fraud_flag = TRUE THEN t.fraud_score END)::numeric, 3) AS avg_fraud_score,
     
     -- Transaction Patterns
-    ROUND(AVG(t.transaction_amount_abs), 2) AS avg_transaction_amount,
-    ROUND(AVG(t.distance_from_home_km), 1) AS avg_distance_from_home,
-    ROUND(AVG(t.velocity_24h), 1) AS avg_velocity_24h,
+    ROUND(AVG(t.transaction_amount_abs)::numeric, 2) AS avg_transaction_amount,
+    ROUND(AVG(t.distance_from_home_km)::numeric, 1) AS avg_distance_from_home,
+    ROUND(AVG(t.velocity_24h)::numeric, 1) AS avg_velocity_24h,
     
     -- Customer Risk
     COUNT(DISTINCT t.customer_key) AS unique_customers,
-    COUNT(DISTINCT CASE WHEN t.is_fraud_flag = 1 THEN t.customer_key END) AS fraud_customers,
+    COUNT(DISTINCT CASE WHEN t.is_fraud_flag = TRUE THEN t.customer_key END) AS fraud_customers,
     
     CURRENT_TIMESTAMP AS last_updated
     

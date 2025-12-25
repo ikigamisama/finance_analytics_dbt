@@ -43,52 +43,42 @@ WITH payment_behavior AS (
     WHERE a.is_current = TRUE AND c.is_current = TRUE
     GROUP BY lp.account_key, c.customer_key, c.customer_segment, c.credit_score,
              c.credit_score_band, a.credit_utilization_pct, a.is_past_due
+),
+baseline AS (
+    SELECT
+        customer_segment,
+        AVG(credit_score) AS avg_credit_score_ontime,
+        AVG(credit_utilization_pct) AS avg_utilization_ontime,
+        AVG(total_late_fees) AS avg_late_fees_ontime
+    FROM payment_behavior
+    WHERE payment_behavior_category = 'Always On Time'
+    GROUP BY customer_segment
 )
 
 SELECT
-    payment_behavior_category,
-    credit_score_band,
-    customer_segment,
+    pb.payment_behavior_category,
+    pb.credit_score_band,
+    pb.customer_segment,
     
-    -- Sample size
     COUNT(*) AS account_count,
     
-    -- Payment metrics
-    ROUND(AVG(total_payments), 1) AS avg_payment_history_length,
-    ROUND(AVG(late_payment_count), 2) AS avg_late_payments,
-    ROUND(AVG(avg_days_late), 1) AS avg_days_late,
+    ROUND(AVG(total_payments)::numeric, 1) AS avg_payment_history_length,
+    ROUND(AVG(late_payment_count)::numeric, 2) AS avg_late_payments,
+    ROUND(AVG(avg_days_late)::numeric, 1) AS avg_days_late,
     
-    -- Financial outcomes
-    ROUND(AVG(avg_outstanding_balance), 2) AS avg_outstanding_balance,
-    ROUND(AVG(total_late_fees), 2) AS avg_late_fees_paid,
-    ROUND(AVG(credit_utilization_pct), 2) AS avg_credit_utilization_pct,
+    ROUND(AVG(avg_outstanding_balance)::numeric, 2) AS avg_outstanding_balance,
+    ROUND(AVG(total_late_fees)::numeric, 2) AS avg_late_fees_paid,
+    ROUND(AVG(credit_utilization_pct)::numeric, 2) AS avg_credit_utilization_pct,
     
-    -- Credit health outcomes
-    ROUND(AVG(credit_score), 0) AS avg_credit_score,
+    ROUND(AVG(credit_score)::numeric, 0) AS avg_credit_score,
     ROUND(SUM(CASE WHEN is_past_due THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS past_due_rate_pct,
     
-    -- Causal effects (compared to "Always On Time" baseline)
-    ROUND(
-        AVG(credit_score) - 
-        MAX(CASE WHEN payment_behavior_category = 'Always On Time' 
-            THEN AVG(credit_score) OVER (PARTITION BY customer_segment) END)
-    , 2) AS credit_score_effect_vs_ontime,
+    -- Causal effects vs baseline
+    ROUND(AVG(credit_score) - b.avg_credit_score_ontime, 2) AS credit_score_effect_vs_ontime,
+    ROUND(AVG(credit_utilization_pct) - b.avg_utilization_ontime, 2) AS utilization_effect_vs_ontime,
+    ROUND((AVG(total_late_fees) - b.avg_late_fees_ontime)::numeric, 2) AS additional_fees_vs_ontime,
     
-    ROUND(
-        AVG(credit_utilization_pct) - 
-        MAX(CASE WHEN payment_behavior_category = 'Always On Time' 
-            THEN AVG(credit_utilization_pct) OVER (PARTITION BY customer_segment) END)
-    , 2) AS utilization_effect_vs_ontime,
-    
-    -- Cost of late payments
-    ROUND(
-        AVG(total_late_fees) - 
-        MAX(CASE WHEN payment_behavior_category = 'Always On Time' 
-            THEN AVG(total_late_fees) OVER (PARTITION BY customer_segment) END)
-    , 2) AS additional_fees_vs_ontime,
-    
-    -- Causal interpretation
-    CASE payment_behavior_category
+    CASE pb.payment_behavior_category
         WHEN 'Always On Time' THEN 'Baseline (Optimal Behavior)'
         WHEN 'Occasionally Late' THEN 'Minor Credit Impact'
         WHEN 'Frequently Late' THEN 'Moderate Credit Damage'
@@ -96,11 +86,14 @@ SELECT
     END AS impact_classification,
     
     CURRENT_TIMESTAMP AS analyzed_at
-    
-FROM payment_behavior
-GROUP BY payment_behavior_category, credit_score_band, customer_segment
+
+FROM payment_behavior pb
+LEFT JOIN baseline b
+    ON pb.customer_segment = b.customer_segment
+GROUP BY pb.payment_behavior_category, pb.credit_score_band, pb.customer_segment, 
+         b.avg_credit_score_ontime, b.avg_utilization_ontime, b.avg_late_fees_ontime
 ORDER BY customer_segment, 
-    CASE payment_behavior_category
+    CASE pb.payment_behavior_category
         WHEN 'Always On Time' THEN 1
         WHEN 'Occasionally Late' THEN 2
         WHEN 'Frequently Late' THEN 3

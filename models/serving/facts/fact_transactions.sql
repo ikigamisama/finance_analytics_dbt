@@ -44,6 +44,7 @@ WITH transaction_facts AS (
         t.is_recurring,
         t.transaction_status,
         t.decline_reason,
+        t.fraud_risk_category,
         
         -- Measures (Facts)
         t.amount AS transaction_amount,

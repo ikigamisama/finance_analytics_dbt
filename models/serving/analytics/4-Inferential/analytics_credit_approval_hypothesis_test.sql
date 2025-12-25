@@ -54,7 +54,7 @@ SELECT
     -- Supporting metrics
     ROUND(mean_credit_score, 0) AS mean_credit_score,
     ROUND(mean_income, 2) AS mean_income,
-    ROUND(mean_dti * 100, 2) AS mean_dti_pct,
+    ROUND(mean_dti::numeric * 100, 2) AS mean_dti_pct,
     ROUND(mean_requested_amount, 2) AS mean_requested_amount,
     
     -- Odds calculation (for logistic regression interpretation)

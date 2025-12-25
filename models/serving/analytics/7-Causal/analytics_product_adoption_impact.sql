@@ -64,43 +64,43 @@ SELECT
     COUNT(*) AS customer_count,
     
     -- Outcome variables
-    ROUND(AVG(customer_lifetime_value), 2) AS avg_clv,
-    ROUND(AVG(transaction_count_90d), 1) AS avg_transactions,
-    ROUND(AVG(total_volume_90d), 2) AS avg_volume,
-    ROUND(AVG(churn_risk_score) * 100, 2) AS avg_churn_risk_pct,
+    ROUND(AVG(customer_lifetime_value)::numeric, 2) AS avg_clv,
+    ROUND(AVG(transaction_count_90d)::numeric, 1) AS avg_transactions,
+    ROUND(AVG(total_volume_90d)::numeric, 2) AS avg_volume,
+    ROUND((AVG(churn_risk_score) * 100)::numeric, 2) AS avg_churn_risk_pct,
     
     -- Causal effect (compared to 1 product baseline)
     ROUND(
-        AVG(customer_lifetime_value) - 
+        (AVG(customer_lifetime_value) - 
         FIRST_VALUE(AVG(customer_lifetime_value)) OVER (
             PARTITION BY customer_segment 
             ORDER BY product_count
-        )
+        ))::numeric
     , 2) AS clv_effect_vs_baseline,
     
     ROUND(
-        AVG(transaction_count_90d) - 
+        (AVG(transaction_count_90d) - 
         FIRST_VALUE(AVG(transaction_count_90d)) OVER (
             PARTITION BY customer_segment 
             ORDER BY product_count
-        )
+        ))::numeric
     , 2) AS transaction_effect_vs_baseline,
     
     ROUND(
-        AVG(churn_risk_score) - 
+        (AVG(churn_risk_score) - 
         FIRST_VALUE(AVG(churn_risk_score)) OVER (
             PARTITION BY customer_segment 
             ORDER BY product_count
-        )
+        ))::numeric
     , 4) AS churn_risk_effect_vs_baseline,
     
     -- Marginal effects (per additional product)
     ROUND(
-        AVG(customer_lifetime_value) - 
+       ( AVG(customer_lifetime_value) - 
         LAG(AVG(customer_lifetime_value)) OVER (
             PARTITION BY customer_segment 
             ORDER BY product_count
-        )
+        ))::numeric
     , 2) AS marginal_clv_effect,
     
     -- Causal interpretation

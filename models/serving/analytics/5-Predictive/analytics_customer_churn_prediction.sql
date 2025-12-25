@@ -69,6 +69,63 @@ WITH customer_features AS (
     ) i ON c.customer_key = i.customer_key
     
     WHERE c.is_current = TRUE AND c.is_active = TRUE
+), 
+
+churn_scores AS (
+    SELECT
+        customer_key,
+        customer_natural_key,
+        customer_segment,
+        tenure_months,
+        days_since_login,
+        transaction_count_90d,
+        active_account_count,
+        past_due_account_count,
+        unresolved_issues,
+        negative_interactions,
+        customer_lifetime_value,
+        historical_churn_score,
+
+        ROUND(
+            (LEAST(100, GREATEST(0,
+                historical_churn_score * 30 +
+
+                CASE
+                    WHEN days_since_login > 90 THEN 0.25
+                    WHEN days_since_login > 60 THEN 0.15
+                    WHEN days_since_login > 30 THEN 0.08
+                    ELSE 0
+                END * 20 +
+
+                CASE
+                    WHEN transaction_count_90d = 0 THEN 0.30
+                    WHEN transaction_count_90d < 5 THEN 0.20
+                    WHEN transaction_count_90d < 15 THEN 0.10
+                    ELSE 0
+                END * 15 +
+
+                CASE
+                    WHEN active_account_count = 0 THEN 0.40
+                    WHEN past_due_account_count > 0 THEN 0.25
+                    ELSE 0
+                END * 15 +
+
+                CASE
+                    WHEN unresolved_issues > 2 THEN 0.30
+                    WHEN unresolved_issues > 0 THEN 0.15
+                    WHEN negative_interactions > 3 THEN 0.20
+                    ELSE 0
+                END * 10 +
+
+                CASE
+                    WHEN unique_categories_90d < 2 THEN 0.15
+                    WHEN unique_categories_90d < 4 THEN 0.08
+                    ELSE 0
+                END * 10
+            )) * 100)::numeric
+        , 2) AS predicted_churn_risk_pct
+
+    FROM customer_features
 )
 
 SELECT
@@ -76,77 +133,28 @@ SELECT
     customer_natural_key,
     customer_segment,
     tenure_months,
-    
-    -- Historical score
-    ROUND(historical_churn_score * 100, 2) AS historical_churn_risk_pct,
-    
-    -- Feature-based churn prediction score (weighted model)
-    ROUND(
-        LEAST(100, GREATEST(0,
-            -- Base score
-            historical_churn_score * 30 +
-            
-            -- Inactivity penalty
-            CASE
-                WHEN days_since_login > 90 THEN 0.25
-                WHEN days_since_login > 60 THEN 0.15
-                WHEN days_since_login > 30 THEN 0.08
-                ELSE 0
-            END * 20 +
-            
-            -- Transaction activity (inverse relationship)
-            CASE
-                WHEN transaction_count_90d = 0 THEN 0.30
-                WHEN transaction_count_90d < 5 THEN 0.20
-                WHEN transaction_count_90d < 15 THEN 0.10
-                ELSE 0
-            END * 15 +
-            
-            -- Account health penalty
-            CASE
-                WHEN active_account_count = 0 THEN 0.40
-                WHEN past_due_account_count > 0 THEN 0.25
-                ELSE 0
-            END * 15 +
-            
-            -- Service issues penalty
-            CASE
-                WHEN unresolved_issues > 2 THEN 0.30
-                WHEN unresolved_issues > 0 THEN 0.15
-                WHEN negative_interactions > 3 THEN 0.20
-                ELSE 0
-            END * 10 +
-            
-            -- Engagement diversity
-            CASE
-                WHEN unique_categories_90d < 2 THEN 0.15
-                WHEN unique_categories_90d < 4 THEN 0.08
-                ELSE 0
-            END * 10
-        )) * 100
-    , 2) AS predicted_churn_risk_pct,
-    
-    -- Risk classification
+
+    ROUND((historical_churn_score * 100)::numeric, 2) AS historical_churn_risk_pct,
+    predicted_churn_risk_pct,
+
     CASE
         WHEN predicted_churn_risk_pct >= 70 THEN 'Critical'
         WHEN predicted_churn_risk_pct >= 50 THEN 'High'
         WHEN predicted_churn_risk_pct >= 30 THEN 'Medium'
         ELSE 'Low'
     END AS predicted_churn_category,
-    
-    -- Key risk factors
+
     days_since_login,
     transaction_count_90d,
     active_account_count,
     past_due_account_count,
     unresolved_issues,
     negative_interactions,
-    
-    -- Expected CLV at risk
+
     ROUND(customer_lifetime_value, 2) AS clv_at_risk,
-    
+
     CURRENT_TIMESTAMP AS prediction_date,
     CURRENT_DATE + INTERVAL '90 days' AS prediction_window_end
-    
-FROM customer_features
+
+FROM churn_scores
 ORDER BY predicted_churn_risk_pct DESC

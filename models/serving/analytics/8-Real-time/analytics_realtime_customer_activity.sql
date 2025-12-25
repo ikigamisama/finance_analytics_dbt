@@ -21,8 +21,8 @@ WITH recent_activity AS (
         STRING_AGG(DISTINCT t.merchant_category, ', ') AS categories_used,
         
         -- Risk indicators
-        SUM(t.is_fraud_flag) AS fraud_alerts,
-        SUM(t.is_high_value_flag) AS high_value_transactions,
+        SUM(CAST(t.is_fraud_flag AS INTEGER)) AS fraud_alerts,
+        SUM(CAST(t.is_high_value_flag AS INTEGER)) AS high_value_transactions,
         SUM(CASE WHEN t.is_international THEN 1 ELSE 0 END) AS international_transactions,
         
         -- Unusual activity flags
@@ -50,9 +50,9 @@ SELECT
     churn_risk_category,
     
     transactions_last_hour,
-    ROUND(volume_last_hour, 2) AS volume_last_hour,
+    ROUND(volume_last_hour::numeric, 2) AS volume_last_hour,
     last_transaction_time,
-    ROUND(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - last_transaction_time)) / 60, 1) AS minutes_since_last_transaction,
+    ROUND((EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - last_transaction_time)) / 60)::numeric, 1) AS minutes_since_last_transaction,
     
     channels_used,
     categories_used,

@@ -16,14 +16,14 @@ SELECT
     COUNT(DISTINCT t.transaction_key) AS transaction_count,
     COUNT(DISTINCT t.customer_key) AS unique_customers,
     COUNT(DISTINCT t.merchant_key) AS unique_merchants,
-    ROUND(SUM(t.transaction_amount_abs), 2) AS total_spend,
-    ROUND(AVG(t.transaction_amount_abs), 2) AS avg_transaction_amount,
+    ROUND(SUM(t.transaction_amount_abs)::numeric, 2) AS total_spend,
+    ROUND(AVG(t.transaction_amount_abs)::numeric, 2) AS avg_transaction_amount,
     
     -- Frequency patterns
     ROUND(COUNT(DISTINCT t.transaction_key) * 1.0 / NULLIF(COUNT(DISTINCT t.customer_key), 0), 2) AS transactions_per_customer,
     
     -- Loyalty indicators
-    ROUND(AVG(CASE WHEN t.is_recurring THEN 1.0 ELSE 0.0 END) * 100, 2) AS recurring_pct,
+    ROUND((AVG(CASE WHEN t.is_recurring THEN 1.0 ELSE 0.0 END) * 100)::numeric, 2) AS recurring_pct,
     
     CURRENT_TIMESTAMP AS last_updated
     

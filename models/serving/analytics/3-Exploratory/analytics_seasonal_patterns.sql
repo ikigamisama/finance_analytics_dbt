@@ -15,8 +15,8 @@ SELECT
     t.merchant_category,
     
     COUNT(*) AS transaction_count,
-    ROUND(SUM(t.transaction_amount_abs), 2) AS total_volume,
-    ROUND(AVG(t.transaction_amount_abs), 2) AS avg_amount,
+    ROUND(SUM(t.transaction_amount_abs)::numeric, 2) AS total_volume,
+    ROUND(AVG(t.transaction_amount_abs)::numeric, 2) AS avg_amount,
     COUNT(DISTINCT t.customer_key) AS unique_customers,
     
     -- Year-over-year comparison helper

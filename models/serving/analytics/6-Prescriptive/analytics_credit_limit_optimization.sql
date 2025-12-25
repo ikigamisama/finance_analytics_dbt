@@ -7,6 +7,7 @@
 }}
 
 WITH credit_accounts AS (
+    -- (UNCHANGED: your original credit_accounts CTE)
     SELECT
         a.account_key,
         a.account_natural_key,
@@ -20,17 +21,16 @@ WITH credit_accounts AS (
         a.account_age_months,
         a.is_past_due,
         
-        -- Payment history
         COALESCE(lp.late_payment_count, 0) AS late_payments_12m,
         COALESCE(lp.missed_payment_count, 0) AS missed_payments_12m,
         
-        -- Transaction activity
         COALESCE(t.avg_monthly_spend, 0) AS avg_monthly_spend,
         COALESCE(t.max_monthly_spend, 0) AS max_monthly_spend
         
     FROM {{ ref('dim_account') }} a
     INNER JOIN {{ ref('dim_customer') }} c 
-        ON a.customer_id = c.customer_natural_key AND c.is_current = TRUE
+        ON a.customer_id = c.customer_natural_key
+       AND c.is_current = TRUE
     INNER JOIN {{ ref('dim_product') }} p 
         ON a.product_id = p.product_natural_key
     LEFT JOIN (
@@ -64,118 +64,132 @@ WITH credit_accounts AS (
       AND p.category = 'Credit'
 ),
 
-limit_recommendations AS (
+limit_base AS (
     SELECT
         account_key,
         account_natural_key,
         customer_key,
         customer_segment,
         credit_score,
-        ROUND(credit_limit, 2) AS current_limit,
-        ROUND(credit_utilization_pct, 2) AS current_utilization_pct,
+        annual_income,
+        credit_limit::numeric AS current_limit,
+        credit_utilization_pct::numeric AS current_utilization_pct,
+        account_age_months,
+        late_payments_12m,
+        missed_payments_12m,
+        avg_monthly_spend,
+        max_monthly_spend,
+        is_past_due
+    FROM credit_accounts
+),
+
+limit_recommendations AS (
+    SELECT
+        *,
         
-        -- Optimal limit calculation
         ROUND(
             LEAST(
-                -- Cap at income-based limit
+                -- Income-based cap
                 annual_income * 0.25,
-                -- Or spending-based limit
+                
+                -- Spend-based + risk-adjusted limit
                 GREATEST(
                     current_limit,
                     max_monthly_spend * 2,
                     avg_monthly_spend * 3
-                ) *
-                -- Adjust by credit score
+                )
+                *
                 CASE
                     WHEN credit_score >= 800 THEN 1.5
                     WHEN credit_score >= 740 THEN 1.3
                     WHEN credit_score >= 670 THEN 1.1
                     WHEN credit_score >= 580 THEN 0.9
                     ELSE 0.7
-                END *
-                -- Adjust by payment history
+                END
+                *
                 CASE
                     WHEN late_payments_12m = 0 AND missed_payments_12m = 0 THEN 1.2
                     WHEN late_payments_12m = 0 THEN 1.0
                     WHEN late_payments_12m <= 2 THEN 0.8
                     ELSE 0.6
-                END *
-                -- Adjust by utilization
+                END
+                *
                 CASE
-                    WHEN credit_utilization_pct > 80 THEN 1.3
-                    WHEN credit_utilization_pct > 50 THEN 1.2
-                    WHEN credit_utilization_pct > 30 THEN 1.1
+                    WHEN current_utilization_pct > 80 THEN 1.3
+                    WHEN current_utilization_pct > 50 THEN 1.2
+                    WHEN current_utilization_pct > 30 THEN 1.1
                     ELSE 1.0
                 END
-            )
-        , 2) AS recommended_limit,
+            )::numeric
+        , 2) AS recommended_limit
+        
+    FROM limit_base
+), 
+final_recommendations AS (
+    SELECT
+        account_key,
+        account_natural_key,
+        customer_key,
+        customer_segment,
+        credit_score,
+        
+        ROUND(current_limit, 2) AS current_limit,
+        recommended_limit,
+        
+        ROUND(recommended_limit - current_limit, 2) AS limit_change,
+        ROUND((recommended_limit - current_limit) * 100.0 / NULLIF(current_limit, 0), 2)
+            AS limit_change_pct,
+        
+        CASE
+            WHEN recommended_limit > current_limit * 1.2
+                 AND late_payments_12m = 0
+                THEN 'Increase Limit'
+            WHEN recommended_limit < current_limit * 0.8
+                 AND (late_payments_12m > 2 OR is_past_due)
+                THEN 'Decrease Limit'
+            WHEN ABS(recommended_limit - current_limit) / NULLIF(current_limit, 0) < 0.1
+                THEN 'No Change'
+            ELSE 'Review Required'
+        END AS recommended_action,
+        
+        CASE
+            WHEN current_utilization_pct > 70 AND late_payments_12m = 0
+                THEN 'High utilization, good payment history'
+            WHEN late_payments_12m > 2
+                THEN 'Payment history concerns'
+            WHEN avg_monthly_spend > current_limit * 0.8
+                THEN 'Spending exceeds limit capacity'
+            WHEN current_utilization_pct < 20 AND account_age_months < 12
+                THEN 'Low utilization, new account'
+            ELSE 'Standard adjustment'
+        END AS adjustment_rationale,
+        
+        CASE
+            WHEN late_payments_12m = 0 AND missed_payments_12m = 0 THEN 'Low Risk'
+            WHEN late_payments_12m <= 2 THEN 'Medium Risk'
+            ELSE 'High Risk'
+        END AS risk_level,
+        
+        current_utilization_pct,
+        ROUND(current_limit / NULLIF(recommended_limit, 0) * current_utilization_pct, 2)
+            AS projected_utilization_pct,
         
         account_age_months,
         late_payments_12m,
-        missed_payments_12m,
-        ROUND(avg_monthly_spend, 2) AS avg_monthly_spend,
-        is_past_due
+        avg_monthly_spend,
         
-    FROM credit_accounts
+        CURRENT_TIMESTAMP AS generated_at
+
+    FROM limit_recommendations
 )
 
-SELECT
-    account_key,
-    account_natural_key,
-    customer_key,
-    customer_segment,
-    credit_score,
-    current_limit,
-    recommended_limit,
-    ROUND(recommended_limit - current_limit, 2) AS limit_change,
-    ROUND((recommended_limit - current_limit) * 100.0 / NULLIF(current_limit, 0), 2) AS limit_change_pct,
-    
-    -- Action recommendation
-    CASE
-        WHEN recommended_limit > current_limit * 1.2 AND late_payments_12m = 0 
-            THEN 'Increase Limit'
-        WHEN recommended_limit < current_limit * 0.8 AND (late_payments_12m > 2 OR is_past_due)
-            THEN 'Decrease Limit'
-        WHEN ABS(recommended_limit - current_limit) / NULLIF(current_limit, 0) < 0.1
-            THEN 'No Change'
-        ELSE 'Review Required'
-    END AS recommended_action,
-    
-    -- Rationale
-    CASE
-        WHEN credit_utilization_pct > 70 AND late_payments_12m = 0 
-            THEN 'High utilization, good payment history'
-        WHEN late_payments_12m > 2 
-            THEN 'Payment history concerns'
-        WHEN avg_monthly_spend > current_limit * 0.8 
-            THEN 'Spending exceeds limit capacity'
-        WHEN credit_utilization_pct < 20 AND account_age_months < 12 
-            THEN 'Low utilization, new account'
-        ELSE 'Standard adjustment'
-    END AS adjustment_rationale,
-    
-    -- Risk assessment
-    CASE
-        WHEN late_payments_12m = 0 AND missed_payments_12m = 0 THEN 'Low Risk'
-        WHEN late_payments_12m <= 2 THEN 'Medium Risk'
-        ELSE 'High Risk'
-    END AS risk_level,
-    
-    current_utilization_pct,
-    ROUND(current_limit / NULLIF(recommended_limit, 0) * current_utilization_pct, 2) AS projected_utilization_pct,
-    
-    account_age_months,
-    late_payments_12m,
-    avg_monthly_spend,
-    
-    CURRENT_TIMESTAMP AS generated_at
-    
-FROM limit_recommendations
-WHERE recommended_action != 'No Change'  -- Only show actionable recommendations
-ORDER BY 
+SELECT *
+FROM final_recommendations
+WHERE recommended_action != 'No Change'
+ORDER BY
     CASE recommended_action
         WHEN 'Increase Limit' THEN 1
         WHEN 'Review Required' THEN 2
         WHEN 'Decrease Limit' THEN 3
     END,
-    ABS(limit_change) DESC
+    ABS(recommended_limit - current_limit) DESC

@@ -18,13 +18,13 @@ WITH customer_metrics AS (
         
         -- Transaction behavior
         COUNT(DISTINCT t.transaction_key) AS transaction_count_90d,
-        ROUND(AVG(t.transaction_amount_abs), 2) AS avg_transaction_amount,
-        ROUND(STDDEV(t.transaction_amount_abs), 2) AS transaction_amount_volatility,
+        ROUND(AVG(t.transaction_amount_abs)::numeric, 2) AS avg_transaction_amount,
+        ROUND(STDDEV(t.transaction_amount_abs)::numeric, 2) AS transaction_amount_volatility,
         
         -- Account health
         SUM(CASE WHEN a.is_past_due THEN 1 ELSE 0 END) AS past_due_accounts,
-        ROUND(AVG(a.credit_utilization_pct), 2) AS avg_credit_utilization,
-        ROUND(SUM(a.current_balance), 2) AS total_balance,
+        ROUND(AVG(a.credit_utilization_pct)::numeric, 2) AS avg_credit_utilization,
+        ROUND(SUM(a.current_balance)::numeric, 2) AS total_balance,
         
         -- Payment behavior
         COALESCE(lp.late_payment_count, 0) AS late_payments_12m,

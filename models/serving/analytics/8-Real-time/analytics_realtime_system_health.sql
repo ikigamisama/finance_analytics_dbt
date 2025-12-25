@@ -41,10 +41,10 @@ SELECT
     
     -- Performance metrics
     ROUND(avg_processing_time_ms, 2) AS avg_processing_time_ms,
-    ROUND(p95_processing_time_ms, 2) AS p95_processing_time_ms,
+    ROUND(p95_processing_time_ms::numeric, 2) AS p95_processing_time_ms,
     
     -- System health indicators
-    ROUND(success_rate_pct, 2) AS success_rate_pct,
+    ROUND(success_rate_pct::numeric, 2) AS success_rate_pct,
     high_risk_transactions,
     
     -- Overall system status
