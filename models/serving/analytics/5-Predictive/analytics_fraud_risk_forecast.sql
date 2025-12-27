@@ -23,7 +23,6 @@ WITH fraud_patterns AS (
         ROUND(SUM(CAST(is_fraud_flag as INTEGER)) * 100.0 / COUNT(*), 2) AS historical_fraud_rate_pct
         
     FROM {{ ref('fact_transactions') }}
-    WHERE transaction_date >= CURRENT_DATE - INTERVAL '180 days'
     GROUP BY merchant_category, channel, hour_of_day, is_international, is_weekend
 ),
 predictions AS (

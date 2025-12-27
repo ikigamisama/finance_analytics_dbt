@@ -33,8 +33,11 @@ SELECT
     CURRENT_TIMESTAMP AS last_updated
     
 FROM {{ ref('fact_transactions') }} t
-INNER JOIN {{ ref('dim_date') }} d ON t.date_key = d.date_key
-WHERE t.transaction_date >= CURRENT_DATE - INTERVAL '730 days'  -- 2 years
+INNER JOIN {{ ref('dim_date') }} d ON t.transaction_date = d.date_actual
+WHERE t.transaction_date >= GREATEST(
+    CURRENT_DATE - INTERVAL '730 days',
+    (SELECT MIN(transaction_date) FROM {{ ref('fact_transactions') }})
+)
 GROUP BY d.month, d.month_name, d.quarter, d.day_of_week, d.day_name, 
          t.merchant_category, d.year
 ORDER BY d.year DESC, d.month, d.day_of_week

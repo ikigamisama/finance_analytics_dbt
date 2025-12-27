@@ -377,14 +377,14 @@ financial-analytics-platform/
 │           ├── 07_causal_analytics/            (4 models)
 │           └── 08_realtime_analytics/          (6 models)
 │
-├── visualizations/                    # Python visualization scripts
+├── visualizations/                  # Python notebook
 │   ├── 1-Descriptive.ipunb          (14 charts)
-│   ├── 2-Diagnostic.ipunb          (13 charts)
+│   ├── 2-Diagnostic.ipunb           (13 charts)
 │   ├── 3-Exploratory.ipunb          (13 charts)
 │   ├── 4-Inferential.ipunb          (10 charts)
-│   ├── 5-Predicticve.ipunb           (10 charts)
-│   ├── 6-Prescriptive.ipunb          (10 charts)
-│   ├── 7-Casual.ipunb              (8 charts)
+│   ├── 5-Predicticve.ipunb          (10 charts)
+│   ├── 6-Prescriptive.ipunb         (10 charts)
+│   ├── 7-Casual.ipunb               (8 charts)
 │   └── 8-RealTime.ipunb             (11 charts)
 ```
 

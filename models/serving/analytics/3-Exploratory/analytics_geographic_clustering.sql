@@ -65,6 +65,5 @@ LEFT JOIN (
 WHERE c.is_current = TRUE
 GROUP BY c.state, c.city, t.total_transactions, t.total_volume, t.avg_transaction,
          a.total_accounts, a.total_balance, a.avg_balance
-HAVING COUNT(DISTINCT c.customer_key) >= 100  -- Minimum threshold
 ORDER BY customer_count DESC
 LIMIT 100

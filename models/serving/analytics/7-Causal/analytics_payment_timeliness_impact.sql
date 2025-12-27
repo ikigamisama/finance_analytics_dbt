@@ -48,7 +48,7 @@ baseline AS (
     SELECT
         customer_segment,
         AVG(credit_score) AS avg_credit_score_ontime,
-        AVG(credit_utilization_pct) AS avg_utilization_ontime,
+        COALESCE(AVG(credit_utilization_pct), 0) AS avg_utilization_ontime,
         AVG(total_late_fees) AS avg_late_fees_ontime
     FROM payment_behavior
     WHERE payment_behavior_category = 'Always On Time'
@@ -68,14 +68,14 @@ SELECT
     
     ROUND(AVG(avg_outstanding_balance)::numeric, 2) AS avg_outstanding_balance,
     ROUND(AVG(total_late_fees)::numeric, 2) AS avg_late_fees_paid,
-    ROUND(AVG(credit_utilization_pct)::numeric, 2) AS avg_credit_utilization_pct,
-    
+    ROUND(COALESCE(AVG(credit_utilization_pct), 0)::numeric, 2) AS avg_credit_utilization_pct,
+
     ROUND(AVG(credit_score)::numeric, 0) AS avg_credit_score,
     ROUND(SUM(CASE WHEN is_past_due THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS past_due_rate_pct,
-    
+
     -- Causal effects vs baseline
     ROUND(AVG(credit_score) - b.avg_credit_score_ontime, 2) AS credit_score_effect_vs_ontime,
-    ROUND(AVG(credit_utilization_pct) - b.avg_utilization_ontime, 2) AS utilization_effect_vs_ontime,
+    ROUND(COALESCE(AVG(credit_utilization_pct), 0) - COALESCE(b.avg_utilization_ontime, 0), 2) AS utilization_effect_vs_ontime,
     ROUND((AVG(total_late_fees) - b.avg_late_fees_ontime)::numeric, 2) AS additional_fees_vs_ontime,
     
     CASE pb.payment_behavior_category

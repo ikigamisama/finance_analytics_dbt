@@ -16,8 +16,11 @@ WITH historical_daily AS (
         SUM(t.transaction_amount_abs) AS total_volume,
         AVG(t.transaction_amount_abs) AS avg_amount
     FROM {{ ref('fact_transactions') }} t
-    INNER JOIN {{ ref('dim_date') }} d ON t.date_key = d.date_key
-    WHERE t.transaction_date >= CURRENT_DATE - INTERVAL '365 days'
+    INNER JOIN {{ ref('dim_date') }} d ON t.transaction_date = d.date_actual
+    WHERE t.transaction_date>= GREATEST(
+        CURRENT_DATE - INTERVAL '365 days',
+        (SELECT MIN(transaction_date) FROM {{ ref('fact_transactions') }})
+    )
     GROUP BY d.date_actual, d.day_of_week, d.is_weekend, d.month
 ),
 

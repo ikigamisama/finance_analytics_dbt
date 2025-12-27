@@ -21,7 +21,6 @@ WITH branch_activity AS (
     FROM {{ ref('dim_location') }} l
     LEFT JOIN {{ ref('fact_transactions') }} t 
         ON l.location_natural_key::VARCHAR = t.location_city
-        AND t.transaction_date >= CURRENT_DATE - INTERVAL '90 days'
     LEFT JOIN {{ ref('dim_date') }} d 
         ON t.date_key = d.date_key
     
@@ -70,7 +69,6 @@ base_calculation AS (
         
     FROM branch_activity ba
     CROSS JOIN total_interactions ti
-    WHERE ba.total_transactions > 0
 ),
 
 final AS (

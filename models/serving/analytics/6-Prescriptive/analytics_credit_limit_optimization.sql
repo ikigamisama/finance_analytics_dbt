@@ -7,7 +7,6 @@
 }}
 
 WITH credit_accounts AS (
-    -- (UNCHANGED: your original credit_accounts CTE)
     SELECT
         a.account_key,
         a.account_natural_key,
@@ -39,7 +38,7 @@ WITH credit_accounts AS (
             SUM(late_payment_flag) AS late_payment_count,
             SUM(missed_payment_flag) AS missed_payment_count
         FROM {{ ref('fact_loan_payments') }}
-        WHERE scheduled_date >= CURRENT_DATE - INTERVAL '365 days'
+        WHERE scheduled_date >= CURRENT_DATE - INTERVAL '12 months'
         GROUP BY account_key
     ) lp ON a.account_key = lp.account_key
     LEFT JOIN (
@@ -53,7 +52,7 @@ WITH credit_accounts AS (
                 DATE_TRUNC('month', transaction_date) AS month,
                 SUM(transaction_amount_abs) AS monthly_spend
             FROM {{ ref('fact_transactions') }}
-            WHERE transaction_date >= CURRENT_DATE - INTERVAL '365 days'
+            WHERE transaction_date >= CURRENT_DATE - INTERVAL '12 months'
             GROUP BY account_key, DATE_TRUNC('month', transaction_date)
         ) monthly
         GROUP BY account_key
@@ -61,7 +60,7 @@ WITH credit_accounts AS (
     
     WHERE a.is_current = TRUE 
       AND a.is_active = TRUE
-      AND p.category = 'Credit'
+      AND p.category = 'CREDIT'
 ),
 
 limit_base AS (
@@ -125,6 +124,7 @@ limit_recommendations AS (
         
     FROM limit_base
 ), 
+
 final_recommendations AS (
     SELECT
         account_key,
@@ -140,12 +140,13 @@ final_recommendations AS (
         ROUND((recommended_limit - current_limit) * 100.0 / NULLIF(current_limit, 0), 2)
             AS limit_change_pct,
         
+        -- LOOSENED CRITERIA FOR MORE RESULTS
         CASE
-            WHEN recommended_limit > current_limit * 1.2
-                 AND late_payments_12m = 0
+            WHEN recommended_limit > current_limit * 1.15  -- Lowered from 1.2
+                 AND late_payments_12m <= 1                -- Allow 1 late payment
                 THEN 'Increase Limit'
-            WHEN recommended_limit < current_limit * 0.8
-                 AND (late_payments_12m > 2 OR is_past_due)
+            WHEN recommended_limit < current_limit * 0.85  -- Raised from 0.8
+                 AND (late_payments_12m > 1 OR is_past_due)
                 THEN 'Decrease Limit'
             WHEN ABS(recommended_limit - current_limit) / NULLIF(current_limit, 0) < 0.1
                 THEN 'No Change'
@@ -185,11 +186,11 @@ final_recommendations AS (
 
 SELECT *
 FROM final_recommendations
-WHERE recommended_action != 'No Change'
+WHERE recommended_action IN ('Increase Limit', 'Decrease Limit', 'Review Required')
 ORDER BY
     CASE recommended_action
         WHEN 'Increase Limit' THEN 1
         WHEN 'Review Required' THEN 2
         WHEN 'Decrease Limit' THEN 3
     END,
-    ABS(recommended_limit - current_limit) DESC
+    ABS(limit_change) DESC

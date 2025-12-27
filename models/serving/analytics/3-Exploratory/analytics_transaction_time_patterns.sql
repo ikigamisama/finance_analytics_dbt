@@ -32,7 +32,10 @@ SELECT
     CURRENT_TIMESTAMP AS last_updated
     
 FROM {{ ref('fact_transactions') }} t
-INNER JOIN {{ ref('dim_date') }} d ON t.date_key = d.date_key
-WHERE t.transaction_date >= CURRENT_DATE - INTERVAL '90 days'
+INNER JOIN {{ ref('dim_date') }} d ON t.transaction_date = d.date_actual
+WHERE t.transaction_date >= GREATEST(
+    CURRENT_DATE - INTERVAL '10 years',
+    (SELECT MIN(transaction_date) FROM {{ ref('fact_transactions') }})
+)
 GROUP BY d.day_name, d.day_of_week, t.transaction_hour, t.channel, t.merchant_category
 ORDER BY d.day_of_week, t.transaction_hour

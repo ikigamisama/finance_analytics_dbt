@@ -30,7 +30,10 @@ SELECT
 FROM {{ ref('fact_transactions') }} t
 INNER JOIN {{ ref('dim_merchant') }} m ON t.merchant_key = m.merchant_key
 INNER JOIN {{ ref('dim_customer') }} c ON t.customer_key = c.customer_key
-WHERE t.transaction_date >= CURRENT_DATE - INTERVAL '180 days'
+WHERE t.transaction_date >= GREATEST(
+    CURRENT_DATE - INTERVAL '10 years',
+    (SELECT MIN(transaction_date) FROM {{ ref('fact_transactions') }})
+)
   AND c.is_current = TRUE
 GROUP BY m.category_group, m.category, m.region, c.customer_segment, c.age_group
 HAVING COUNT(DISTINCT t.transaction_key) >= 50

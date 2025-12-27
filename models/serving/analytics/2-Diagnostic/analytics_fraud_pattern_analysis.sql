@@ -33,8 +33,11 @@ SELECT
     CURRENT_TIMESTAMP AS last_updated
     
 FROM {{ ref('fact_transactions') }} t
-INNER JOIN {{ ref('dim_date') }} d ON t.date_key = d.date_key
-WHERE t.transaction_date >= CURRENT_DATE - INTERVAL '90 days'
+INNER JOIN {{ ref('dim_date') }} d ON t.transaction_date = d.date_actual
+WHERE t.transaction_date >= GREATEST(
+    CURRENT_DATE - INTERVAL '10 years',
+    (SELECT MIN(transaction_date) FROM {{ ref('fact_transactions') }})
+)
 GROUP BY t.merchant_category, t.channel, t.is_international, d.day_name, 
          d.is_weekend, EXTRACT(HOUR FROM t.transaction_date)
 HAVING COUNT(*) >= 100  -- Filter for statistical significance

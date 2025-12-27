@@ -21,7 +21,10 @@ WITH transaction_stats AS (
         MAX(transaction_amount_abs) AS max_amount
 
     FROM {{ ref('fact_transactions') }}
-    WHERE transaction_date >= CURRENT_DATE - INTERVAL '90 days'
+    WHERE transaction_date >= GREATEST(
+        CURRENT_DATE - INTERVAL '90 days',
+        (SELECT MIN(transaction_date) FROM {{ ref('fact_transactions') }})
+    )
     GROUP BY merchant_category, channel
 )
 
@@ -67,5 +70,4 @@ SELECT
     CURRENT_TIMESTAMP AS last_updated
 
 FROM transaction_stats
-WHERE sample_size >= 100
 ORDER BY sample_size DESC
