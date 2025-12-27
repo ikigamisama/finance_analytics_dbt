@@ -1,3 +1,11 @@
+{{
+    config(
+        materialized='table',
+        schema="gold",
+        tags=['analytics', 'prescriptive', 'serving', 'customer']
+    )
+}}
+
 WITH at_risk_customers AS (
     SELECT
         c.customer_key,
@@ -56,65 +64,75 @@ WITH at_risk_customers AS (
     WHERE c.is_current = TRUE 
       AND c.is_active = TRUE
       AND c.churn_risk_score >= 0.5
+), 
+scored_actions AS (
+    SELECT
+        customer_key,
+        customer_natural_key,
+        customer_segment,
+        ROUND((churn_risk_score * 100)::numeric, 2) AS churn_risk_pct,
+        ROUND(customer_lifetime_value::numeric, 2) AS clv_at_risk,
+
+        CASE
+            WHEN unresolved_issues > 0 THEN 'URGENT: Resolve Service Issues'
+            WHEN past_due_accounts > 0 THEN 'URGENT: Payment Assistance Program'
+            WHEN days_since_login > 90 THEN 'Re-engagement Campaign'
+            WHEN transaction_count_90d = 0 THEN 'Win-Back Offer'
+            WHEN active_accounts <= 1 THEN 'Cross-Sell Campaign'
+            WHEN negative_interactions > 2 THEN 'Customer Success Outreach'
+            ELSE 'Loyalty Program Enrollment'
+        END AS recommended_action,
+
+        CASE
+            WHEN unresolved_issues > 0 OR past_due_accounts > 0 THEN 1
+            WHEN churn_risk_score >= 0.7 AND customer_lifetime_value >= 10000 THEN 1
+            WHEN churn_risk_score >= 0.7 THEN 2
+            WHEN customer_lifetime_value >= 10000 THEN 2
+            ELSE 3
+        END AS action_priority,
+
+        CASE
+            WHEN unresolved_issues > 0 OR negative_interactions > 2 THEN 'Phone Call'
+            WHEN days_since_login <= 30 THEN 'In-App Message'
+            WHEN days_since_login <= 60 THEN 'Email + SMS'
+            ELSE 'Direct Mail'
+        END AS recommended_channel,
+
+        -- ✅ MATERIALIZE estimated_success_rate_pct HERE
+        ROUND(
+            CASE
+                WHEN unresolved_issues > 0 THEN 65
+                WHEN past_due_accounts > 0 THEN 55
+                WHEN transaction_count_90d = 0 THEN 35
+                WHEN active_accounts <= 1 THEN 45
+                WHEN negative_interactions > 2 THEN 50
+                ELSE 40
+            END *
+            CASE
+                WHEN tenure_months >= 24 THEN 1.2
+                WHEN tenure_months >= 12 THEN 1.0
+                ELSE 0.8
+            END
+        , 0) AS estimated_success_rate_pct,
+
+        days_since_login,
+        transaction_count_90d,
+        active_accounts,
+        past_due_accounts,
+        unresolved_issues,
+        negative_interactions,
+        customer_lifetime_value,
+        CURRENT_TIMESTAMP AS generated_at
+
+    FROM at_risk_customers
 )
 
 SELECT
-    customer_key,
-    customer_natural_key,
-    customer_segment,
-    ROUND(churn_risk_score * 100, 2) AS churn_risk_pct,
-    ROUND(customer_lifetime_value, 2) AS clv_at_risk,
-    
-    -- Recommended Action (Primary)
-    CASE
-        WHEN unresolved_issues > 0 THEN 'URGENT: Resolve Service Issues'
-        WHEN past_due_accounts > 0 THEN 'URGENT: Payment Assistance Program'
-        WHEN days_since_login > 90 THEN 'Re-engagement Campaign'
-        WHEN transaction_count_90d = 0 THEN 'Win-Back Offer'
-        WHEN active_accounts <= 1 THEN 'Cross-Sell Campaign'
-        WHEN negative_interactions > 2 THEN 'Customer Success Outreach'
-        ELSE 'Loyalty Program Enrollment'
-    END AS recommended_action,
-    
-    -- Action Priority (1=Highest)
-    CASE
-        WHEN unresolved_issues > 0 OR past_due_accounts > 0 THEN 1
-        WHEN churn_risk_score >= 0.7 AND customer_lifetime_value >= 10000 THEN 1
-        WHEN churn_risk_score >= 0.7 THEN 2
-        WHEN customer_lifetime_value >= 10000 THEN 2
-        ELSE 3
-    END AS action_priority,
-    
-    -- Recommended Channel
-    CASE
-        WHEN unresolved_issues > 0 OR negative_interactions > 2 THEN 'Phone Call'
-        WHEN days_since_login <= 30 THEN 'In-App Message'
-        WHEN days_since_login <= 60 THEN 'Email + SMS'
-        ELSE 'Direct Mail'
-    END AS recommended_channel,
-    
-    -- Estimated Success Rate
+    *,
+    -- ✅ Now this works
     ROUND(
-        CASE
-            WHEN unresolved_issues > 0 THEN 65
-            WHEN past_due_accounts > 0 THEN 55
-            WHEN transaction_count_90d = 0 THEN 35
-            WHEN active_accounts <= 1 THEN 45
-            WHEN negative_interactions > 2 THEN 50
-            ELSE 40
-        END * 
-        -- Adjust by tenure
-        CASE
-            WHEN tenure_months >= 24 THEN 1.2
-            WHEN tenure_months >= 12 THEN 1.0
-            ELSE 0.8
-        END
-    , 0) AS estimated_success_rate_pct,
-    
-    -- Expected ROI
-    ROUND(
-        customer_lifetime_value * 0.5 * 
-        (estimated_success_rate_pct / 100) - 
+        customer_lifetime_value * 0.5 *
+        (estimated_success_rate_pct / 100.0) -
         CASE recommended_action
             WHEN 'URGENT: Resolve Service Issues' THEN 150
             WHEN 'URGENT: Payment Assistance Program' THEN 200
@@ -125,23 +143,12 @@ SELECT
             ELSE 40
         END
     , 2) AS expected_roi,
-    
-    -- Timeline
+
     CASE action_priority
         WHEN 1 THEN 'Within 48 hours'
         WHEN 2 THEN 'Within 1 week'
         ELSE 'Within 2 weeks'
-    END AS recommended_timeline,
-    
-    -- Key Indicators
-    days_since_login,
-    transaction_count_90d,
-    active_accounts,
-    past_due_accounts,
-    unresolved_issues,
-    negative_interactions,
-    
-    CURRENT_TIMESTAMP AS generated_at
-    
-FROM at_risk_customers
+    END AS recommended_timeline
+
+FROM scored_actions
 ORDER BY action_priority, clv_at_risk DESC

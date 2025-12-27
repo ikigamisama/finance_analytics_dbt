@@ -127,23 +127,23 @@ This platform provides a complete financial analytics solution implementing:
 │  │     Customer overview, transactions, accounts, etc.   │  │
 │  │                                                       │  │
 │  │  🔍 02_diagnostic_analytics/ (9 models)               │  │
-│  │     Churn, fraud patterns, loan defaults, etc.       │   │
-│  │                                                       │  │
-│  │  🔬 03_exploratory_analytics/ (8 models)             │   │
+│  │     Churn, fraud patterns, loan defaults, etc.       │    │
+│  │                                                       │   │
+│  │  🔬 03_exploratory_analytics/ (8 models)             │    │
 │  │     Behavior clusters, time patterns, cross-sell     │    │
 │  │                                                       │   │
-│  │  📈 04_inferential_analytics/ (7 models)             │   │
+│  │  📈 04_inferential_analytics/ (7 models)             │    │
 │  │     Statistical tests, A/B tests, confidence         │    │
 │  │                                                       │   │
-│  │  🔮 05_predictive_analytics/ (5 models)              │   │
+│  │  🔮 05_predictive_analytics/ (5 models)              │    │
 │  │     Churn prediction, forecasts, risk scores         │    │
 │  │                                                       │   │
 │  │  💡 06_prescriptive_analytics/ (5 models)            │    │
 │  │     Retention actions, recommendations, optimization │    │
 │  │                                                       │   │
-│  │  🎯 07_causal_analytics/ (4 models)                  │   │
+│  │  🎯 07_causal_analytics/ (4 models)                  │    │
 │  │     Impact analysis, elasticity, attribution         │    │
-│  │                                                       │   │
+│  │                                                      │    │
 │  │  ⚡ 08_realtime_analytics/ (6 models)                │    │
 │  │     Live monitoring, fraud alerts, system health     │    │
 │  └──────────────────────────────────────────────────────┘    │
@@ -209,7 +209,7 @@ This platform provides a complete financial analytics solution implementing:
 ```bash
 # System Requirements
 - Python 3.8+
-- PostgreSQL 12+
+- Docker
 - 4GB RAM minimum
 - 10GB disk space
 
@@ -218,6 +218,56 @@ This platform provides a complete financial analytics solution implementing:
 - psycopg2
 - plotly
 - pandas
+```
+
+### Docker Compose
+
+```yml
+services:
+  # PostgreSQL Database
+  postgresql:
+    image: postgres:16
+    container_name: postgres_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: finance_analytics
+      POSTGRES_USER: analytics_user
+      POSTGRES_PASSWORD: analytics_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - finance_dbt_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analytics_user -d finance_analytics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # pgAdmin for PostgreSQL
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: adminpass
+    ports:
+      - "5050:80"
+    networks:
+      - finance_dbt_network
+    depends_on:
+      - postgresql
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  finance_dbt_network:
+    driver: bridge
 ```
 
 ### Installation
@@ -328,14 +378,14 @@ financial-analytics-platform/
 │           └── 08_realtime_analytics/          (6 models)
 │
 ├── visualizations/                    # Python visualization scripts
-│   ├── 01_descriptive_analytics.py       (14 charts)
-│   ├── 02_diagnostic_analytics.py        (13 charts)
-│   ├── 03_exploratory_analytics.py       (13 charts)
-│   ├── 04_inferential_analytics.py       (10 charts)
-│   ├── 05_predictive_analytics.py        (10 charts)
-│   ├── 06_prescriptive_analytics.py      (10 charts)
-│   ├── 07_causal_analytics.py            (8 charts)
-│   └── 08_realtime_analytics.py          (11 charts)
+│   ├── 1-Descriptive.ipunb          (14 charts)
+│   ├── 2-Diagnostic.ipunb          (13 charts)
+│   ├── 3-Exploratory.ipunb          (13 charts)
+│   ├── 4-Inferential.ipunb          (10 charts)
+│   ├── 5-Predicticve.ipunb           (10 charts)
+│   ├── 6-Prescriptive.ipunb          (10 charts)
+│   ├── 7-Casual.ipunb              (8 charts)
+│   └── 8-RealTime.ipunb             (11 charts)
 ```
 
 **Total**:
